@@ -16,6 +16,8 @@
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "test": "node --experimental-strip-types --import ./scripts/register-ts-resolve-hook.mjs scripts/check-params.ts && node --experimental-strip-types --import ./scripts/register-ts-resolve-hook.mjs --test app/server/dockerhub.server.test.ts",
+    "test:params": "node --experimental-strip-types --import ./scripts/register-ts-resolve-hook.mjs scripts/check-params.ts",
+    "test:unit": "node --experimental-strip-types --import ./scripts/register-ts-resolve-hook.mjs --test \"app/**/*.test.ts\"",
     "prepare": "husky"
   },
   "lint-staged": {
