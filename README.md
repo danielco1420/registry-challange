@@ -38,6 +38,9 @@ pnpm dev               # http://localhost:5173
 pnpm typecheck
 pnpm lint              # ESLint (pnpm lint:fix to autofix)
 pnpm format:check      # Prettier (pnpm format to write)
+pnpm test              # Vitest, once (pnpm test:watch to watch)
+pnpm test:coverage     # Vitest + coverage of app/server and app/lib (coverage/index.html)
+pnpm test:e2e          # Playwright (Chromium) against the production build on :4173
 pnpm build && pnpm start
 ```
 
@@ -82,7 +85,7 @@ The stack is chosen. Remaining setup is tracked as GitHub issues; the unchecked 
 - [x] Git hooks (Husky + lint-staged + commitlint)
 - [ ] CI workflow (`.github/workflows/ci.yml`): lint, typecheck, test, build, audit, E2E
 - [ ] `Dockerfile` + `docker-compose.yml`
-- [ ] Test setup (Vitest + Testing Library, MSW, Playwright)
+- [x] Test setup (Vitest + Testing Library, MSW, Playwright)
 - [ ] `.vscode/` recommended extensions and settings
 - [ ] Set the Dependabot ecosystem in `.github/dependabot.yml`
 

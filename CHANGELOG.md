@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `pnpm test` also runs unit tests (`app/**/*.test.ts`) on Node's built-in test runner with fake timers (`pnpm test:unit`; `pnpm test:params` runs the param cases).
 - Per-client rate limiter (`app/server/rateLimit.server.ts`): `RATE_LIMIT_MAX` requests per `RATE_LIMIT_WINDOW_MS` per client IP, answering 429 with `Retry-After`, with bounded memory. Ready for `/api/*` routes and page loaders to call; not wired into them yet.
 - `TRUST_PROXY_HOPS` env var (default `0`): how many reverse proxies' `X-Forwarded-For` entries to trust when resolving the client IP. With the default the client IP is unknown, so the per-client limit doesn't apply until a deployment sets it.
+- Test tooling: Vitest with a Node project (`app/**/*.test.ts`) and a jsdom project with Testing Library and jest-dom (`app/**/*.test.tsx`); MSW for Node tests, which blocks any unhandled request to a non-loopback host so tests never reach Docker Hub; a `fixtures/dockerhub/` folder for recorded responses (filled in T08); Playwright (Chromium) with an e2e smoke test against the production build. Scripts: `pnpm test`, `pnpm test:watch`, `pnpm test:coverage` (v8 coverage of `app/server` and `app/lib`, report only, ~80% target) and `pnpm test:e2e`.
 
 ### Fixed
 - `searchParamsToObject` now keeps the first occurrence of a repeated query key even when it's empty, instead of falling through to a later value (e.g. `?sort=&sort=stars` now keeps `sort` missing).
@@ -35,3 +36,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - PRs now merge with merge commits instead of squash.
 - Moved the assignment brief from `README.md` to `docs/ASSIGNMENT.md`. `README.md` now describes the project.
 - `docs/API.md`: param validation section now states that routes aren't wired to the schemas/helper yet, matching `docs/RISKS.md` 2.2/2.3.
+- One test runner: the cache, upstream client, rate limiter and param tests moved from Node's built-in runner and the ad hoc `scripts/check-*.ts` checks to Vitest. The `scripts/` folder and its `.ts` resolve hook are gone.
