@@ -11,11 +11,16 @@ on:
   push:
     branches: [main]
 
+# Read-only token. Every checkout also sets `persist-credentials: false`, so the token
+# isn't left in .git/config while the PR's own code (lint, tests, build) runs.
 permissions:
   contents: read
 
+# A PR's runs share a group, so a new push cancels the superseded run. Pushes to
+# `main` get one group per commit: GitHub keeps only one pending run per group, so a
+# shared `main` group would drop the queued run of a commit merged in between.
 concurrency:
-  group: ci-${{ github.event.pull_request.number || github.ref }}
+  group: ci-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
@@ -29,6 +34,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup
       - name: ESLint
         run: pnpm lint
@@ -41,6 +48,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup
       - run: pnpm typecheck
 
@@ -50,6 +59,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup
       - run: pnpm test
 
@@ -59,6 +70,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup
       - run: pnpm build
 
@@ -68,6 +81,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup
       - run: pnpm audit --audit-level=high
 
@@ -77,6 +92,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup
 
       - name: Get Playwright version
@@ -102,8 +119,10 @@ jobs:
       # playwright.config.ts builds the app and serves it on :4173.
       - run: pnpm test:e2e
 
+      # Not just on failure: with `retries` in CI, a flaky test that passes on retry
+      # leaves a green job whose trace (`trace: 'on-first-retry'`) is only in here.
       - name: Upload Playwright report
-        if: failure()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report
