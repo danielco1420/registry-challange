@@ -1,13 +1,5 @@
 /**
- * Table-driven cases for `params.ts`. Not imported by the app.
- *
- * Ready for Vitest (#5):
- *
- *   it.each(PARAM_CASES)('$schema: $label', ({ schema, input, valid, output }) => {
- *     const result = v.safeParse(PARAM_SCHEMAS[schema], input);
- *     expect(result.success).toBe(valid);
- *     if (valid && output !== undefined) expect(result.output).toEqual(output);
- *   });
+ * Table-driven cases for `params.ts`, run by `params.test.ts`. Not imported by the app.
  */
 import {
   BadgeSchema,

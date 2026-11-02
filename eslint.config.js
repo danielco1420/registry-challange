@@ -9,7 +9,15 @@ import tseslint from 'typescript-eslint';
 export default defineConfig(
   {
     // `**/` so nested copies (e.g. git worktrees under .claude/) are skipped too.
-    ignores: ['**/build/', '**/.react-router/', '**/node_modules/', '**/coverage/', '.claude/'],
+    ignores: [
+      '**/build/',
+      '**/.react-router/',
+      '**/node_modules/',
+      '**/coverage/',
+      '**/playwright-report/',
+      '**/test-results/',
+      '.claude/',
+    ],
   },
   js.configs.recommended,
   tseslint.configs.recommended,

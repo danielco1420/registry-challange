@@ -1,6 +1,8 @@
 build/
 .react-router/
 coverage/
+playwright-report/
+test-results/
 node_modules/
 pnpm-lock.yaml
 # Local tooling, e.g. git worktrees under .claude/worktrees/.
