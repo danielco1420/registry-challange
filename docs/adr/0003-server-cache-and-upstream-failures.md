@@ -13,7 +13,9 @@ Every user's traffic leaves from the proxy's IP, so we share one anonymous Docke
 - **HTTP caching:** `/api/*` responses carry `Cache-Control` headers matching those TTLs.
 - **Failures (429, 5xx, timeout, non-JSON):** one retry with backoff that honors `Retry-After`; then serve stale cache if we have it; the UI shows a degraded banner when data is stale or upstream is failing; with no cache, show the "Docker Hub unavailable" state.
 - **Per-client rate limit:** 60 req/min per client IP on `/api/*` and direct page-loader requests, 429 with `Retry-After`. This only contains abuse by a single client; it does not protect the shared Docker Hub quota, since three clients could consume all of it.
-- **Proxy-wide upstream budget:** at most 150 upstream req/min (overridable by env var), below Docker Hub's ~180 req/min. Every upstream attempt counts, including retries. Cache hits and single-flight followers don't. When the budget is exhausted we make no upstream call and follow the failure path above: serve stale cache if we have it, otherwise the "Docker Hub unavailable" state; `/api/*` returns 503 with `Retry-After` set to the time until the budget resets.
+- **Proxy-wide upstream budget:** at most 150 upstream req/min, set by `UPSTREAM_BUDGET_PER_MIN` (default 150, values above 150 are rejected at startup), below Docker Hub's ~180 req/min. Every upstream attempt counts, including retries. Cache hits and single-flight followers don't. When the budget is exhausted we make no upstream call and follow the failure path above:
+  - **Stale entry available:** `/api/*` returns 200 with the stale body, `X-Cache: STALE` and `Cache-Control: no-store`, so downstream caches don't keep it. No `Retry-After`. The UI shows the degraded banner.
+  - **No stale entry:** `/api/*` returns 503 with a JSON error body and `Cache-Control: no-store`; `Retry-After` is the number of seconds until the budget resets. The UI shows the "Docker Hub unavailable" state.
 - **Anonymous only:** no Docker Hub token.
 
 ## Alternatives considered
