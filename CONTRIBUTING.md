@@ -26,6 +26,10 @@
 Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
 Breaking changes: `feat!: …` or a `BREAKING CHANGE:` footer.
 
+Git hooks (installed by `pnpm install` through Husky; they also run in Git for Windows):
+- `commit-msg` runs commitlint and rejects messages that don't follow this format.
+- `pre-commit` runs ESLint and Prettier on staged files (lint-staged).
+
 Examples:
 - `feat(tags): add name filter to tag list`
 - `fix(proxy): honor Retry-After on 429`

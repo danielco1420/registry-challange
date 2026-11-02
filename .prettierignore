@@ -1,0 +1,8 @@
+build/
+.react-router/
+coverage/
+node_modules/
+pnpm-lock.yaml
+
+# Docs are hand-wrapped prose; keep Prettier off Markdown for now.
+*.md
