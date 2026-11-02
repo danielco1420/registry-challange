@@ -6,7 +6,7 @@ A simplified Docker Hub–style web app for browsing and searching public contai
 
 ## Status
 
-🟡 **Foundation phase.** The API exploration, risk analysis and repo conventions are done. The tech stack and UI design are being decided in [docs/DESIGN_QUESTIONNAIRE.md](docs/DESIGN_QUESTIONNAIRE.md). No application code exists yet.
+🟡 **Scaffold phase.** Decisions are recorded in [docs/DESIGN_QUESTIONNAIRE.md](docs/DESIGN_QUESTIONNAIRE.md). The app skeleton runs; features are tracked as GitHub issues.
 
 ## Features (planned)
 
@@ -29,13 +29,13 @@ Docker Hub doesn't send CORS headers, so the browser can't call it directly. We 
 
 ## Getting started
 
-> Filled in once the stack is chosen (questionnaire section A).
+Requires Node 22.12 or newer (`.nvmrc`) and pnpm 12.16.1 (the version pinned in `package.json`). Node 22's bundled Corepack is too old for pnpm 12, so install pnpm directly with `npm install -g pnpm@12.16.1`, or first run `npm install -g corepack@latest && corepack enable`.
 
 ```bash
-# placeholder: e.g.
-# pnpm install
-# cp .env.example .env
-# pnpm dev
+pnpm install
+cp .env.example .env   # optional; defaults apply
+pnpm dev               # http://localhost:5173
+pnpm build && pnpm start
 ```
 
 Environment variables are documented in [.env.example](.env.example).
@@ -57,9 +57,9 @@ Environment variables are documented in [.env.example](.env.example).
 
 ## Roadmap
 
-These files depend on the stack choice and will be added after the questionnaire:
+The stack is chosen. Remaining setup is tracked as GitHub issues; the unchecked items below are still to do:
 
-- [ ] `package.json`, lockfile, `.nvmrc`
+- [x] `package.json`, lockfile, `.nvmrc`
 - [ ] Lint/format config (ESLint + Prettier)
 - [ ] Git hooks (Husky + lint-staged + commitlint)
 - [ ] CI workflow (`.github/workflows/ci.yml`): lint, typecheck, test, build, audit, E2E
