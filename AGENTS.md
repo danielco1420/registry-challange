@@ -8,7 +8,7 @@ Instructions for AI coding agents (Codex, Cursor, Copilot, Claude, etc.). The fu
 - Docker Hub integration source of truth: [docs/API.md](docs/API.md).
 
 ## Setup / build / test
-Node 22 (`.nvmrc`) and pnpm (pinned in `package.json`; `corepack enable` or `corepack prepare pnpm@12.16.1 --activate`).
+Node 22.12 or newer (`.nvmrc`) and pnpm 12.16.1 (the version pinned in `package.json`). Node 22's bundled Corepack is too old for pnpm 12, so install pnpm directly with `npm install -g pnpm@12.16.1`, or first run `npm install -g corepack@latest && corepack enable`.
 
 ```bash
 pnpm install
