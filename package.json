@@ -15,7 +15,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "test": "node --experimental-strip-types --import ./scripts/register-ts-resolve-hook.mjs scripts/check-params.ts",
+    "test": "node --experimental-strip-types --import ./scripts/register-ts-resolve-hook.mjs scripts/check-params.ts && node --experimental-strip-types --import ./scripts/register-ts-resolve-hook.mjs scripts/check-rate-limit.ts",
     "prepare": "husky"
   },
   "lint-staged": {

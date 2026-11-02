@@ -21,6 +21,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Valibot schemas for every route param (`namespace`, `repo`, `tag`, `q`, `page`, `pageSize`, `sort`, `badge`, `ordering`, tag filter) and a helper that turns a failed parse into a `400` JSON error (`app/lib/params.ts`, `app/lib/validate.ts`).
 - `pnpm test`: runs the `app/lib/params.cases.ts` table against the schemas (dependency-free stand-in until Vitest lands; `scripts/check-params.ts`).
 - Typed env config (`app/server/config.server.ts`), validated with Valibot at startup. Invalid values, including `UPSTREAM_BUDGET_PER_MIN` above 150, stop the server with a clear message.
+- Per-client rate limiter (`app/server/rateLimit.server.ts`): `RATE_LIMIT_MAX` requests per `RATE_LIMIT_WINDOW_MS` per client IP, answering 429 with `Retry-After`, with bounded memory. Ready for `/api/*` routes and page loaders to call; not wired into them yet.
+- `TRUST_PROXY_HOPS` env var (default `0`): how many reverse proxies' `X-Forwarded-For` entries to trust when resolving the client IP.
 
 ### Fixed
 - `searchParamsToObject` now keeps the first occurrence of a repeated query key even when it's empty, instead of falling through to a later value (e.g. `?sort=&sort=stars` now keeps `sort` missing).

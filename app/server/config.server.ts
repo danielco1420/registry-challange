@@ -25,6 +25,9 @@ function intVar(defaultValue: number, min: number, max: number = Number.MAX_SAFE
   );
 }
 
+/** More reverse proxies than this in front of the app is almost certainly a misconfiguration. */
+const MAX_TRUST_PROXY_HOPS = 10;
+
 /** Node timers (setTimeout, AbortSignal.timeout) treat larger delays as 1 ms. */
 const MAX_TIMER_MS = 2_147_483_647;
 
@@ -74,6 +77,7 @@ const EnvSchema = v.object({
 
   RATE_LIMIT_WINDOW_MS: intVar(60_000, 1, MAX_TIMER_MS),
   RATE_LIMIT_MAX: intVar(60, 1),
+  TRUST_PROXY_HOPS: intVar(0, 0, MAX_TRUST_PROXY_HOPS),
 
   UPSTREAM_BUDGET_PER_MIN: intVar(MAX_UPSTREAM_BUDGET_PER_MIN, 1, MAX_UPSTREAM_BUDGET_PER_MIN),
 });
@@ -100,6 +104,11 @@ export interface Config {
   rateLimit: {
     windowMs: number;
     max: number;
+    /**
+     * How many reverse proxies sit in front of the app and append to
+     * `X-Forwarded-For`. 0 (default) means the header is never trusted.
+     */
+    trustProxyHops: number;
   };
 }
 
@@ -156,6 +165,7 @@ export function parseEnv(source: Record<string, string | undefined>): Config {
     rateLimit: {
       windowMs: env.RATE_LIMIT_WINDOW_MS,
       max: env.RATE_LIMIT_MAX,
+      trustProxyHops: env.TRUST_PROXY_HOPS,
     },
   };
 }
