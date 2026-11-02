@@ -13,7 +13,7 @@
 
    Example: `feat/tag-filter`.
 3. Keep PRs small and focused, with one logical change per PR.
-4. Squash-merge once checks pass and the PR is reviewed.
+4. Merge with a merge commit (no squash) once checks pass and the PR is reviewed.
 
 ## Commit messages: [Conventional Commits](https://www.conventionalcommits.org/)
 

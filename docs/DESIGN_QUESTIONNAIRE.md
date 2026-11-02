@@ -9,244 +9,254 @@ We go through these one at a time. For each question:
 
 Status legend: ⬜ open · ✅ decided
 
+All questions answered on 2026-11-02. Significant decisions are recorded in [ADR-0002](adr/0002-react-router-v7-single-app.md) (stack) and [ADR-0003](adr/0003-server-cache-and-upstream-failures.md) (caching and upstream failures).
+
 ---
 
 ## A. Architecture & stack
 
-### A1. ⬜ Backend proxy form
+### A1. ✅ Backend proxy form
 A proxy is required because Docker Hub has no CORS headers ([ADR-0001](adr/0001-backend-proxy-for-cors.md)).
 Options: Next.js route handlers · Node + Express · Node + Fastify · serverless function (Vercel/Netlify) · Vite dev proxy only (local-only; not deployable).
 *Rec:* Next.js route handlers, or Vite + a small Fastify server.
-**Answer:**
+**Answer:** React Router v7 (framework mode) resource routes serve `/api/*` from the same Node server as the UI.
+**Why:** One deployable; server loaders can reuse the same upstream client and cache directly. See [ADR-0002](adr/0002-react-router-v7-single-app.md).
 
-### A2. ⬜ Frontend framework
+### A2. ✅ Frontend framework
 Options: React · Vue · Svelte · Angular.
 *Rec:* React.
-**Answer:**
+**Answer:** React.
 
-### A3. ⬜ Meta-framework vs SPA
+### A3. ✅ Meta-framework vs SPA
 Options: Next.js (App Router, SSR) · Remix/React Router · Vite SPA.
 Consider SSR/SEO for repo pages and whether the proxy lives in the same app.
-**Answer:**
+**Answer:** React Router v7 framework mode, with SSR.
+**Why:** SSR for shareable repo pages, web-standard loaders/actions, and the proxy lives in the same app.
 
-### A4. ⬜ TypeScript strict mode
+### A4. ✅ TypeScript strict mode
 *Rec:* yes, `strict: true`.
-**Answer:**
+**Answer:** `strict: true` plus `noUncheckedIndexedAccess`.
 
-### A5. ⬜ Repo layout
+### A5. ✅ Repo layout
 Options: single app · pnpm workspace (`apps/web`, `apps/api`, `packages/shared`).
 *Rec:* single app, unless the proxy is a separate server.
-**Answer:**
+**Answer:** Single app. Server-only code lives in `*.server.ts` modules so it never reaches the client bundle.
 
-### A6. ⬜ Package manager & Node version
+### A6. ✅ Package manager & Node version
 Options: pnpm · npm · yarn. Node LTS version pinned in `.nvmrc`.
 *Rec:* pnpm, Node 22 LTS.
-**Answer:**
+**Answer:** pnpm (pinned via `packageManager` in `package.json`), Node 22 LTS in `.nvmrc`.
 
 ---
 
 ## B. Data fetching & state
 
-### B7. ⬜ Server-state library
+### B7. ✅ Server-state library
 Options: TanStack Query · SWR · RTK Query · plain fetch.
 *Rec:* TanStack Query.
-**Answer:**
+**Answer:** None. React Router loaders for page data, `useFetcher` for "Load more" and autocomplete.
+**Why:** Loaders already handle fetching, revalidation and pending states; caching lives on the server (B9).
 
-### B8. ⬜ Client state (theme, recent searches, favorites)
+### B8. ✅ Client state (theme, recent searches, favorites)
 Options: none (URL + localStorage) · React Context · Zustand.
-**Answer:**
+**Answer:** No state library. URL for view state (B13), small hooks around `localStorage` for recent searches and favorites, theme in a cookie so SSR renders the right theme without a flash.
 
-### B9. ⬜ Server-side caching
+### B9. ✅ Server-side caching
 Options: in-memory LRU · Redis · HTTP `Cache-Control` + CDN · a combination.
 TTLs to set: popular (≈10 min) · search (≈1 min) · repo (≈5 min) · tags (≈2 min) · publisher (≈1 h).
-**Answer:**
+**Answer:** In-memory LRU (max entries from `CACHE_MAX_ENTRIES`) with single-flight per key and stale-while-revalidate, plus `Cache-Control` headers on `/api/*` responses. TTLs as listed: popular 10 min, search 1 min, repo 5 min, tags 2 min, publisher 1 h (configurable via env). See [ADR-0003](adr/0003-server-cache-and-upstream-failures.md).
 
-### B10. ⬜ Runtime validation of upstream responses
+### B10. ✅ Runtime validation of upstream responses
 Zod schemas protect against changes to the undocumented API.
 *Rec:* yes.
-**Answer:**
+**Answer:** Yes, with **Valibot** instead of Zod. Used for upstream responses and for our own route params.
+**Why:** Same safety, smaller and tree-shakeable, so the shared schemas stay cheap if any reach the client.
 
-### B11. ⬜ Search interaction
+### B11. ✅ Search interaction
 Options: debounced as-you-type · submit-only · both. Autocomplete via `/api/search/v4/suggestions`?
-**Answer:**
+**Answer:** Submit navigates to the results page. A debounced (~250 ms) autocomplete dropdown uses `/api/search/v4/suggestions` through a new allowlisted proxy route.
+**Follow-up:** add the suggestions route to the allowlist in [API.md](API.md) and the hard rules when implemented.
 
-### B12. ⬜ Pagination style
+### B12. ✅ Pagination style
 Separately for search results and for tags. Options: numbered pages · "Load more" · infinite scroll.
-**Answer:**
+**Answer:** Search results: numbered pages (`page` in the URL). Tags: "Load more".
 
-### B13. ⬜ URL as state
+### B13. ✅ URL as state
 Put `q`, `sort`, `page`, and the tag filter in the query string, so links can be shared and Back/Forward works.
 *Rec:* yes.
-**Answer:**
+**Answer:** Yes.
 
 ---
 
 ## C. Routing & URLs
 
-### C14. ⬜ URL scheme
+### C14. ✅ URL scheme
 Options: mirror Hub (`/r/{ns}/{repo}`, `/_/{repo}` for official images) · `/repo/{ns}/{repo}`.
-**Answer:**
+**Answer:** Mirror Hub: `/r/{ns}/{repo}`, and `/_/{repo}` for official images (`/r/library/{repo}` redirects to it).
 
-### C15. ⬜ Deep-linkable tag view
+### C15. ✅ Deep-linkable tag view
 `/r/{ns}/{repo}/tags/{tag}` (uses the single-tag endpoint)?
-**Answer:**
+**Answer:** Yes. Shows digest, pull commands and the per-architecture breakdown.
 
-### C16. ⬜ 404 and error pages
+### C16. ✅ 404 and error pages
 Custom design? Separate states for "repo not found" and "Docker Hub unavailable"?
-**Answer:**
+**Answer:** Distinct states: generic 404, "repository not found", and "Docker Hub unavailable / rate limited" with a retry action.
 
 ---
 
 ## D. UI & visual design
 
-### D17. ⬜ Component library
+### D17. ✅ Component library
 Options: shadcn/ui (Radix) + Tailwind · MUI · Chakra · Mantine · custom.
-**Answer:**
+**Answer:** shadcn/ui (Radix primitives).
 
-### D18. ⬜ Styling approach
+### D18. ✅ Styling approach
 Options: Tailwind · CSS Modules · CSS-in-JS.
-**Answer:**
+**Answer:** Tailwind CSS v4.
 
-### D19. ⬜ Dark mode
+### D19. ✅ Dark mode
 Options: system preference only · toggle · both (toggle that defaults to system).
-**Answer:**
+**Answer:** Toggle with Light / Dark / System, defaulting to System. Stored in a cookie (see B8).
 
-### D20. ⬜ Brand
+### D20. ✅ Brand
 Palette (Docker-like blue or our own)? Typeface? Logo or name for the app?
-**Answer:**
+**Answer:** App name **Danny's Dockers**. Neutral grays with a light green accent instead of Docker blue. No Docker logo or trademarks.
+**Follow-up:** check the green accent's contrast against both themes for text and focus rings.
 
-### D21. ⬜ Explore layout
+### D21. ✅ Explore layout
 Options: card grid · list rows. Columns per breakpoint (e.g. 1 / 2 / 3 / 4)?
-**Answer:**
+**Answer:** Card grid everywhere (popular and search results). Columns 2 / 3 / 4 from `md` / `lg` / `xl` (see E29 for the minimum width).
 
-### D22. ⬜ Card contents
+### D22. ✅ Card contents
 Choose from: logo · name · owner · description · badge · pulls · stars · updated · arch chips.
-**Answer:**
+**Answer:** Logo, name, owner, description. Plus the official / verified badge (from E28).
+**Why:** Keeps cards clean; stats live on the repository page.
 
-### D23. ⬜ Tags layout
+### D23. ✅ Tags layout
 Options: table with sortable columns · cards. Expandable row for the per-architecture breakdown?
-**Answer:**
+**Answer:** Table with sortable columns (name, last updated, size). Rows expand to show the per-architecture breakdown (OS/arch, digest, size).
 
-### D24. ⬜ Repository overview
+### D24. ✅ Repository overview
 Render `full_description` Markdown (sanitized)? Tabs "Overview | Tags" like Hub, or a single page?
-**Answer:**
+**Answer:** Tabs "Overview | Tags", each URL-addressable (`/r/{ns}/{repo}` and `/r/{ns}/{repo}/tags`). Overview renders sanitized `full_description` Markdown.
 
-### D25. ⬜ Loading, empty and error states
+### D25. ✅ Loading, empty and error states
 Skeletons or spinners? Illustrations? Copy text for each state?
-**Answer:**
+**Answer:** Spinners with short text. No illustrations. Every data view has a loading, empty and error state with a clear next action (retry, clear filters).
 
-### D26. ⬜ Formatting
+### D26. ✅ Formatting
 - Dates: relative ("3 days ago") with absolute on hover?
 - Sizes: MB (decimal) or MiB (binary)?
 - Numbers: compact (1.2B)?
 
-**Answer:**
+**Answer:** Relative dates with the absolute date on hover; decimal units (MB, like Hub); compact numbers (1.2B). All via `Intl`.
 
-### D27. ⬜ Copy-command feedback
+### D27. ✅ Copy-command feedback
 Options: inline "Copied ✓" · toast. Fallback when the Clipboard API isn't available?
-**Answer:**
+**Answer:** Inline: the button shows "Copied ✓" for ~2 s, announced through `aria-live`. Fallback: select the command in a read-only input so the user can copy it manually.
 
 ---
 
 ## E. Product extras ("Product Thinking" in the brief)
 
-### E28. ⬜ Which extras make the cut?
+### E28. ✅ Which extras make the cut?
 Tick the ones we're building:
-- [ ] Tag name filter (upstream `name=`) and sort (`ordering=`)
-- [ ] Copy pull-by-digest command
+- [x] Tag name filter (upstream `name=`) and sort (`ordering=`)
+- [x] Copy pull-by-digest command
 - [ ] Architecture / OS chips
-- [ ] Official / verified publisher badges
-- [ ] Recent searches (localStorage)
-- [ ] Favorites (localStorage)
+- [x] Official / verified publisher badges
+- [x] Recent searches (localStorage)
+- [x] Favorites (localStorage)
 - [ ] `/` keyboard shortcut to focus search
 - [ ] "View on Docker Hub" link
 - [ ] Pulls and stars stats
-- [ ] Tag deep links
-- [ ] Sort search results (relevance / pulls / stars / updated)
-- [ ] Badge filter on search
-- [ ] Autocomplete suggestions
-- [ ] Per-architecture size breakdown
+- [x] Tag deep links
+- [x] Sort search results (relevance / pulls / stars / updated)
+- [x] Badge filter on search
+- [x] Autocomplete suggestions
+- [x] Per-architecture size breakdown
 
-**Answer / notes:**
+**Answer / notes:** Per-architecture breakdown is in because the expandable tag rows (D23) and the tag page (C15) depend on it. Favorites show on Explore.
 
-### E29. ⬜ Responsive strategy
+### E29. ✅ Responsive strategy
 Mobile-first or desktop-first? Minimum supported width (e.g. 360 px)?
-**Answer:**
+**Answer:** Desktop-first, minimum supported width 768 px. Narrower screens should still work but aren't polished.
 
-### E30. ⬜ Accessibility target
+### E30. ✅ Accessibility target
 WCAG 2.1 AA? Full keyboard navigation, focus rings, `aria-live` on copy feedback?
 *Rec:* AA.
-**Answer:**
+**Answer:** Best effort, no formal target: semantic HTML, Radix primitives, visible focus rings, `aria-live` on copy feedback.
 
-### E31. ⬜ Internationalization
+### E31. ✅ Internationalization
 English only, or i18n-ready (message catalog, `Intl` formatting)?
-**Answer:**
+**Answer:** i18n-ready with **react-i18next**. English catalog only for now; dates and numbers through `Intl`.
 
-### E32. ⬜ Analytics
+### E32. ✅ Analytics
 None · privacy-friendly (Plausible/Umami).
-**Answer:**
+**Answer:** None.
 
 ---
 
 ## F. Quality & delivery
 
-### F33. ⬜ Testing
+### F33. ✅ Testing
 - Unit: Vitest + Testing Library?
 - API mocks: MSW?
 - End-to-end: Playwright?
 - Coverage target?
 
-**Answer:**
+**Answer:** Vitest + Testing Library for unit/component tests, MSW with recorded Docker Hub fixtures, Playwright for a few end-to-end flows. Coverage target ~80% on server and lib code; no global gate on UI components.
 
-### F34. ⬜ Lint & format
+### F34. ✅ Lint & format
 Options: ESLint + Prettier · Biome. Pre-commit hooks with Husky + lint-staged?
-**Answer:**
+**Answer:** ESLint + Prettier, with Husky + lint-staged pre-commit hooks.
 
-### F35. ⬜ Commit convention
+### F35. ✅ Commit convention
 Conventional Commits enforced by commitlint?
 *Rec:* yes (already in [CONTRIBUTING.md](../CONTRIBUTING.md)).
-**Answer:**
+**Answer:** Yes, commitlint on the `commit-msg` hook.
 
-### F36. ⬜ Branch strategy
+### F36. ✅ Branch strategy
 Trunk-based with short-lived branches and PRs into `main`? Squash merges?
-**Answer:**
+**Answer:** Trunk-based with short-lived branches and PRs into `main`. **Merge commits** (no squash), so branch history is kept.
 
-### F37. ⬜ CI checks
+### F37. ✅ CI checks
 GitHub Actions on every PR: lint · typecheck · test · build · `audit`?
-**Answer:**
+**Answer:** GitHub Actions on every PR: lint, typecheck, test, build, `pnpm audit` (high and above), and a Playwright E2E job.
 
-### F38. ⬜ Deployment
+### F38. ✅ Deployment
 Options: Vercel · Netlify · Fly.io · Render · Docker image only. Preview deploys per PR?
-**Answer:**
+**Answer:** Docker image only. No hosted deployment or preview deploys.
 
-### F39. ⬜ Containerize for local run
+### F39. ✅ Containerize for local run
 Dockerfile + docker-compose (fits the theme)?
-**Answer:**
+**Answer:** Yes. Multi-stage Dockerfile running as a non-root user, plus `docker-compose.yml` so reviewers can run `docker compose up`.
 
-### F40. ⬜ Observability
+### F40. ✅ Observability
 Sentry (or none)? Structured logging (pino) on the proxy? Logging upstream rate-limit headers?
-**Answer:**
+**Answer:** Console logging only. No Sentry, no pino.
 
-### F41. ⬜ Versioning & changelog
+### F41. ✅ Versioning & changelog
 SemVer + Keep a Changelog. Write entries by hand, or use release-please / changesets?
-**Answer:**
+**Answer:** SemVer + Keep a Changelog, entries written by hand in each PR.
 
 ---
 
 ## G. Security & resilience (see [RISKS.md](RISKS.md))
 
-### G42. ⬜ Proxy rate limiting
+### G42. ✅ Proxy rate limiting
 Per-IP limits (e.g. 60 req/min) and the library or edge rule to enforce them.
-**Answer:**
+**Answer:** In-app per-IP limit of 60 req/min (`RATE_LIMIT_MAX` / `RATE_LIMIT_WINDOW_MS`) on `/api/*`, returning 429 with `Retry-After`. Caps on `page` and `page_size`.
 
-### G43. ⬜ Security headers & CSP
+### G43. ✅ Security headers & CSP
 Allowed `img-src` hosts: `*.cloudfront.net` (logos), `www.gravatar.com` (avatars). HSTS, `frame-ancestors 'none'`, `Referrer-Policy`.
-**Answer:**
+**Answer:** Strict CSP: `default-src 'self'`, nonce-based scripts, `img-src 'self'` plus the hosts above (extend as new logo hosts show up). Also HSTS, `frame-ancestors 'none'`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Content-Type-Options: nosniff`.
 
-### G44. ⬜ Upstream failure behavior
+### G44. ✅ Upstream failure behavior
 On 429 or 5xx: serve stale cache · show a degraded banner · retry with backoff · all of these?
-**Answer:**
+**Answer:** All of these: one retry with backoff (honoring `Retry-After`), serve stale cache when available, and show a degraded banner when data is stale or upstream is failing. See [ADR-0003](adr/0003-server-cache-and-upstream-failures.md).
 
-### G45. ⬜ Optional Docker Hub token
+### G45. ✅ Optional Docker Hub token
 Use a PAT (server env var only) to raise limits, or stay anonymous?
-**Answer:**
+**Answer:** Anonymous only. No token code path; `DOCKERHUB_PAT` is removed from `.env.example`.
+**Why:** Caching keeps us well under the anonymous limit, and no secrets means nothing to leak.

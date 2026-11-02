@@ -13,5 +13,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Architecture stub, project summary skeleton, and ADR-0001 (backend proxy, because Docker Hub has no CORS).
 - Contribution rules, AI assistant guides (`CLAUDE.md`, `AGENTS.md`), GitHub templates, Dependabot, security policy, and editor/git config.
 
+### Added
+- Answers to every design questionnaire question; ADR-0002 (React Router v7 single app) and ADR-0003 (server cache and upstream failure handling).
+
 ### Changed
+- Calling Docker Hub anonymously: removed `DOCKERHUB_PAT` from `.env.example`.
+- PRs now merge with merge commits instead of squash.
 - Moved the assignment brief from `README.md` to `docs/ASSIGNMENT.md`. `README.md` now describes the project.
