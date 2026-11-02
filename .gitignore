@@ -37,3 +37,6 @@ Thumbs.db
 # Misc
 *.tsbuildinfo
 .cache/
+
+# React Router
+.react-router/

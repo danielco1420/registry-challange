@@ -10,7 +10,7 @@ Registry UI: a Docker Hub–like web app with two pages:
 
 The brief is in [docs/ASSIGNMENT.md](docs/ASSIGNMENT.md).
 
-**Current phase:** foundation done; design decisions are in [docs/DESIGN_QUESTIONNAIRE.md](docs/DESIGN_QUESTIONNAIRE.md). Stack: React Router v7 (framework mode, SSR) single app, TypeScript strict, pnpm, Node 22, shadcn/ui + Tailwind, Valibot ([ADR-0002](docs/adr/0002-react-router-v7-single-app.md)). Don't add libraries the questionnaire doesn't name without asking.
+**Current phase:** app scaffolded; design decisions are in [docs/DESIGN_QUESTIONNAIRE.md](docs/DESIGN_QUESTIONNAIRE.md). Stack: React Router v7 (framework mode, SSR) single app, TypeScript strict, pnpm, Node 22, shadcn/ui + Tailwind, Valibot ([ADR-0002](docs/adr/0002-react-router-v7-single-app.md)). Don't add libraries the questionnaire doesn't name without asking.
 
 ## Read first
 
@@ -21,7 +21,17 @@ The brief is in [docs/ASSIGNMENT.md](docs/ASSIGNMENT.md).
 
 ## Commands
 
-_Pending implementation: the stack is chosen (pnpm, Node 22) but the app is not scaffolded yet. Install, dev, lint, typecheck, test and build commands will be added here with the scaffold._
+Node 22 (`.nvmrc`) and pnpm (pinned in `package.json`; `corepack enable` or `corepack prepare pnpm@12.16.1 --activate`).
+
+```bash
+pnpm install
+cp .env.example .env   # optional; defaults apply
+pnpm dev               # http://localhost:5173
+pnpm typecheck         # react-router typegen && tsc
+pnpm build && pnpm start   # production server, PORT defaults to 3000
+```
+
+Lint, test and e2e commands are added by their own tasks. Server-only code goes in `app/server/*.server.ts`.
 
 ## Hard rules
 

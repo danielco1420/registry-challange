@@ -6,7 +6,7 @@ A simplified Docker Hub–style web app for browsing and searching public contai
 
 ## Status
 
-🟡 **Foundation phase.** The API exploration, risk analysis and repo conventions are done. The tech stack and UI design are being decided in [docs/DESIGN_QUESTIONNAIRE.md](docs/DESIGN_QUESTIONNAIRE.md). No application code exists yet.
+🟡 **Scaffold phase.** Decisions are recorded in [docs/DESIGN_QUESTIONNAIRE.md](docs/DESIGN_QUESTIONNAIRE.md). The app skeleton runs; features are tracked as GitHub issues.
 
 ## Features (planned)
 
@@ -29,13 +29,13 @@ Docker Hub doesn't send CORS headers, so the browser can't call it directly. We 
 
 ## Getting started
 
-> Filled in once the stack is chosen (questionnaire section A).
+Requires Node 22 and pnpm (`corepack enable`).
 
 ```bash
-# placeholder: e.g.
-# pnpm install
-# cp .env.example .env
-# pnpm dev
+pnpm install
+cp .env.example .env   # optional; defaults apply
+pnpm dev               # http://localhost:5173
+pnpm build && pnpm start
 ```
 
 Environment variables are documented in [.env.example](.env.example).
