@@ -1,14 +1,15 @@
 /**
- * Tests for the Docker Hub upstream client, run by `pnpm test` with Node's
- * built-in test runner. Vitest and MSW aren't set up yet (T03, #5), so a local
- * `node:http` server stands in for Docker Hub: the client uses real `fetch`
- * and a real timeout. Only the retry wait is injected, so tests don't sleep.
+ * Tests for the Docker Hub upstream client. Most run against a local `node:http`
+ * server standing in for Docker Hub, so the client uses real `fetch`, a real
+ * timeout and real redirect handling (MSW lets loopback requests through). Only
+ * the retry wait is injected, so tests don't sleep. The last block uses MSW.
  */
-import assert from 'node:assert/strict';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { after, before, beforeEach, describe, it } from 'node:test';
+import { http, HttpResponse } from 'msw';
 import * as v from 'valibot';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { server as msw } from '../../test/msw/server';
 import {
   MAX_ATTEMPTS,
   MAX_REPORTED_RETRY_AFTER_SECONDS,
@@ -65,7 +66,7 @@ const slow =
 const CLOUDFLARE_HTML =
   '<!DOCTYPE html><html><head><title>Just a moment...</title></head><body>cf challenge</body></html>';
 
-before(async () => {
+beforeAll(async () => {
   server = createServer((req, res) => {
     received.push(req);
     const handler = handlers.shift();
@@ -77,7 +78,7 @@ before(async () => {
   baseUrl = `http://127.0.0.1:${port}`;
 });
 
-after(async () => {
+afterAll(async () => {
   server.closeAllConnections();
   await new Promise<void>((resolve) => server.close(() => resolve()));
 });
@@ -117,14 +118,15 @@ async function rejectsWith(
   try {
     await promise;
   } catch (error) {
-    assert.ok(error instanceof UpstreamError, `expected UpstreamError, got ${String(error)}`);
-    assert.equal(error.kind, kind);
+    expect(error).toBeInstanceOf(UpstreamError);
+    const upstreamError = error as UpstreamError;
+    expect(upstreamError.kind).toBe(kind);
     for (const [key, value] of Object.entries(extra)) {
-      assert.equal(error[key as keyof typeof extra], value, key);
+      expect(upstreamError[key as keyof typeof extra], key).toBe(value);
     }
-    return error;
+    return upstreamError;
   }
-  assert.fail(`expected an UpstreamError of kind ${kind}`);
+  return expect.fail(`expected an UpstreamError of kind ${kind}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -136,59 +138,56 @@ describe('buildUpstreamUrl', () => {
   const href = (request: UpstreamRequest) => buildUpstreamUrl(base, request).href;
 
   it('maps search params to /api/search/v4', () => {
-    assert.equal(
+    expect(
       href({
         endpoint: 'search',
         query: { q: 'nginx', page: 3, pageSize: 25, sort: 'stars', badge: 'verified_publisher' },
       }),
+    ).toBe(
       'https://hub.docker.com/api/search/v4?query=nginx&from=50&size=25&sort=star_count&order=desc&badges=verified_publisher',
     );
   });
 
   it('builds the popular-10 query and omits sort for relevance', () => {
-    assert.equal(
+    expect(
       href({
         endpoint: 'search',
         query: { q: '', page: 1, pageSize: 10, sort: 'pulls', badge: 'official' },
       }),
+    ).toBe(
       'https://hub.docker.com/api/search/v4?query=&from=0&size=10&sort=pull_count&order=desc&badges=official',
     );
-    assert.equal(
+    expect(
       href({ endpoint: 'search', query: { q: 'a b&c', page: 1, pageSize: 5, sort: 'relevance' } }),
-      'https://hub.docker.com/api/search/v4?query=a+b%26c&from=0&size=5',
-    );
+    ).toBe('https://hub.docker.com/api/search/v4?query=a+b%26c&from=0&size=5');
   });
 
   it('encodes suggestions queries', () => {
-    assert.equal(
-      href({ endpoint: 'suggestions', q: 'ngï/../x' }),
+    expect(href({ endpoint: 'suggestions', q: 'ngï/../x' })).toBe(
       'https://hub.docker.com/api/search/v4/suggestions?query=ng%C3%AF%2F..%2Fx',
     );
   });
 
   it('builds repository, tags, tag and publisher paths', () => {
-    assert.equal(
-      href(repoRequest),
+    expect(href(repoRequest)).toBe(
       'https://hub.docker.com/v2/namespaces/library/repositories/nginx',
     );
-    assert.equal(
+    expect(
       href({
         endpoint: 'tags',
         params: { ns: 'fluent', repo: 'fluent-bit' },
         query: { page: 2, pageSize: 100, ordering: '-last_updated', name: 'alpine' },
       }),
+    ).toBe(
       'https://hub.docker.com/v2/namespaces/fluent/repositories/fluent-bit/tags?page=2&page_size=100&ordering=-last_updated&name=alpine',
     );
-    assert.equal(
+    expect(
       href({ endpoint: 'tag', params: { ns: 'library', repo: 'nginx', tag: '1.27.0-alpine' } }),
-      'https://hub.docker.com/v2/namespaces/library/repositories/nginx/tags/1.27.0-alpine',
-    );
-    assert.equal(
-      href({ endpoint: 'org', name: 'bitnami' }),
+    ).toBe('https://hub.docker.com/v2/namespaces/library/repositories/nginx/tags/1.27.0-alpine');
+    expect(href({ endpoint: 'org', name: 'bitnami' })).toBe(
       'https://hub.docker.com/v2/orgs/bitnami',
     );
-    assert.equal(
-      href({ endpoint: 'user', name: 'edsiper' }),
+    expect(href({ endpoint: 'user', name: 'edsiper' })).toBe(
       'https://hub.docker.com/v2/users/edsiper',
     );
   });
@@ -206,7 +205,7 @@ describe('buildUpstreamUrl', () => {
       { endpoint: 'user', name: '' },
     ];
     for (const request of bad) {
-      assert.throws(() => buildUpstreamUrl(base, request), TypeError, JSON.stringify(request));
+      expect(() => buildUpstreamUrl(base, request), JSON.stringify(request)).toThrow(TypeError);
     }
   });
 
@@ -216,10 +215,9 @@ describe('buildUpstreamUrl', () => {
       { page: 1, pageSize: 1000 },
       { page: 1.5, pageSize: 25 },
     ]) {
-      assert.throws(
-        () => buildUpstreamUrl(base, { endpoint: 'tags', params: { ns: 'a', repo: 'b' }, query }),
-        TypeError,
-      );
+      expect(() =>
+        buildUpstreamUrl(base, { endpoint: 'tags', params: { ns: 'a', repo: 'b' }, query }),
+      ).toThrow(TypeError);
     }
   });
 
@@ -236,13 +234,12 @@ describe('buildUpstreamUrl', () => {
       },
     ] as unknown as UpstreamRequest[];
     for (const request of bad) {
-      assert.throws(() => buildUpstreamUrl(base, request), TypeError, JSON.stringify(request));
+      expect(() => buildUpstreamUrl(base, request), JSON.stringify(request)).toThrow(TypeError);
     }
   });
 
   it('keeps only the origin of the base URL', () => {
-    assert.equal(
-      buildUpstreamUrl('https://hub.docker.com/', repoRequest).href,
+    expect(buildUpstreamUrl('https://hub.docker.com/', repoRequest).href).toBe(
       'https://hub.docker.com/v2/namespaces/library/repositories/nginx',
     );
   });
@@ -250,34 +247,34 @@ describe('buildUpstreamUrl', () => {
 
 describe('parseRetryAfter', () => {
   it('parses delta seconds and HTTP dates', () => {
-    assert.equal(parseRetryAfter(null), undefined);
-    assert.equal(parseRetryAfter('2'), 2000);
-    assert.equal(parseRetryAfter(' 0 '), 0);
-    assert.equal(parseRetryAfter('soon'), undefined);
+    expect(parseRetryAfter(null)).toBeUndefined();
+    expect(parseRetryAfter('2')).toBe(2000);
+    expect(parseRetryAfter(' 0 ')).toBe(0);
+    expect(parseRetryAfter('soon')).toBeUndefined();
     const now = Date.parse('2026-11-02T12:00:00Z');
-    assert.equal(parseRetryAfter('Mon, 02 Nov 2026 12:00:05 GMT', now), 5000);
-    assert.equal(parseRetryAfter('Mon, 02 Nov 2026 11:59:00 GMT', now), 0);
+    expect(parseRetryAfter('Mon, 02 Nov 2026 12:00:05 GMT', now)).toBe(5000);
+    expect(parseRetryAfter('Mon, 02 Nov 2026 11:59:00 GMT', now)).toBe(0);
   });
 
   it('rejects values Date.parse would misread', () => {
     for (const value of ['1.5', '-1', '1 2', 'Nov 2 2026', '2026-11-02T12:00:05Z']) {
-      assert.equal(parseRetryAfter(value), undefined, value);
+      expect(parseRetryAfter(value), value).toBeUndefined();
     }
   });
 
   it('clamps huge values instead of returning Infinity', () => {
-    assert.equal(parseRetryAfter('9'.repeat(400)), MAX_REPORTED_RETRY_AFTER_SECONDS * 1000);
+    expect(parseRetryAfter('9'.repeat(400))).toBe(MAX_REPORTED_RETRY_AFTER_SECONDS * 1000);
   });
 });
 
 describe('parseRateLimitReset', () => {
   it('turns a Unix reset time into a delay', () => {
     const now = Date.parse('2026-11-02T12:00:00Z');
-    assert.equal(parseRateLimitReset(null, now), undefined);
-    assert.equal(parseRateLimitReset(String(now / 1000 + 42), now), 42_000);
-    assert.equal(parseRateLimitReset(String(now / 1000 - 5), now), 0);
-    assert.equal(parseRateLimitReset('soon', now), undefined);
-    assert.equal(parseRateLimitReset('9'.repeat(400), now), undefined);
+    expect(parseRateLimitReset(null, now)).toBeUndefined();
+    expect(parseRateLimitReset(String(now / 1000 + 42), now)).toBe(42_000);
+    expect(parseRateLimitReset(String(now / 1000 - 5), now)).toBe(0);
+    expect(parseRateLimitReset('soon', now)).toBeUndefined();
+    expect(parseRateLimitReset('9'.repeat(400), now)).toBeUndefined();
   });
 });
 
@@ -289,26 +286,26 @@ describe('createDockerHubClient', () => {
   it('200: returns the validated body and sends our headers', async () => {
     respond(json(200, { ...NGINX, extra: 'ignored' }));
     const data = await client().get(repoRequest, RepoSchema);
-    assert.deepEqual(data, NGINX);
-    assert.equal(received.length, 1);
-    assert.equal(received[0]?.method, 'GET');
-    assert.equal(received[0]?.url, '/v2/namespaces/library/repositories/nginx');
-    assert.equal(received[0]?.headers['user-agent'], USER_AGENT);
-    assert.equal(received[0]?.headers.accept, 'application/json');
-    assert.deepEqual(sleeps, []);
+    expect(data).toEqual(NGINX);
+    expect(received.length).toBe(1);
+    expect(received[0]?.method).toBe('GET');
+    expect(received[0]?.url).toBe('/v2/namespaces/library/repositories/nginx');
+    expect(received[0]?.headers['user-agent']).toBe(USER_AGENT);
+    expect(received[0]?.headers.accept).toBe('application/json');
+    expect(sleeps).toEqual([]);
   });
 
   it('404 "object not found": not_found, no retry', async () => {
     respond(json(404, { message: 'object not found', errinfo: {} }));
     await rejectsWith(client().get(repoRequest, RepoSchema), 'not_found', { status: 404 });
-    assert.equal(received.length, 1);
+    expect(received.length).toBe(1);
   });
 
   it('429 with Retry-After: waits that long, then retries', async () => {
     respond(json(429, { message: 'Too Many Requests' }, { 'Retry-After': '2' }), json(200, NGINX));
-    assert.deepEqual(await client().get(repoRequest, RepoSchema), NGINX);
-    assert.equal(received.length, 2);
-    assert.deepEqual(sleeps, [2000]);
+    expect(await client().get(repoRequest, RepoSchema)).toEqual(NGINX);
+    expect(received.length).toBe(2);
+    expect(sleeps).toEqual([2000]);
   });
 
   it('429 twice: rate_limited with retryAfterSeconds', async () => {
@@ -320,8 +317,8 @@ describe('createDockerHubClient', () => {
       status: 429,
       retryAfterSeconds: 3,
     });
-    assert.equal(received.length, MAX_ATTEMPTS);
-    assert.deepEqual(sleeps, [1000]);
+    expect(received.length).toBe(MAX_ATTEMPTS);
+    expect(sleeps).toEqual([1000]);
   });
 
   it('429 with a long Retry-After: fails fast without retrying', async () => {
@@ -330,8 +327,8 @@ describe('createDockerHubClient', () => {
       status: 429,
       retryAfterSeconds: 60,
     });
-    assert.equal(received.length, 1);
-    assert.deepEqual(sleeps, []);
+    expect(received.length).toBe(1);
+    expect(sleeps).toEqual([]);
   });
 
   it('429 without Retry-After: uses x-ratelimit-reset and fails fast', async () => {
@@ -340,35 +337,31 @@ describe('createDockerHubClient', () => {
     const error = await rejectsWith(client().get(repoRequest, RepoSchema), 'rate_limited', {
       status: 429,
     });
-    assert.ok(
-      error.retryAfterSeconds !== undefined &&
-        error.retryAfterSeconds >= 58 &&
-        error.retryAfterSeconds <= 60,
-      `retryAfterSeconds ${error.retryAfterSeconds}`,
-    );
-    assert.equal(received.length, 1);
-    assert.deepEqual(sleeps, []);
+    expect(error.retryAfterSeconds).toBeGreaterThanOrEqual(58);
+    expect(error.retryAfterSeconds).toBeLessThanOrEqual(60);
+    expect(received.length).toBe(1);
+    expect(sleeps).toEqual([]);
   });
 
   it('429 with no rate-limit headers: one retry after the default backoff', async () => {
     respond(json(429, { message: 'Too Many Requests' }), json(200, NGINX));
-    assert.deepEqual(await client().get(repoRequest, RepoSchema), NGINX);
-    assert.equal(received.length, 2);
-    assert.deepEqual(sleeps, [RETRY_BACKOFF_BASE_MS + 125]);
+    expect(await client().get(repoRequest, RepoSchema)).toEqual(NGINX);
+    expect(received.length).toBe(2);
+    expect(sleeps).toEqual([RETRY_BACKOFF_BASE_MS + 125]);
   });
 
   it('5xx then 200: retries once after a jittered backoff', async () => {
     respond(json(503, { message: 'unavailable' }), json(200, NGINX));
-    assert.deepEqual(await client().get(repoRequest, RepoSchema), NGINX);
-    assert.equal(received.length, 2);
-    assert.equal(sleeps.length, 1);
-    assert.ok(sleeps[0]! >= RETRY_BACKOFF_BASE_MS, `backoff ${sleeps[0]}`);
+    expect(await client().get(repoRequest, RepoSchema)).toEqual(NGINX);
+    expect(received.length).toBe(2);
+    expect(sleeps.length).toBe(1);
+    expect(sleeps[0]).toBeGreaterThanOrEqual(RETRY_BACKOFF_BASE_MS);
   });
 
   it('5xx twice: unavailable', async () => {
     respond(json(500, { message: 'boom' }), json(502, { message: 'bad gateway' }));
     await rejectsWith(client().get(repoRequest, RepoSchema), 'unavailable', { status: 502 });
-    assert.equal(received.length, MAX_ATTEMPTS);
+    expect(received.length).toBe(MAX_ATTEMPTS);
   });
 
   it('timeout: retries once, then unavailable', async () => {
@@ -378,14 +371,14 @@ describe('createDockerHubClient', () => {
       'unavailable',
       { status: undefined },
     );
-    assert.match(error.message, /timed out/);
-    assert.equal(received.length, MAX_ATTEMPTS);
+    expect(error.message).toMatch(/timed out/);
+    expect(received.length).toBe(MAX_ATTEMPTS);
   });
 
   it('timeout then 200: recovers on the retry', async () => {
     respond(slow(500), json(200, NGINX));
-    assert.deepEqual(await client({ timeoutMs: 50 }).get(repoRequest, RepoSchema), NGINX);
-    assert.equal(received.length, 2);
+    expect(await client({ timeoutMs: 50 }).get(repoRequest, RepoSchema)).toEqual(NGINX);
+    expect(received.length).toBe(2);
   });
 
   it('HTML body (Cloudflare) on 200: bad_payload after one retry', async () => {
@@ -396,8 +389,8 @@ describe('createDockerHubClient', () => {
     const error = await rejectsWith(client().get(repoRequest, RepoSchema), 'bad_payload', {
       status: 200,
     });
-    assert.doesNotMatch(error.message, /<html|cf challenge/i);
-    assert.equal(received.length, MAX_ATTEMPTS);
+    expect(error.message).not.toMatch(/<html|cf challenge/i);
+    expect(received.length).toBe(MAX_ATTEMPTS);
   });
 
   it('HTML body labelled as JSON: bad_payload', async () => {
@@ -407,20 +400,20 @@ describe('createDockerHubClient', () => {
     );
     const error = await rejectsWith(client().get(repoRequest, RepoSchema), 'bad_payload');
     // Neither the message nor the cause may quote the upstream body.
-    assert.doesNotMatch(`${error.message} ${String(error.cause)}`, /DOCTYPE|cf challenge/i);
+    expect(`${error.message} ${String(error.cause)}`).not.toMatch(/DOCTYPE|cf challenge/i);
   });
 
   it('HTML 403 challenge: unavailable, no retry', async () => {
     respond(raw(403, 'text/html', CLOUDFLARE_HTML));
     await rejectsWith(client().get(repoRequest, RepoSchema), 'unavailable', { status: 403 });
-    assert.equal(received.length, 1);
+    expect(received.length).toBe(1);
   });
 
   it('JSON that fails the schema: bad_payload, no retry', async () => {
     respond(json(200, { namespace: 'library', name: 'nginx', pull_count: '1B+' }));
     const error = await rejectsWith(client().get(repoRequest, RepoSchema), 'bad_payload');
-    assert.ok(error.cause instanceof v.ValiError);
-    assert.equal(received.length, 1);
+    expect(error.cause).toBeInstanceOf(v.ValiError);
+    expect(received.length).toBe(1);
   });
 
   it('redirect: unavailable, not followed', async () => {
@@ -429,7 +422,7 @@ describe('createDockerHubClient', () => {
       res.end();
     });
     await rejectsWith(client().get(repoRequest, RepoSchema), 'unavailable', { status: 301 });
-    assert.equal(received.length, 1);
+    expect(received.length).toBe(1);
   });
 
   it('network error: unavailable after one retry', async () => {
@@ -439,7 +432,7 @@ describe('createDockerHubClient', () => {
       throw new TypeError('fetch failed');
     };
     await rejectsWith(client({ fetch: failingFetch }).get(repoRequest, RepoSchema), 'unavailable');
-    assert.equal(calls, MAX_ATTEMPTS);
+    expect(calls).toBe(MAX_ATTEMPTS);
   });
 
   it('invalid params never reach the network', async () => {
@@ -448,13 +441,43 @@ describe('createDockerHubClient', () => {
       calls += 1;
       return new Response('{}');
     };
-    await assert.rejects(
+    await expect(
       client({ fetch: countingFetch }).get(
         { endpoint: 'repository', params: { ns: 'library', repo: '../../v2/users/x' } },
         RepoSchema,
       ),
-      TypeError,
+    ).rejects.toThrow(TypeError);
+    expect(calls).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Against a mocked Docker Hub (MSW)
+// ---------------------------------------------------------------------------
+
+describe('createDockerHubClient with MSW', () => {
+  const HUB = 'https://hub.docker.com';
+
+  it('reads a repository from the mocked Docker Hub origin', async () => {
+    let userAgent: string | null = null;
+    msw.use(
+      http.get(`${HUB}/v2/namespaces/:ns/repositories/:repo`, ({ request, params }) => {
+        userAgent = request.headers.get('User-Agent');
+        return HttpResponse.json({ ...NGINX, namespace: params.ns, name: params.repo });
+      }),
     );
-    assert.equal(calls, 0);
+    expect(await client({ baseUrl: HUB }).get(repoRequest, RepoSchema)).toEqual(NGINX);
+    expect(userAgent).toBe(USER_AGENT);
+  });
+
+  it('maps a mocked 404 to not_found', async () => {
+    msw.use(
+      http.get(`${HUB}/v2/namespaces/:ns/repositories/:repo`, () =>
+        HttpResponse.json({ message: 'object not found', errinfo: {} }, { status: 404 }),
+      ),
+    );
+    await rejectsWith(client({ baseUrl: HUB }).get(repoRequest, RepoSchema), 'not_found', {
+      status: 404,
+    });
   });
 });
