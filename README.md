@@ -38,7 +38,19 @@ pnpm dev               # http://localhost:5173
 pnpm build && pnpm start
 ```
 
-Environment variables are documented in [.env.example](.env.example).
+Environment variables are documented in [.env.example](.env.example). All are optional; unset or empty values use the defaults shown there.
+
+| Variable | Default | Allowed |
+|---|---|---|
+| `DOCKERHUB_BASE_URL` | `https://hub.docker.com` | absolute `http(s)` URL |
+| `UPSTREAM_TIMEOUT_MS` | `8000` | integer ≥ 1 |
+| `CACHE_TTL_POPULAR` / `_SEARCH` / `_REPO` / `_TAGS` / `_PUBLISHER` (seconds) | `600` / `60` / `300` / `120` / `3600` | integer ≥ 0 |
+| `CACHE_MAX_ENTRIES` | `1000` | integer ≥ 1 |
+| `RATE_LIMIT_WINDOW_MS` | `60000` | integer ≥ 1 |
+| `RATE_LIMIT_MAX` | `60` | integer ≥ 1 |
+| `UPSTREAM_BUDGET_PER_MIN` | `150` | integer 1–150 |
+
+They're validated when the server starts (`app/server/config.server.ts`). An invalid value, including `UPSTREAM_BUDGET_PER_MIN` above 150, stops `pnpm start` with a message naming the variable. In `pnpm dev` the error appears on the first request.
 
 ## Documentation
 
