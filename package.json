@@ -15,6 +15,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
+    "test": "node --experimental-strip-types --import ./scripts/register-ts-resolve-hook.mjs scripts/check-params.ts",
     "prepare": "husky"
   },
   "lint-staged": {
