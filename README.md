@@ -53,7 +53,7 @@ Environment variables are documented in [.env.example](.env.example). All are op
 | `CACHE_MAX_ENTRIES` | `1000` | integer ≥ 1 |
 | `RATE_LIMIT_WINDOW_MS` | `60000` | integer 1–2147483647 |
 | `RATE_LIMIT_MAX` | `60` | integer ≥ 1 |
-| `TRUST_PROXY_HOPS` | `0` | integer 0–10: reverse proxies in front of the app whose `X-Forwarded-For` is trusted for the per-client rate limit |
+| `TRUST_PROXY_HOPS` | `0` | integer 0–10: reverse proxies in front of the app whose `X-Forwarded-For` is trusted for the per-client rate limit. With `0` the client IP is unknown, so the per-client limit is off |
 | `UPSTREAM_BUDGET_PER_MIN` | `150` | integer 1–150 |
 
 They're validated when the server starts (`app/server/config.server.ts`). An invalid value, including `UPSTREAM_BUDGET_PER_MIN` above 150, stops `pnpm start` with a message naming the variable. In `pnpm dev` the error appears on the first request.

@@ -5,6 +5,7 @@
  */
 import assert from 'node:assert/strict';
 
+import { config } from '../app/server/config.server';
 import {
   checkRateLimit,
   createRateLimiter,
@@ -95,6 +96,19 @@ test('a new window starts after windowMs, with a fresh count', () => {
   assert.equal(fresh.retryAfterSeconds, 60);
 });
 
+test('fixed window: up to 2 × max in a burst across a window boundary (documented)', () => {
+  const clock = fakeClock();
+  const limiter = createRateLimiter({ windowMs: 60_000, max: 2, now: clock.now });
+  limiter.hit('a'); // opens the 0-60 s window
+  clock.advance(59_999);
+  assert.equal(limiter.hit('a').allowed, true);
+  assert.equal(limiter.hit('a').allowed, false);
+  clock.advance(1); // new window
+  assert.equal(limiter.hit('a').allowed, true);
+  assert.equal(limiter.hit('a').allowed, true);
+  assert.equal(limiter.hit('a').allowed, false);
+});
+
 test('clients are counted separately', () => {
   const limiter = createRateLimiter({ windowMs: 60_000, max: 1, now: fakeClock().now });
   assert.equal(limiter.hit('a').allowed, true);
@@ -161,7 +175,10 @@ test('ipToKey normalizes addresses', () => {
     ['2001:db8::1', '2001:db8:0:0::/64'],
     ['::1', '0:0:0:0::/64'],
     ['fe80::1%eth0', 'fe80:0:0:0::/64'],
-    ['64:ff9b::192.0.2.1', '64:ff9b:0:0::/64'],
+    ['64:ff9b::192.0.2.1', '192.0.2.1'],
+    ['64:ff9b::c000:202', '192.0.2.2'],
+    ['64:ff9b:1::192.0.2.1', '64:ff9b:1:0::/64'],
+    ['1.2.3.4%eth0', null],
     ['', null],
     ['unknown', null],
     ['999.1.1.1', null],
@@ -263,12 +280,14 @@ test('enforceRateLimit returns the result, then throws the 429 Response', async 
 });
 
 test('the default limiter reads RATE_LIMIT_MAX from config', () => {
-  // Default config: 60 per window. A documentation-range address no other test uses.
+  // Read the limit from config, so an exported RATE_LIMIT_MAX doesn't break the test.
+  // A documentation-range address no other test uses.
+  const { max } = config.rateLimit;
   const opts = { clientAddress: '192.0.2.250', trustProxyHops: 0 };
-  for (let i = 0; i < 60; i += 1) assert.equal(checkRateLimit(request(), opts).allowed, true);
+  for (let i = 0; i < max; i += 1) assert.equal(checkRateLimit(request(), opts).allowed, true);
   const blocked = checkRateLimit(request(), opts);
   assert.equal(blocked.allowed, false);
-  assert.equal(blocked.limit, 60);
+  assert.equal(blocked.limit, max);
 });
 
 let failures = 0;

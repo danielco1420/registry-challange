@@ -7,6 +7,16 @@
  * (seconds until the client's window resets). State is in memory, per process,
  * like the cache (ADR-0003): it's lost on restart and not shared across instances.
  *
+ * Known limitation of a fixed window: a client can send up to `2 × RATE_LIMIT_MAX`
+ * requests in a short burst around the end of one window and the start of the
+ * next. That's accepted: this limit only contains abuse by one client, and the
+ * shared Docker Hub quota is the job of the proxy-wide upstream budget
+ * (`UPSTREAM_BUDGET_PER_MIN`, ADR-0003), not of this limiter.
+ *
+ * **Off by default:** with the default `TRUST_PROXY_HOPS=0` and no caller-supplied
+ * `clientAddress`, no request can be attributed to a client, so nothing is
+ * limited (see "Client IP resolution" below).
+ *
  * Usage from a resource route or a page loader:
  *
  * ```ts
@@ -31,14 +41,18 @@
  *    entry `TRUST_PROXY_HOPS` positions from the right. Entries further left
  *    are client-supplied and ignored, so a client can't spoof its way into a
  *    fresh bucket. A missing, too short or malformed header means "unknown".
+ *    This relies on the app being reachable only through those proxies: a
+ *    direct caller controls the whole header. A value lower than the real
+ *    number of proxies puts every user in the bucket of one proxy's address.
  * 2. With `TRUST_PROXY_HOPS=0`, a `clientAddress` passed by the caller (e.g.
  *    the socket address from a custom server) is used. The header is ignored.
  * 3. Otherwise the client is unknown and the request is **not** limited (fail
  *    open), with a one-time warning. One shared bucket for every unidentified
  *    request would let a single client lock all users out.
  *
- * IPv4-mapped IPv6 addresses count as IPv4. Other IPv6 clients are bucketed by
- * their /64 prefix, since one host usually controls a whole /64.
+ * IPv4-mapped (`::ffff:0:0/96`) and NAT64 well-known-prefix (`64:ff9b::/96`)
+ * IPv6 addresses count as the IPv4 address they embed. Other IPv6 clients are
+ * bucketed by their /64 prefix, since one host usually controls a whole /64.
  *
  * ## Memory
  *
@@ -46,7 +60,9 @@
  * re-inserted when its new window starts, so entries are ordered by expiry.
  * Each check drops expired entries from the front (amortized O(1), no timers).
  * `maxKeys` caps the map if many distinct clients arrive within one window; the
- * oldest entry is evicted first.
+ * oldest entry is evicted first, which gives that client a fresh window. That
+ * fails open on purpose: a client able to fill the map holds more than
+ * `maxKeys` buckets and could already send `maxKeys × RATE_LIMIT_MAX` requests.
  */
 import { isIP } from 'node:net';
 
@@ -144,15 +160,18 @@ export function ipToKey(raw: string): string | null {
   const bracketed = /^\[([^\]]+)\](?::\d+)?$/.exec(address);
   if (bracketed?.[1] !== undefined) address = bracketed[1];
   else if (/^[\d.]+:\d+$/.test(address)) address = address.slice(0, address.lastIndexOf(':'));
-  address = address.replace(/%.*$/, ''); // IPv6 zone index, e.g. fe80::1%eth0
+  if (address.includes(':')) address = address.replace(/%.*$/, ''); // IPv6 zone index, e.g. fe80::1%eth0
 
   const version = isIP(address);
   if (version === 4) return address;
   if (version !== 6) return null;
 
   const hextets = expandIpv6(address);
-  if (hextets.slice(0, 5).every((h) => h === 0) && hextets[5] === 0xffff) {
-    const [hi = 0, lo = 0] = hextets.slice(6);
+  if (hextets === null) return null;
+  const [h0, h1, h2, h3, h4, h5, hi = 0, lo = 0] = hextets;
+  const ipv4Mapped = h0 === 0 && h1 === 0 && h2 === 0 && h3 === 0 && h4 === 0 && h5 === 0xffff;
+  const nat64 = h0 === 0x64 && h1 === 0xff9b && h2 === 0 && h3 === 0 && h4 === 0 && h5 === 0;
+  if (ipv4Mapped || nat64) {
     return [hi >> 8, hi & 0xff, lo >> 8, lo & 0xff].join('.');
   }
   return `${hextets
@@ -161,10 +180,18 @@ export function ipToKey(raw: string): string | null {
     .join(':')}::/64`;
 }
 
-/** The 8 hextets of a valid IPv6 address (any notation, including embedded IPv4). */
-function expandIpv6(address: string): number[] {
+/**
+ * The 8 hextets of a valid IPv6 address (any notation, including embedded IPv4),
+ * or `null` if the URL parser disagrees with `isIP` about it.
+ */
+function expandIpv6(address: string): number[] | null {
   // WHATWG URL serialization gives a canonical form: lowercase hex only, at most one `::`.
-  const canonical = new URL(`http://[${address}]/`).hostname.slice(1, -1);
+  let canonical: string;
+  try {
+    canonical = new URL(`http://[${address}]/`).hostname.slice(1, -1);
+  } catch {
+    return null;
+  }
   const [head = '', tail] = canonical.split('::');
   const parse = (part: string) => (part === '' ? [] : part.split(':').map((h) => parseInt(h, 16)));
   const left = parse(head);
