@@ -1,12 +1,11 @@
 /**
  * Tests for `getCached` and its responses: the cache, the Docker Hub client and
- * the upstream budget wired together, on Node's built-in test runner. Vitest
- * and MSW aren't set up yet (T03, #5), so a fake `fetch` stands in for Docker
- * Hub, `mock.timers` drives the cache's `Date`, and the budget gets its own
+ * the upstream budget wired together. A fake `fetch` stands in for Docker
+ * Hub, fake timers drive the cache's `Date`, and the budget gets its own
  * clock, advanced in step.
  */
 import assert from 'node:assert/strict';
-import { afterEach, beforeEach, describe, it, mock } from 'node:test';
+import { afterEach, beforeEach, describe, it, vi } from 'vitest';
 import * as v from 'valibot';
 import { BUDGET_WINDOW_MS, createUpstreamBudget, type UpstreamBudget } from './budget.server';
 import { createCache } from './cache.server';
@@ -87,7 +86,7 @@ const read = (repo: string) =>
 
 /** Moves both clocks forward. */
 function advance(ms: number) {
-  mock.timers.tick(ms);
+  vi.advanceTimersByTime(ms);
   budgetTime += ms;
 }
 
@@ -111,14 +110,14 @@ async function rejectsUnavailable(
 }
 
 beforeEach(() => {
-  mock.timers.enable({ apis: ['Date'], now: 0 });
+  vi.useFakeTimers({ toFake: ['Date'], now: 0 });
   replies = [];
   sent = [];
   budgetTime = 0;
 });
 
 afterEach(() => {
-  mock.timers.reset();
+  vi.useRealTimers();
 });
 
 // ---------------------------------------------------------------------------

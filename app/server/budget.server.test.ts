@@ -1,9 +1,9 @@
 /**
  * Unit tests for the proxy-wide upstream budget, on Node's built-in test
- * runner with an injected clock. Vitest isn't set up yet (T03, #5).
+ * runner with an injected clock.
  */
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { describe, it } from 'vitest';
 import { BUDGET_WINDOW_MS, createUpstreamBudget, upstreamBudget } from './budget.server';
 
 function setup(limit: number) {

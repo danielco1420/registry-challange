@@ -17,10 +17,21 @@ pnpm dev               # http://localhost:5173
 pnpm typecheck         # react-router typegen && tsc
 pnpm lint              # ESLint (pnpm lint:fix to autofix)
 pnpm format:check      # Prettier (pnpm format to write)
+pnpm test              # Vitest, once (pnpm test:watch to watch)
+pnpm test:coverage     # Vitest + coverage of app/server and app/lib (coverage/index.html)
+pnpm test:e2e          # Playwright (Chromium) against the production build on :4173
 pnpm build && pnpm start   # production server, PORT defaults to 3000
 ```
 
-`pnpm install` sets up Husky git hooks: pre-commit runs lint-staged (ESLint + Prettier on staged files), commit-msg runs commitlint (Conventional Commits). Test and e2e commands are added by their own tasks. Server-only code goes in `app/server/*.server.ts`. Read env vars only through `config` from `app/server/config.server.ts`, never `process.env` directly.
+`pnpm install` sets up Husky git hooks: pre-commit runs lint-staged (ESLint + Prettier on staged files), commit-msg runs commitlint (Conventional Commits).
+
+Tests (Vitest, questionnaire F33):
+- `app/**/*.test.ts` run in Node (`node` project), `app/**/*.test.tsx` in jsdom with Testing Library and jest-dom (`dom` project). Import `describe`/`it`/`expect`/`vi` from `vitest` (no globals).
+- MSW (`test/msw/server.ts`) runs for every test in both projects. Add handlers per test with `server.use(...)`; they reset after each test. Unhandled HTTP requests to non-loopback hosts get a 500 and unhandled WebSockets get an error, so tests never reach the real Docker Hub. Recorded responses go in `fixtures/dockerhub/` (T08).
+- Coverage targets ~80% on `app/server` and `app/lib`; it is reported, not enforced.
+- E2E specs live in `e2e/*.spec.ts`. Run `pnpm exec playwright install chromium` once before the first `pnpm test:e2e`.
+
+Server-only code goes in `app/server/*.server.ts`. Read env vars only through `config` from `app/server/config.server.ts`, never `process.env` directly.
 
 ## Rules
 - Never call `hub.docker.com` from the browser. Use the allowlisted `/api/*` proxy routes ([ADR-0001](docs/adr/0001-backend-proxy-for-cors.md)).
