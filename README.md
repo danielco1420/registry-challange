@@ -29,7 +29,7 @@ Docker Hub doesn't send CORS headers, so the browser can't call it directly. We 
 
 ## Getting started
 
-Requires Node 22 and pnpm (`corepack enable`).
+Requires Node 22.12 or newer (`.nvmrc`) and pnpm 12.16.1 (the version pinned in `package.json`). Node 22's bundled Corepack is too old for pnpm 12, so install pnpm directly with `npm install -g pnpm@12.16.1`, or first run `npm install -g corepack@latest && corepack enable`.
 
 ```bash
 pnpm install

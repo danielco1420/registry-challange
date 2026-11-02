@@ -4,7 +4,7 @@
   "type": "module",
   "packageManager": "pnpm@12.16.1",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.12"
   },
   "scripts": {
     "dev": "node --env-file-if-exists=.env node_modules/@react-router/dev/bin.js dev",
