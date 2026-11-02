@@ -15,6 +15,7 @@ import {
   PageSchema,
   PageSizeSchema,
   PublisherNameSchema,
+  PublisherParamsSchema,
   QuerySchema,
   RepoNameSchema,
   RepoParamsSchema,
@@ -22,6 +23,7 @@ import {
   SearchSortSchema,
   TagFilterSchema,
   TagOrderingSchema,
+  TagParamsSchema,
   TagSchema,
   TagsQuerySchema,
 } from './params';
@@ -39,6 +41,8 @@ export const PARAM_SCHEMAS = {
   ordering: TagOrderingSchema,
   tagFilter: TagFilterSchema,
   repoParams: RepoParamsSchema,
+  tagParams: TagParamsSchema,
+  publisherParams: PublisherParamsSchema,
   searchQuery: SearchQuerySchema,
   tagsQuery: TagsQuerySchema,
 } as const;
@@ -188,6 +192,25 @@ export const PARAM_CASES: ParamCase[] = [
     input: { ns: 'library', repo: '..' },
     valid: false,
   },
+
+  { schema: 'repoParams', label: 'not an object', input: 'library/nginx', valid: false },
+
+  {
+    schema: 'tagParams',
+    label: 'deep link',
+    input: { ns: 'library', repo: 'nginx', tag: '1.27-alpine' },
+    valid: true,
+  },
+  {
+    schema: 'tagParams',
+    label: 'traversal in tag',
+    input: { ns: 'library', repo: 'nginx', tag: '..' },
+    valid: false,
+  },
+  { schema: 'tagParams', label: 'missing tag', input: { ns: 'library', repo: 'nginx' }, valid: false },
+
+  { schema: 'publisherParams', label: 'publisher', input: { name: 'bitnami' }, valid: true },
+  { schema: 'publisherParams', label: 'encoded slash', input: { name: 'a%2Fb' }, valid: false },
 
   {
     schema: 'searchQuery',

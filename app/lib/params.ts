@@ -127,40 +127,65 @@ export const TagFilterSchema = v.pipe(
 // Per-route schemas
 // ---------------------------------------------------------------------------
 
+/**
+ * Fixed message for the object schemas. Valibot's default object message
+ * includes the received value (`... but received "<input>"`), so we replace it.
+ * The same message is used for a missing required key, which has a path.
+ */
+const objectMessage = (issue: v.ObjectIssue): string => {
+  const key = issue.path?.[0]?.key;
+  return typeof key === 'string' ? `${key} is required` : 'params must be an object';
+};
+
 /** `/api/repos/:ns/:repo` (and the details page). */
-export const RepoParamsSchema = v.object({
-  ns: NamespaceSchema,
-  repo: RepoNameSchema,
-});
+export const RepoParamsSchema = v.object(
+  {
+    ns: NamespaceSchema,
+    repo: RepoNameSchema,
+  },
+  objectMessage,
+);
 
 /** `/r/:ns/:repo/tags/:tag` deep link (C15). */
-export const TagParamsSchema = v.object({
-  ns: NamespaceSchema,
-  repo: RepoNameSchema,
-  tag: TagSchema,
-});
+export const TagParamsSchema = v.object(
+  {
+    ns: NamespaceSchema,
+    repo: RepoNameSchema,
+    tag: TagSchema,
+  },
+  objectMessage,
+);
 
 /** `/api/publishers/:name`. */
-export const PublisherParamsSchema = v.object({
-  name: PublisherNameSchema,
-});
+export const PublisherParamsSchema = v.object(
+  {
+    name: PublisherNameSchema,
+  },
+  objectMessage,
+);
 
 /** `/api/search?q=&page=&pageSize=&sort=&badge=`. Missing params get defaults. */
-export const SearchQuerySchema = v.object({
-  q: v.optional(QuerySchema, ''),
-  page: v.optional(PageSchema, '1'),
-  pageSize: v.optional(PageSizeSchema, String(PAGE_SIZE_DEFAULT)),
-  sort: v.optional(SearchSortSchema, 'relevance'),
-  badge: v.optional(BadgeSchema),
-});
+export const SearchQuerySchema = v.object(
+  {
+    q: v.optional(QuerySchema, ''),
+    page: v.optional(PageSchema, '1'),
+    pageSize: v.optional(PageSizeSchema, String(PAGE_SIZE_DEFAULT)),
+    sort: v.optional(SearchSortSchema, 'relevance'),
+    badge: v.optional(BadgeSchema),
+  },
+  objectMessage,
+);
 
 /** `/api/repos/:ns/:repo/tags?page=&pageSize=&ordering=&name=`. */
-export const TagsQuerySchema = v.object({
-  page: v.optional(PageSchema, '1'),
-  pageSize: v.optional(PageSizeSchema, String(PAGE_SIZE_DEFAULT)),
-  ordering: v.optional(TagOrderingSchema),
-  name: v.optional(TagFilterSchema),
-});
+export const TagsQuerySchema = v.object(
+  {
+    page: v.optional(PageSchema, '1'),
+    pageSize: v.optional(PageSizeSchema, String(PAGE_SIZE_DEFAULT)),
+    ordering: v.optional(TagOrderingSchema),
+    name: v.optional(TagFilterSchema),
+  },
+  objectMessage,
+);
 
 export type RepoParams = v.InferOutput<typeof RepoParamsSchema>;
 export type TagParams = v.InferOutput<typeof TagParamsSchema>;
