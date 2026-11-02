@@ -9,7 +9,7 @@ Update the status column as mitigations land. New risks go in the matching secti
 | # | Risk | Impact | Mitigation | Status |
 |---|---|---|---|---|
 | 1.1 | **Upstream rate limit** (~180 req/min per IP) is shared by every user, because all traffic leaves from the proxy's IP | 429s for everyone under modest load | Server-side cache with per-route TTLs; request coalescing (single-flight); stale-while-revalidate; honor `Retry-After` | ⬜ |
-| 1.2 | **Cache stampede** when a hot key expires | Burst of upstream calls, which leads to 429s | Single-flight per key; jittered TTLs; serve stale while refreshing | ⬜ |
+| 1.2 | **Cache stampede** when a hot key expires | Burst of upstream calls, which leads to 429s | Single-flight per key; jittered TTLs; serve stale while refreshing | 🟡 (`app/server/cache.server.ts`; routes not wired yet) |
 | 1.3 | **Undocumented `/api/search/v4`** changes or disappears | Search and Explore break | Valibot validation with clear errors; fallback to `/v2/search/repositories`; contract tests against recorded fixtures | ⬜ |
 | 1.4 | **Cloudflare bot protection** challenges our server IP | Upstream returns HTML or 403 instead of JSON | Low request volume via caching; descriptive User-Agent; detect non-JSON responses and surface a degraded state | ⬜ |
 | 1.5 | **Terms of Service** for automated or undocumented API use | Access could be blocked | Keep traffic minimal, document the usage, prefer documented endpoints where they exist | ⬜ |
@@ -24,7 +24,7 @@ Update the status column as mitigations land. New risks go in the matching secti
 | 2.3 | **Path or parameter injection** (`../`, encoded slashes, huge strings) | Unexpected upstream calls, errors | Validate `namespace`/`repo` with `^[a-z0-9]+(?:[._-][a-z0-9]+)*$`, tags with `^[\w][\w.-]{0,127}$`; length limits; `encodeURIComponent` | 🟡 (schemas and 400 helper in `app/lib`; routes not wired yet) |
 | 2.4 | **Scrapers** using us as a free mirror | Quota exhaustion | Rate limits, cache headers, optional edge bot protection | ⬜ |
 | 2.5 | **Huge tag lists** (thousands of tags) | Slow pages, memory use | Server-side pagination; never fetch all pages; list virtualization if we use infinite scroll | ⬜ |
-| 2.6 | **Unbounded in-memory cache** | Memory leak or crash | LRU with max entries; move to Redis if we scale horizontally | ⬜ |
+| 2.6 | **Unbounded in-memory cache** | Memory leak or crash | LRU with max entries; move to Redis if we scale horizontally | 🟡 (LRU bounded by `CACHE_MAX_ENTRIES` in `app/server/cache.server.ts`; routes not wired yet) |
 | 2.7 | **Multiple instances** each hold their own cache | Lower hit rate, more upstream calls | Shared cache (Redis) or CDN caching via `Cache-Control` | ➖ until scaling |
 
 ## 3. Frontend security & privacy
