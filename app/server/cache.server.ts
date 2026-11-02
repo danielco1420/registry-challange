@@ -146,17 +146,20 @@ export class MemoryCache {
     const existing = this.inflight.get(key);
     if (existing) return existing;
 
-    const promise = (async () => {
-      try {
-        const value = await fetcher();
+    // `fetcher` runs on a later microtask, so one that throws synchronously
+    // still rejects through `promise` and clears its slot after it is
+    // registered below, instead of leaving a rejected promise in `inflight`.
+    const promise: Promise<Entry> = Promise.resolve()
+      .then(() => fetcher())
+      .then((value) => {
         const storedAt = Date.now();
         const entry: Entry = { value, storedAt, expiresAt: storedAt + this.jitteredTtl(ttlMs) };
         this.set(key, entry);
         return entry;
-      } finally {
-        this.inflight.delete(key);
-      }
-    })();
+      })
+      .finally(() => {
+        if (this.inflight.get(key) === promise) this.inflight.delete(key);
+      });
     this.inflight.set(key, promise);
     return promise;
   }

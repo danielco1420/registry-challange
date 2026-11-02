@@ -142,6 +142,28 @@ describe('single-flight', () => {
     assert.equal((await c.get('k', TTL, ok)).status, 'MISS');
     assert.equal(ok.mock.callCount(), 1);
   });
+
+  it('frees the slot when the fetcher throws synchronously', async () => {
+    const c = createCache({ maxEntries: 10, jitter: 0 });
+    const throwing = mock.fn((): Promise<string> => {
+      throw new Error('bad request');
+    });
+
+    await assert.rejects(c.get('k', TTL, throwing), /bad request/);
+    assert.equal(c.isFetching('k'), false);
+    assert.equal((await c.get('k', TTL, counter('v'))).value, 'v');
+
+    // Same on a background refresh: the stale entry stays and the next read retries.
+    mock.timers.tick(1000);
+    assert.equal((await c.get('k', TTL, throwing)).status, 'STALE');
+    await flush();
+    assert.equal(c.isFetching('k'), false);
+    const retry = counter('new');
+    await c.get('k', TTL, retry);
+    await flush();
+    assert.equal(retry.mock.callCount(), 1);
+    assert.equal((await c.get('k', TTL, retry)).value, 'new');
+  });
 });
 
 describe('stale-while-revalidate', () => {
