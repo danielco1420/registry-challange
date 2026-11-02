@@ -33,7 +33,7 @@ pnpm format:check      # Prettier (pnpm format to write)
 pnpm build && pnpm start   # production server, PORT defaults to 3000
 ```
 
-`pnpm install` sets up Husky git hooks: pre-commit runs lint-staged (ESLint + Prettier on staged files), commit-msg runs commitlint (Conventional Commits). Test and e2e commands are added by their own tasks. Server-only code goes in `app/server/*.server.ts`.
+`pnpm install` sets up Husky git hooks: pre-commit runs lint-staged (ESLint + Prettier on staged files), commit-msg runs commitlint (Conventional Commits). Test and e2e commands are added by their own tasks. Server-only code goes in `app/server/*.server.ts`. Read env vars only through `config` from `app/server/config.server.ts`, never `process.env` directly.
 
 ## Hard rules
 

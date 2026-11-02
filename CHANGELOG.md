@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - React Router v7 app (framework mode, SSR) with TypeScript strict, pnpm and Node 22; placeholder home page and `/api/health`.
 - ESLint (typescript-eslint, React Hooks, jsx-a11y) and Prettier, with `pnpm lint`, `pnpm lint:fix`, `pnpm format` and `pnpm format:check`.
 - Husky git hooks: pre-commit runs lint-staged, commit-msg runs commitlint (Conventional Commits, types from `CONTRIBUTING.md`).
+- Typed env config (`app/server/config.server.ts`), validated with Valibot at startup. Invalid values, including `UPSTREAM_BUDGET_PER_MIN` above 150, stop the server with a clear message.
 
 ### Changed
 - Calling Docker Hub anonymously: removed `DOCKERHUB_PAT` from `.env.example`.
