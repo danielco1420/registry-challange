@@ -13,7 +13,7 @@ Docker Hub also rate-limits anonymous API use to roughly 180 requests/min per IP
 
 All Docker Hub traffic goes through our own thin backend (BFF). It exposes a small allowlist of routes (`/api/popular`, `/api/search`, `/api/repos/:ns/:repo`, `/api/repos/:ns/:repo/tags`, `/api/publishers/:name`). Those routes validate parameters, cache responses, rate-limit clients, and normalize upstream JSON into our DTOs.
 
-The concrete runtime (Next.js route handlers, Fastify, serverless) is decided in questionnaire A1.
+The concrete runtime is React Router v7 resource routes ([ADR-0002](0002-react-router-v7-single-app.md)).
 
 ## Alternatives considered
 
@@ -24,6 +24,6 @@ The concrete runtime (Next.js route handlers, Fastify, serverless) is decided in
 ## Consequences
 
 - We need a server runtime for deployment, not just static hosting.
-- Positive: one place for caching, rate limiting, validation, and an optional secret token.
+- Positive: one place for caching, rate limiting and validation.
 - Positive: the frontend is decoupled from Docker Hub's response shapes.
 - All users share the proxy's upstream rate limit, so caching is mandatory (see [RISKS.md](../RISKS.md) 1.1).

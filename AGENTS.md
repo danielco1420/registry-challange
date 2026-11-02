@@ -4,7 +4,7 @@ Instructions for AI coding agents (Codex, Cursor, Copilot, Claude, etc.). The fu
 
 ## Context
 - Docker Hub–like registry browser. Brief: [docs/ASSIGNMENT.md](docs/ASSIGNMENT.md).
-- Phase: foundation. The stack is undecided; see [docs/DESIGN_QUESTIONNAIRE.md](docs/DESIGN_QUESTIONNAIRE.md).
+- Phase: foundation done. Decisions: [docs/DESIGN_QUESTIONNAIRE.md](docs/DESIGN_QUESTIONNAIRE.md). Stack: React Router v7 single app, TypeScript strict, pnpm, Node 22, shadcn/ui + Tailwind, Valibot ([ADR-0002](docs/adr/0002-react-router-v7-single-app.md)).
 - Docker Hub integration source of truth: [docs/API.md](docs/API.md).
 
 ## Setup / build / test

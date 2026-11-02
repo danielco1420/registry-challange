@@ -10,7 +10,7 @@ Registry UI: a Docker Hub–like web app with two pages:
 
 The brief is in [docs/ASSIGNMENT.md](docs/ASSIGNMENT.md).
 
-**Current phase:** foundation/docs only. The stack isn't chosen yet; see [docs/DESIGN_QUESTIONNAIRE.md](docs/DESIGN_QUESTIONNAIRE.md). Don't scaffold app code or pick libraries unless the questionnaire answer (or the user) says so.
+**Current phase:** foundation done; design decisions are in [docs/DESIGN_QUESTIONNAIRE.md](docs/DESIGN_QUESTIONNAIRE.md). Stack: React Router v7 (framework mode, SSR) single app, TypeScript strict, pnpm, Node 22, shadcn/ui + Tailwind, Valibot ([ADR-0002](docs/adr/0002-react-router-v7-single-app.md)). Don't add libraries the questionnaire doesn't name without asking.
 
 ## Read first
 
@@ -33,10 +33,10 @@ _To be added once the stack is chosen (install, dev, lint, typecheck, test, buil
    - `/api/publishers/:name`
 2. The proxy is an **allowlist**. Validate `namespace`/`repo`/`tag` params. Never forward arbitrary paths or URLs.
 3. Cache upstream responses. The ~180 req/min per-IP limit is shared by all users.
-4. Validate upstream JSON with schemas. `/api/search/v4` is undocumented and may change.
+4. Validate upstream JSON with Valibot schemas. `/api/search/v4` is undocumented and may change.
 5. Sanitize `full_description` Markdown. Never render raw HTML from upstream.
 6. Official images use namespace `library`. The pull command omits it (`docker pull nginx:tag`).
-7. Secrets (optional `DOCKERHUB_PAT`) stay server-side and come from env vars only.
+7. We call Docker Hub anonymously (no token). Any future secret stays server-side and comes from env vars only.
 
 ## Conventions
 

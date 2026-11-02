@@ -14,7 +14,10 @@ See [API.md](API.md) for full details. In short:
 ## Key design decisions
 
 - Backend proxy, because Docker Hub has no CORS headers ([ADR-0001](adr/0001-backend-proxy-for-cors.md)).
-- _…more from the questionnaire_
+- React Router v7 single app: SSR pages and the `/api/*` proxy in one Node process ([ADR-0002](adr/0002-react-router-v7-single-app.md)).
+- In-memory LRU cache with single-flight and stale-while-revalidate; retry, stale fallback and a degraded banner on upstream failures ([ADR-0003](adr/0003-server-cache-and-upstream-failures.md)).
+- Valibot validation of every upstream response, since `/api/search/v4` is undocumented.
+- URLs mirror Docker Hub (`/r/{ns}/{repo}`, `/_/{repo}`), and search/sort/page state lives in the query string.
 
 ## Product decisions (added / left out, and why)
 

@@ -60,11 +60,11 @@ Environment variables are documented in [.env.example](.env.example).
 These files depend on the stack choice and will be added after the questionnaire:
 
 - [ ] `package.json`, lockfile, `.nvmrc`
-- [ ] Lint/format config (ESLint + Prettier or Biome)
+- [ ] Lint/format config (ESLint + Prettier)
 - [ ] Git hooks (Husky + lint-staged + commitlint)
-- [ ] CI workflow (`.github/workflows/ci.yml`): lint, typecheck, test, build
+- [ ] CI workflow (`.github/workflows/ci.yml`): lint, typecheck, test, build, audit, E2E
 - [ ] `Dockerfile` + `docker-compose.yml`
-- [ ] Test setup (unit, API mocks, e2e)
+- [ ] Test setup (Vitest + Testing Library, MSW, Playwright)
 - [ ] `.vscode/` recommended extensions and settings
 - [ ] Set the Dependabot ecosystem in `.github/dependabot.yml`
 
