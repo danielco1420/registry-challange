@@ -111,6 +111,13 @@ describe('searchRepositories', () => {
     expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('$.results[0].id'));
   });
 
+  it('v4 drift on a sorted query: falls back without the sort (flagged by `source`)', async () => {
+    driftV4(renameIds);
+    const result = await searchRepositories(client(), { ...nginxQuery, sort: 'stars' });
+    expect(result.source).toBe('legacy');
+    expect(calls[1]).toBe('/v2/search/repositories/?query=nginx&page=1&page_size=25');
+  });
+
   it('v4 drift on popular (empty query, badge filter): no fallback, bad_payload with the path', async () => {
     driftV4((body) => {
       const second = body.results[1];

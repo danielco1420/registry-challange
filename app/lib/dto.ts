@@ -38,7 +38,10 @@ export interface RepoSummary {
   stars: number;
   /** ISO timestamp; `''` when unknown. */
   updatedAt: string;
-  /** Architecture labels, e.g. `x86-64`, `ARM 64`; may be empty. */
+  /**
+   * Search's display labels, e.g. `x86-64`, `ARM 64` (not the raw `amd64` of
+   * `TagImage.arch`); empty when there was no search result to take them from.
+   */
   archs: string[];
   /** The publisher archived the repository: read-only, no new pushes. */
   archived: boolean;
@@ -55,6 +58,7 @@ export interface RepoDetails extends RepoSummary {
 }
 
 export interface TagImage {
+  /** Raw platform name (`amd64`, `arm64`), as in `docker pull --platform linux/arm64`. */
   arch: string;
   variant?: string;
   /** `linux`, `windows`; `''` for some very old images. */

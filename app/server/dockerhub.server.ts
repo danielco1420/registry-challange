@@ -131,6 +131,12 @@ const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
  * A Valibot issue path as a JSONPath-like string: `$` for the root, then
  * `.key`, `["odd key"]` or `[index]`. Only keys and indexes, never values, so
  * it's safe to log and to put in an error message.
+ *
+ * That holds because our response schemas only use `v.object` (keys come from
+ * the schema, unknown keys are stripped) and arrays. A `v.record`,
+ * `v.looseObject`, `v.objectWithRest` or `v.map` would put keys from the
+ * upstream body in the path; `dockerhub.schemas.server.test.ts` fails if one
+ * is added.
  */
 export function formatIssuePath(path: readonly { key: unknown }[] | undefined): string {
   let out = '$';

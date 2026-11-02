@@ -238,7 +238,7 @@ interface RepoSummary {
   pullsLabel: string;    // "1B+"
   stars: number;
   updatedAt: string;     // ISO, "" when unknown
-  archs: string[];       // architecture labels ("x86-64", "ARM 64")
+  archs: string[];       // human labels from search ("x86-64", "ARM 64"); [] without a search result
   archived: boolean;
 }
 
@@ -256,6 +256,8 @@ interface Tag {
   digest?: string;
   pushedBy?: string;
   lastPulled?: string;
+  // arch is the raw platform name ("amd64", "arm64"), as in `--platform linux/arm64/v8`,
+  // unlike RepoSummary.archs, which holds search's display labels
   images: { arch: string; variant?: string; os: string; size: number }[];
 }
 
@@ -280,6 +282,7 @@ Each upstream response is validated with a Valibot schema in `app/server/dockerh
 | v4 `type` other than `image`, or an `id` our `:ns`/`:repo` params can't express | result dropped (`total` stays Docker Hub's count) |
 | unknown `badge` | `"none"` |
 | `status_description: "archived"` / `archived: true` | `archived: true` |
+| repository endpoint has no publisher name, logo, badge or platforms | `toRepoDetails(repo, summary)` takes them from the search result with the same `id`; without one (a direct link), `owner` is the namespace, no logo, `archs: []`, and `badge` is `official` for `library`, else `none` (a verified publisher loses its badge) |
 
 ### Proxy routes (allowlist only)
 
@@ -337,11 +340,11 @@ Failures throw `UpstreamError` with a `kind` (plus `status` and `retryAfterSecon
 | 2xx with a non-JSON `Content-Type` or body (e.g. Cloudflare HTML), or JSON that fails the schema | `bad_payload` |
 | No upstream budget slot left (nothing sent) | `budget_exhausted` |
 
-For JSON that fails the schema, the error also carries `issuePath`, the first failing field as a JSONPath-like string (`$.results[3].publisher.name`, `$` for the root), and the message ends with it. It names keys and indexes only, never upstream values, so it's safe to log. `isSchemaMismatch(error)` tells this case apart from a non-JSON body.
+For JSON that fails the schema, the error also carries `issuePath`, the first failing field as a JSONPath-like string (`$.results[3].publisher.name`, `$` for the root), and the message ends with it. It names keys and indexes only, never upstream values, so it's safe to log. That relies on the response schemas using only `v.object` and arrays (no `v.record`, `v.looseObject`, `v.objectWithRest` or `v.map`, whose keys come from the body); a test enforces it. `isSchemaMismatch(error)` tells this case apart from a non-JSON body.
 
 ### Search fallback (`app/server/search.server.ts`)
 
-`searchRepositories(client, query)` and `suggestRepositories(client, q)` call v4 first. When v4 fails its schema (`isSchemaMismatch`), they make one call to the legacy `/v2/search/repositories/?query=&page=&page_size=` (client endpoint `legacySearch`) and return the same `Page<RepoSummary>` with `source: 'legacy'` (no logos, dates or platforms), logging the failing path with `console.warn`. The fallback only runs for a non-empty query without a badge filter, since the legacy endpoint can't express "popular" or a badge; otherwise, and for any other failure (404, 429, 5xx, non-JSON, budget), the original error is rethrown for `getCached` to handle.
+`searchRepositories(client, query)` and `suggestRepositories(client, q)` call v4 first. When v4 fails its schema (`isSchemaMismatch`), they make one call to the legacy `/v2/search/repositories/?query=&page=&page_size=` (client endpoint `legacySearch`) and return the same `Page<RepoSummary>` with `source: 'legacy'` (no logos, dates or platforms), logging the failing path with `console.warn`. The fallback only runs for a non-empty query without a badge filter, since the legacy endpoint can't express "popular" or a badge. A `sort` is dropped (legacy ignores `ordering`), so a sorted query comes back in relevance order; the UI should use `source: 'legacy'` to say results are limited. Otherwise, and for any other failure (404, 429, 5xx, non-JSON, budget), the original error is rethrown for `getCached` to handle.
 
 ## Upstream budget and failure path (`app/server/budget.server.ts`, `app/server/upstream.server.ts`)
 

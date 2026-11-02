@@ -214,6 +214,20 @@ describe('repository → RepoDetails', () => {
     });
   });
 
+  it('ignores a search result for a different repository', () => {
+    const details = toRepoDetails(repo(fixtures.repoFluentBit), {
+      ...NGINX_SUMMARY,
+      badge: 'verified_publisher',
+    });
+    expect(details).toMatchObject({
+      id: 'fluent/fluent-bit',
+      owner: 'fluent',
+      logoUrl: undefined,
+      badge: 'none',
+      archs: [],
+    });
+  });
+
   it('fluent/fluent-bit: a non-official repository', () => {
     expect(toRepoDetails(repo(fixtures.repoFluentBit))).toMatchObject({
       id: 'fluent/fluent-bit',
@@ -359,6 +373,7 @@ describe('pull counts (RISKS 4.2)', () => {
     [500_000, '500K+'],
     [5_062_408, '5M+'],
     [353_779_325, '100M+'],
+    // Inferred from the 5×10ⁿ bucket pattern: no recorded repo falls in 500M–1B.
     [700_000_000, '500M+'],
     [13_536_895_997, '1B+'],
     [-5, '0'],

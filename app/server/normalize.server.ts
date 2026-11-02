@@ -23,7 +23,7 @@ import {
   type TagImage,
 } from '../lib/dto';
 import { NAME_MAX_LENGTH, NAME_PATTERN } from '../lib/params';
-import { OFFICIAL_NAMESPACE } from '../lib/pull-command';
+import { OFFICIAL_NAMESPACE, imageRef } from '../lib/pull-command';
 import type {
   LegacySearchResponse,
   LegacySearchResult,
@@ -52,8 +52,8 @@ export function splitRepoId(
   return isName(namespace) && isName(name) ? { namespace, name } : undefined;
 }
 
-export const displayNameFor = (namespace: string, name: string) =>
-  namespace === OFFICIAL_NAMESPACE ? name : `${namespace}/${name}`;
+/** `nginx` for `library/nginx`, else `fluent/fluent-bit`: the same rule as the pull command. */
+export const displayNameFor = imageRef;
 
 /** A known badge, else `none`. */
 export function toBadge(value: string | null | undefined): Badge {
@@ -223,19 +223,28 @@ export function toLegacySearchPage(body: LegacySearchResponse, paging: Paging): 
 // Repository (B)
 // ---------------------------------------------------------------------------
 
-/** What the repository endpoint lacks and a search result (if we have one) can fill in. */
-export type RepoSummaryExtras = Partial<Pick<RepoSummary, 'owner' | 'logoUrl' | 'badge' | 'archs'>>;
+/**
+ * What the repository endpoint lacks and a search result (if we have one) can
+ * fill in, keyed by the result's `id` so it can't be merged into another repo.
+ */
+export type RepoSummaryExtras = Pick<RepoSummary, 'id'> &
+  Partial<Pick<RepoSummary, 'owner' | 'logoUrl' | 'badge' | 'archs'>>;
 
 /**
  * The repository endpoint, optionally merged with the matching search result
- * (`extras`) for the owner display name, logo, badge and architectures, which
- * this endpoint doesn't send.
+ * (`summary`) for the owner display name, logo, badge and architectures, which
+ * this endpoint doesn't send. A summary for a different repository is ignored.
+ * Without one (a direct deep link), `owner` is the namespace, `logoUrl` is
+ * absent, `archs` is empty and `badge` is `official` for `library`, else
+ * `none`, even for a verified publisher.
  */
-export function toRepoDetails(repo: Repository, extras: RepoSummaryExtras = {}): RepoDetails {
+export function toRepoDetails(repo: Repository, summary?: RepoSummaryExtras): RepoDetails {
   const { namespace, name } = repo;
+  const id = `${namespace}/${name}`;
+  const extras: Partial<RepoSummaryExtras> = summary?.id === id ? summary : {};
   const storageSize = nonNegative(repo.storage_size);
   return {
-    id: `${namespace}/${name}`,
+    id,
     namespace,
     name,
     displayName: displayNameFor(namespace, name),

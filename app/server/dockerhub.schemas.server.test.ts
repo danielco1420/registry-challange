@@ -121,4 +121,32 @@ describe('formatIssuePath', () => {
       '$["odd key"]["Symbol(x)"]',
     );
   });
+
+  it('response schemas only key paths by schema keys, so issuePath never holds upstream keys', () => {
+    // A record's path holds the upstream key, which is why schemas must not use one.
+    const record = v.object({ labels: v.record(v.string(), v.string()) });
+    expect(failingPath(record, { labels: { 'from-upstream': 42 } })).toBe(
+      '$.labels["from-upstream"]',
+    );
+
+    const INPUT_KEYED = ['record', 'loose_object', 'object_with_rest', 'map', 'set'];
+    type Node = {
+      type?: string;
+      entries?: Record<string, Node>;
+      item?: Node;
+      wrapped?: Node;
+      options?: Node[];
+    };
+    const inputKeyed = (node: Node, at: string): string[] => [
+      ...(INPUT_KEYED.includes(node.type ?? '') ? [`${at}: ${node.type}`] : []),
+      ...Object.entries(node.entries ?? {}).flatMap(([key, child]) =>
+        inputKeyed(child, `${at}.${key}`),
+      ),
+      ...(node.item ? inputKeyed(node.item, `${at}[]`) : []),
+      ...(node.wrapped ? inputKeyed(node.wrapped, at) : []),
+      ...(node.options ?? []).flatMap((option) => inputKeyed(option, at)),
+    ];
+    expect(inputKeyed(record as Node, '$')).toEqual(['$.labels: record']);
+    for (const [name, schema] of cases) expect(inputKeyed(schema as Node, name)).toEqual([]);
+  });
 });

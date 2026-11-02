@@ -7,10 +7,12 @@
  * normalize it into the same `Page<RepoSummary>`, with `source: 'legacy'` so
  * the UI can say results are limited (no logos, dates or platforms).
  *
- * The legacy endpoint has no sort or badge filter and returns nothing for an
- * empty query, so it can't stand in for "popular" or a badge-filtered search:
- * those rethrow the v4 `bad_payload`, and `getCached` serves stale data or a
- * 503 as usual. Any other failure (404, 429, 5xx, non-JSON, budget) is
+ * The legacy endpoint has no badge filter and returns nothing for an empty
+ * query, so it can't stand in for "popular" or a badge-filtered search: those
+ * rethrow the v4 `bad_payload`, and `getCached` serves stale data or a 503 as
+ * usual. It has no sort either, but relevance-ordered results beat a 503 for a
+ * sorted query, so `sort` is dropped and the UI must use `source` to say the
+ * results are limited and unsorted. Any other failure (404, 429, 5xx, non-JSON, budget) is
  * rethrown as is: the legacy endpoint is on the same host and would fail too.
  *
  * Callers wrap these in `getCached` (`upstream.server.ts`); both upstream
@@ -26,7 +28,10 @@ export type SearchSource = 'v4' | 'legacy';
 
 export interface SearchResult {
   page: Page<RepoSummary>;
-  /** `legacy` when v4 failed its schema and the fallback answered. */
+  /**
+   * `legacy` when v4 failed its schema and the fallback answered: no logos,
+   * dates or platforms, and `sort` was ignored (relevance order).
+   */
   source: SearchSource;
 }
 
