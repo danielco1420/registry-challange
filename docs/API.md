@@ -256,7 +256,7 @@ The proxy never forwards arbitrary paths or URLs.
 
 ### Param validation
 
-Every param is parsed with the Valibot schemas in `app/lib/params.ts` before any upstream call. A failed parse returns `400` with `Cache-Control: no-store` and this body (built by `app/lib/validate.ts`; messages never echo the input):
+Valibot schemas (`app/lib/params.ts`) and a `400` helper (`app/lib/validate.ts`) are available for every param. Route enforcement is not wired yet (RISKS.md 2.2/2.3); once a route calls `parseParams`/`parseOrThrow`, a failed parse returns `400` with `Cache-Control: no-store` and this body (messages never echo the input):
 
 ```json
 { "error": { "code": "invalid_params", "message": "Invalid request parameters",

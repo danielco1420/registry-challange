@@ -201,8 +201,11 @@ export type TagsQuery = v.InferOutput<typeof TagsQuerySchema>;
 export function searchParamsToObject(params: URLSearchParams): Record<string, string> {
   // No prototype, so keys like `__proto__` or `constructor` are plain data.
   const out: Record<string, string> = Object.create(null);
+  const seen = new Set<string>();
   for (const [key, value] of params) {
-    if (value !== '' && !Object.hasOwn(out, key)) out[key] = value;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (value !== '') out[key] = value;
   }
   return out;
 }

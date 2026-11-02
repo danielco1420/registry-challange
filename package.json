@@ -10,7 +10,8 @@
     "dev": "node --env-file-if-exists=.env node_modules/@react-router/dev/bin.js dev",
     "build": "react-router build",
     "start": "node --env-file-if-exists=.env node_modules/@react-router/serve/bin.js ./build/server/index.js",
-    "typecheck": "react-router typegen && tsc"
+    "typecheck": "react-router typegen && tsc",
+    "test": "node --experimental-strip-types --import ./scripts/register-ts-resolve-hook.mjs scripts/check-params.ts"
   },
   "dependencies": {
     "@react-router/node": "^7.18.5",
