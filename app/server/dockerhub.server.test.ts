@@ -458,3 +458,76 @@ describe('createDockerHubClient', () => {
     assert.equal(calls, 0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Upstream budget (ADR-0003)
+// ---------------------------------------------------------------------------
+
+describe('upstream budget', () => {
+  /** A budget with `slots` left that records every acquisition attempt. */
+  function fakeBudget(slots: number) {
+    const state = { slots, acquired: 0, refused: 0 };
+    return {
+      state,
+      budget: {
+        tryAcquire() {
+          if (state.slots <= 0) {
+            state.refused += 1;
+            return false;
+          }
+          state.slots -= 1;
+          state.acquired += 1;
+          return true;
+        },
+        retryAfterSeconds: () => 42,
+      },
+    };
+  }
+
+  it('counts every attempt, retries included', async () => {
+    const { state, budget } = fakeBudget(10);
+    respond(json(503, { message: 'unavailable' }), json(200, NGINX));
+    assert.deepEqual(await client({ budget }).get(repoRequest, RepoSchema), NGINX);
+    assert.equal(received.length, 2);
+    assert.equal(state.acquired, 2);
+  });
+
+  it('takes one slot for a call that succeeds first time', async () => {
+    const { state, budget } = fakeBudget(10);
+    respond(json(200, NGINX));
+    await client({ budget }).get(repoRequest, RepoSchema);
+    assert.equal(state.acquired, 1);
+  });
+
+  it('sends nothing and throws budget_exhausted when there is no slot', async () => {
+    const { state, budget } = fakeBudget(0);
+    respond(json(200, NGINX));
+    const error = await rejectsWith(
+      client({ budget }).get(repoRequest, RepoSchema),
+      'budget_exhausted',
+      { retryAfterSeconds: 42, status: undefined },
+    );
+    assert.equal(error.endpoint, 'repository');
+    assert.equal(received.length, 0);
+    assert.equal(state.refused, 1);
+  });
+
+  it('skips the retry when the budget runs out and throws the first failure', async () => {
+    const { state, budget } = fakeBudget(1);
+    respond(json(503, { message: 'unavailable' }), json(200, NGINX));
+    await rejectsWith(client({ budget }).get(repoRequest, RepoSchema), 'unavailable', {
+      status: 503,
+    });
+    assert.equal(received.length, 1);
+    assert.equal(state.acquired, 1);
+    assert.equal(state.refused, 1);
+  });
+
+  it('takes no slot for a retry it would not make (long Retry-After)', async () => {
+    const { state, budget } = fakeBudget(10);
+    respond(json(429, { message: 'Too Many Requests' }, { 'Retry-After': '60' }));
+    await rejectsWith(client({ budget }).get(repoRequest, RepoSchema), 'rate_limited');
+    assert.equal(state.acquired, 1);
+    assert.equal(state.refused, 0);
+  });
+});

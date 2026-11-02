@@ -26,6 +26,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `pnpm test` also runs unit tests (`app/**/*.test.ts`) on Node's built-in test runner with fake timers (`pnpm test:unit`; `pnpm test:params` runs the param cases).
 - Per-client rate limiter (`app/server/rateLimit.server.ts`): `RATE_LIMIT_MAX` requests per `RATE_LIMIT_WINDOW_MS` per client IP, answering 429 with `Retry-After`, with bounded memory. Ready for `/api/*` routes and page loaders to call; not wired into them yet.
 - `TRUST_PROXY_HOPS` env var (default `0`): how many reverse proxies' `X-Forwarded-For` entries to trust when resolving the client IP. With the default the client IP is unknown, so the per-client limit doesn't apply until a deployment sets it.
+- Proxy-wide upstream budget (`app/server/budget.server.ts`): at most `UPSTREAM_BUDGET_PER_MIN` Docker Hub attempts in any 60 s, retries included; with no slot left, nothing is sent (`UpstreamError` kind `budget_exhausted`).
+- `getCached(key, ttlSeconds, fetcher)` facade (`app/server/upstream.server.ts`) wiring the cache, the upstream client and the budget, with a `degraded` flag for the UI banner. When the budget is spent or Docker Hub is failing it serves stale data (`200`, `X-Cache: STALE`, `Cache-Control: no-store`) or, with nothing cached, a `503` JSON error with `Retry-After` and `Cache-Control: no-store`. Not wired to routes yet (T13).
 
 ### Fixed
 - `searchParamsToObject` now keeps the first occurrence of a repeated query key even when it's empty, instead of falling through to a later value (e.g. `?sort=&sort=stars` now keeps `sort` missing).

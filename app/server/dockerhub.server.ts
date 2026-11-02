@@ -11,8 +11,13 @@
  * body, honoring `Retry-After` (ADR-0003). Failures surface as a typed
  * `UpstreamError`. The response is validated with the caller's Valibot schema.
  *
- * Not here: caching (T09) and the proxy-wide upstream budget (T10), which wrap
- * this client.
+ * Every attempt, retries included, first takes a slot from the proxy-wide
+ * upstream budget (`budget.server.ts`, ADR-0003). With no slot, nothing is
+ * sent: a first attempt fails with `budget_exhausted`, a retry is skipped and
+ * the previous failure is thrown.
+ *
+ * Not here: caching and the stale / 503 failure path, which live in
+ * `upstream.server.ts` (`getCached`) around this client.
  */
 import * as v from 'valibot';
 import {
@@ -33,6 +38,7 @@ import {
   type TagParams,
   type TagsQuery,
 } from '../lib/params';
+import { upstreamBudget, type UpstreamBudget } from './budget.server';
 import { config } from './config.server';
 
 // ---------------------------------------------------------------------------
@@ -63,7 +69,8 @@ export const MAX_REPORTED_RETRY_AFTER_SECONDS = 86_400;
 // Errors
 // ---------------------------------------------------------------------------
 
-export type UpstreamErrorKind = 'not_found' | 'rate_limited' | 'unavailable' | 'bad_payload';
+export type UpstreamErrorKind =
+  'not_found' | 'rate_limited' | 'unavailable' | 'bad_payload' | 'budget_exhausted';
 
 export interface UpstreamErrorOptions {
   endpoint: UpstreamEndpoint;
@@ -80,6 +87,8 @@ export interface UpstreamErrorOptions {
  * - `rate_limited`: 429.
  * - `unavailable`: 5xx, timeout, network error, or any other non-2xx status (e.g. a Cloudflare 403).
  * - `bad_payload`: a 2xx that isn't JSON (e.g. a Cloudflare HTML page) or doesn't match the schema.
+ * - `budget_exhausted`: the proxy-wide upstream budget had no slot, so nothing
+ *   was sent. `retryAfterSeconds` is the time until a slot frees up.
  *
  * Messages never include the upstream body. For a schema mismatch, `cause` is
  * a `ValiError` whose issues may quote upstream values: log it server-side,
@@ -285,6 +294,11 @@ export interface DockerHubClientOptions {
   sleep?: (ms: number) => Promise<void>;
   /** Jitter source in [0, 1). Defaults to `Math.random`. */
   random?: () => number;
+  /**
+   * Proxy-wide upstream budget; every attempt, retries included, takes a slot.
+   * Omitted: unlimited (tests only; the app's client uses `upstreamBudget`).
+   */
+  budget?: Pick<UpstreamBudget, 'tryAcquire' | 'retryAfterSeconds'>;
 }
 
 export interface DockerHubClient {
@@ -395,7 +409,16 @@ export function createDockerHubClient(options: DockerHubClientOptions): DockerHu
     async get(request, schema) {
       const url = buildUpstreamUrl(options.baseUrl, request);
       const { endpoint } = request;
+      const { budget } = options;
+      const acquire = () => budget === undefined || budget.tryAcquire();
 
+      if (!acquire()) {
+        throw new UpstreamError(
+          'budget_exhausted',
+          `Docker Hub ${endpoint}: upstream budget exhausted, request not sent`,
+          { endpoint, retryAfterSeconds: budget?.retryAfterSeconds() },
+        );
+      }
       let result = await attempt(url, endpoint);
       for (let n = 1; !result.ok && result.retry && n < MAX_ATTEMPTS; n++) {
         const delay =
@@ -404,6 +427,8 @@ export function createDockerHubClient(options: DockerHubClientOptions): DockerHu
         // Honor Retry-After: wait it out, or give up now if it's too long to hold the request.
         if (delay > MAX_RETRY_AFTER_MS) break;
         await sleep(delay);
+        // The retry counts against the budget too; with no slot left, keep the failure we have.
+        if (!acquire()) break;
         result = await attempt(url, endpoint);
       }
       if (!result.ok) throw result.error;
@@ -421,8 +446,12 @@ export function createDockerHubClient(options: DockerHubClientOptions): DockerHu
   };
 }
 
-/** The app's client, configured from env (`DOCKERHUB_BASE_URL`, `UPSTREAM_TIMEOUT_MS`). */
+/**
+ * The app's client, configured from env (`DOCKERHUB_BASE_URL`, `UPSTREAM_TIMEOUT_MS`)
+ * and bound to the proxy-wide budget (`UPSTREAM_BUDGET_PER_MIN`).
+ */
 export const dockerHub: DockerHubClient = createDockerHubClient({
   baseUrl: config.upstream.baseUrl,
   timeoutMs: config.upstream.timeoutMs,
+  budget: upstreamBudget,
 });

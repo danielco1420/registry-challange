@@ -15,8 +15,9 @@ import { config } from './config.server';
  *   written together don't all expire together.
  *
  * This module only caches. It never calls Docker Hub and never sets HTTP
- * headers: callers pass the upstream call as `fetcher` and map `status` /
- * `ageMs` to `X-Cache` / `Age` themselves.
+ * headers: `getCached` in `upstream.server.ts` passes the upstream call as
+ * `fetcher` and maps `status` / `ageMs` / `refreshFailed` to headers and the
+ * `degraded` flag.
  */
 
 /** Maps to the `X-Cache` header: `MISS` means the caller waited for a fetch. */
@@ -29,6 +30,12 @@ export interface CacheResult<T> {
   isStale: boolean;
   /** Milliseconds since the value was fetched. */
   ageMs: number;
+  /**
+   * True when the value is stale and its last background refresh failed, i.e.
+   * the source is failing rather than just slow to refresh. Always false for
+   * `HIT` and `MISS`.
+   */
+  refreshFailed: boolean;
 }
 
 export interface CacheGetOptions {
@@ -53,6 +60,8 @@ interface Entry {
   storedAt: number;
   /** `Date.now()` after which the value is stale. */
   expiresAt: number;
+  /** Set when a background refresh of this entry failed; a successful one replaces the entry. */
+  refreshFailed?: boolean;
 }
 
 export class MemoryCache {
@@ -102,13 +111,16 @@ export class MemoryCache {
       const isStale = now >= entry.expiresAt;
       if (isStale) {
         // Background refresh: the caller doesn't wait, and a failure keeps the stale entry.
-        this.load(key, ttlMs, fetcher).catch(() => {});
+        this.load(key, ttlMs, fetcher).catch(() => {
+          entry.refreshFailed = true;
+        });
       }
       return {
         value: entry.value as T,
         status: isStale ? 'STALE' : 'HIT',
         isStale,
         ageMs: Math.max(0, now - entry.storedAt),
+        refreshFailed: isStale && entry.refreshFailed === true,
       };
     }
 
@@ -118,6 +130,7 @@ export class MemoryCache {
       status: 'MISS',
       isStale: false,
       ageMs: Math.max(0, Date.now() - loaded.storedAt),
+      refreshFailed: false,
     };
   }
 

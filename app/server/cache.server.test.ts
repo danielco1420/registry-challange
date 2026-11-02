@@ -43,11 +43,23 @@ describe('MemoryCache basics', () => {
     const fetcher = counter('v1');
 
     const first = await c.get('k', TTL, fetcher);
-    assert.deepEqual(first, { value: 'v1', status: 'MISS', isStale: false, ageMs: 0 });
+    assert.deepEqual(first, {
+      value: 'v1',
+      status: 'MISS',
+      isStale: false,
+      ageMs: 0,
+      refreshFailed: false,
+    });
 
     mock.timers.tick(400);
     const second = await c.get('k', TTL, fetcher);
-    assert.deepEqual(second, { value: 'v1', status: 'HIT', isStale: false, ageMs: 400 });
+    assert.deepEqual(second, {
+      value: 'v1',
+      status: 'HIT',
+      isStale: false,
+      ageMs: 400,
+      refreshFailed: false,
+    });
     assert.equal(fetcher.mock.callCount(), 1);
   });
 
@@ -178,7 +190,13 @@ describe('stale-while-revalidate', () => {
     // Several readers while the refresh is pending: none waits, one fetch total.
     for (let i = 0; i < 3; i += 1) {
       const result = await c.get('k', TTL, refresher);
-      assert.deepEqual(result, { value: 'old', status: 'STALE', isStale: true, ageMs: 1000 });
+      assert.deepEqual(result, {
+        value: 'old',
+        status: 'STALE',
+        isStale: true,
+        ageMs: 1000,
+        refreshFailed: false,
+      });
     }
     assert.equal(refresher.mock.callCount(), 1);
     assert.equal(c.isFetching('k'), true);
@@ -188,7 +206,13 @@ describe('stale-while-revalidate', () => {
     assert.equal(c.isFetching('k'), false);
 
     const fresh = await c.get('k', TTL, refresher);
-    assert.deepEqual(fresh, { value: 'new', status: 'HIT', isStale: false, ageMs: 0 });
+    assert.deepEqual(fresh, {
+      value: 'new',
+      status: 'HIT',
+      isStale: false,
+      ageMs: 0,
+      refreshFailed: false,
+    });
     assert.equal(refresher.mock.callCount(), 1);
   });
 
@@ -200,6 +224,7 @@ describe('stale-while-revalidate', () => {
     const failing = mock.fn(() => Promise.reject(new Error('429')));
     const stale = await c.get('k', TTL, failing);
     assert.equal(stale.status, 'STALE');
+    assert.equal(stale.refreshFailed, false, 'the refresh has not run yet');
     await flush();
     assert.equal(failing.mock.callCount(), 1);
     assert.equal(c.isFetching('k'), false);
@@ -207,8 +232,21 @@ describe('stale-while-revalidate', () => {
     const stillStale = await c.get('k', TTL, failing);
     assert.equal(stillStale.value, 'old');
     assert.equal(stillStale.status, 'STALE');
+    assert.equal(stillStale.refreshFailed, true);
     await flush();
     assert.equal(failing.mock.callCount(), 2);
+
+    // A successful refresh replaces the entry and clears the flag.
+    const ok = counter('new');
+    assert.equal((await c.get('k', TTL, ok)).refreshFailed, true);
+    await flush();
+    assert.deepEqual(await c.get('k', TTL, ok), {
+      value: 'new',
+      status: 'HIT',
+      isStale: false,
+      ageMs: 0,
+      refreshFailed: false,
+    });
   });
 
   it('lets a miss join a refresh that is already in flight', async () => {
