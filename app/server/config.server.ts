@@ -25,23 +25,45 @@ function intVar(defaultValue: number, min: number, max: number = Number.MAX_SAFE
   );
 }
 
-const urlVar = (defaultValue: string) =>
+/** Node timers (setTimeout, AbortSignal.timeout) treat larger delays as 1 ms. */
+const MAX_TIMER_MS = 2_147_483_647;
+
+/** True when `value` is a bare http(s) origin: no credentials, path, query or hash. */
+function isHttpOrigin(value: string): boolean {
+  if (!URL.canParse(value)) return false;
+  const url = new URL(value);
+  return (
+    /^https?:$/.test(url.protocol) &&
+    url.username === '' &&
+    url.password === '' &&
+    /^\/+$/.test(url.pathname) &&
+    url.search === '' &&
+    url.hash === '' &&
+    !/[?#]/.test(value)
+  );
+}
+
+/**
+ * An env var holding an http(s) origin, normalized to `URL.origin` (no trailing slash).
+ * The error doesn't echo the value, since a URL may embed credentials.
+ */
+const originVar = (defaultValue: string) =>
   v.optional(
     v.pipe(
       v.string(),
       v.trim(),
       v.check(
-        (value) => URL.canParse(value) && /^https?:$/.test(new URL(value).protocol),
-        (issue) => `must be an absolute http(s) URL, got "${issue.input}"`,
+        isHttpOrigin,
+        'must be an http(s) origin without credentials, path, query or hash (e.g. https://hub.docker.com)',
       ),
-      v.transform((value) => value.replace(/\/+$/, '')),
+      v.transform((value) => new URL(value).origin),
     ),
     defaultValue,
   );
 
 const EnvSchema = v.object({
-  DOCKERHUB_BASE_URL: urlVar('https://hub.docker.com'),
-  UPSTREAM_TIMEOUT_MS: intVar(8000, 1),
+  DOCKERHUB_BASE_URL: originVar('https://hub.docker.com'),
+  UPSTREAM_TIMEOUT_MS: intVar(8000, 1, MAX_TIMER_MS),
 
   CACHE_TTL_POPULAR: intVar(600, 0),
   CACHE_TTL_SEARCH: intVar(60, 0),
@@ -50,7 +72,7 @@ const EnvSchema = v.object({
   CACHE_TTL_PUBLISHER: intVar(3600, 0),
   CACHE_MAX_ENTRIES: intVar(1000, 1),
 
-  RATE_LIMIT_WINDOW_MS: intVar(60_000, 1),
+  RATE_LIMIT_WINDOW_MS: intVar(60_000, 1, MAX_TIMER_MS),
   RATE_LIMIT_MAX: intVar(60, 1),
 
   UPSTREAM_BUDGET_PER_MIN: intVar(
