@@ -25,7 +25,7 @@ Why a proxy: Docker Hub sends no CORS headers. See [ADR-0001](adr/0001-backend-p
 | Hooks / data layer | Server-state queries, URL state | Only calls our `/api/*` |
 | API client (frontend) | Typed fetchers for `/api/*` | The only frontend code that does network calls |
 | Proxy routes | Validate, cache, call upstream, normalize | Allowlist only (see [API.md](API.md#proxy-routes-allowlist-only)) |
-| Upstream client | Docker Hub calls, timeouts, retries, Valibot parsing | The only code that knows Docker Hub URLs |
+| Upstream client (`app/server/dockerhub.server.ts`, in place) | Docker Hub calls, timeouts, retries, Valibot parsing, typed `UpstreamError` | The only code that knows Docker Hub URLs; takes typed requests, never URLs or paths (see [API.md](API.md#upstream-client-appserverdockerhubserverts)) |
 
 ## Data flow: Repository details
 
@@ -46,3 +46,5 @@ Why a proxy: Docker Hub sends no CORS headers. See [ADR-0001](adr/0001-backend-p
 | publisher | 1 h |
 
 In-memory LRU with single-flight and stale-while-revalidate; TTLs overridable by env var. See [ADR-0003](adr/0003-server-cache-and-upstream-failures.md).
+
+The cache mechanics live in `app/server/cache.server.ts`: `cache.get(key, { ttlMs }, fetcher)` returns `{ value, status, isStale, ageMs }`, where `status` is `HIT`, `MISS` or `STALE` for the `X-Cache` header. Each entry's TTL gets ±10% jitter. A stale entry is served at once while one background refresh runs; a failed refresh keeps it, and only LRU eviction removes it. The module never calls Docker Hub or sets headers: the upstream client passes its fetch as `fetcher`, and the routes map `status`/`ageMs` to headers.

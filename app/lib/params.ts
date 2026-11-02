@@ -62,8 +62,9 @@ export const TagSchema = v.pipe(
 // Query params
 // ---------------------------------------------------------------------------
 
+/** No C0/C1 control characters. Also re-checked by the upstream client. */
 // eslint-disable-next-line no-control-regex
-const NO_CONTROL_CHARS = /^[^\u0000-\u001f\u007f-\u009f]*$/;
+export const NO_CONTROL_CHARS = /^[^\u0000-\u001f\u007f-\u009f]*$/;
 
 /** Free-text search. Unicode is allowed (it's sent as an encoded query value, never as a path). */
 export const QuerySchema = v.pipe(
