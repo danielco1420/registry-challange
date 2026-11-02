@@ -21,6 +21,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Valibot schemas for every route param (`namespace`, `repo`, `tag`, `q`, `page`, `pageSize`, `sort`, `badge`, `ordering`, tag filter) and a helper that turns a failed parse into a `400` JSON error (`app/lib/params.ts`, `app/lib/validate.ts`).
 - `pnpm test`: runs the `app/lib/params.cases.ts` table against the schemas (dependency-free stand-in until Vitest lands; `scripts/check-params.ts`).
 - Typed env config (`app/server/config.server.ts`), validated with Valibot at startup. Invalid values, including `UPSTREAM_BUDGET_PER_MIN` above 150, stop the server with a clear message.
+- Server-side in-memory cache (`app/server/cache.server.ts`): LRU bounded by `CACHE_MAX_ENTRIES`, single-flight per key, stale-while-revalidate with one background refresh, ±10% TTL jitter, and a `HIT`/`MISS`/`STALE` status plus entry age for `X-Cache` headers. Not wired to routes yet.
+- `pnpm test` also runs unit tests (`app/**/*.test.ts`) on Node's built-in test runner with fake timers (`pnpm test:unit`; `pnpm test:params` runs the param cases).
 
 ### Fixed
 - `searchParamsToObject` now keeps the first occurrence of a repeated query key even when it's empty, instead of falling through to a later value (e.g. `?sort=&sort=stars` now keeps `sort` missing).
