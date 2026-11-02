@@ -13,7 +13,7 @@ export default defineConfig({
           name: 'node',
           environment: 'node',
           include: ['app/**/*.test.ts', 'test/**/*.test.ts'],
-          setupFiles: ['test/setup.node.ts'],
+          setupFiles: ['test/setup.msw.ts'],
         },
       },
       {
@@ -21,8 +21,10 @@ export default defineConfig({
         test: {
           name: 'dom',
           environment: 'jsdom',
-          include: ['app/**/*.test.tsx'],
-          setupFiles: ['test/setup.dom.ts'],
+          include: ['app/**/*.test.tsx', 'test/**/*.test.tsx'],
+          // MSW guards the dom project too: jsdom keeps Node's `fetch`, so without it
+          // a component test could reach the real Docker Hub.
+          setupFiles: ['test/setup.msw.ts', 'test/setup.dom.ts'],
         },
       },
     ],

@@ -286,13 +286,13 @@ describe('createDockerHubClient', () => {
   it('200: returns the validated body and sends our headers', async () => {
     respond(json(200, { ...NGINX, extra: 'ignored' }));
     const data = await client().get(repoRequest, RepoSchema);
-    expect(data).toEqual(NGINX);
+    expect(data).toStrictEqual(NGINX);
     expect(received.length).toBe(1);
     expect(received[0]?.method).toBe('GET');
     expect(received[0]?.url).toBe('/v2/namespaces/library/repositories/nginx');
     expect(received[0]?.headers['user-agent']).toBe(USER_AGENT);
     expect(received[0]?.headers.accept).toBe('application/json');
-    expect(sleeps).toEqual([]);
+    expect(sleeps).toStrictEqual([]);
   });
 
   it('404 "object not found": not_found, no retry', async () => {
@@ -303,9 +303,9 @@ describe('createDockerHubClient', () => {
 
   it('429 with Retry-After: waits that long, then retries', async () => {
     respond(json(429, { message: 'Too Many Requests' }, { 'Retry-After': '2' }), json(200, NGINX));
-    expect(await client().get(repoRequest, RepoSchema)).toEqual(NGINX);
+    expect(await client().get(repoRequest, RepoSchema)).toStrictEqual(NGINX);
     expect(received.length).toBe(2);
-    expect(sleeps).toEqual([2000]);
+    expect(sleeps).toStrictEqual([2000]);
   });
 
   it('429 twice: rate_limited with retryAfterSeconds', async () => {
@@ -318,7 +318,7 @@ describe('createDockerHubClient', () => {
       retryAfterSeconds: 3,
     });
     expect(received.length).toBe(MAX_ATTEMPTS);
-    expect(sleeps).toEqual([1000]);
+    expect(sleeps).toStrictEqual([1000]);
   });
 
   it('429 with a long Retry-After: fails fast without retrying', async () => {
@@ -328,7 +328,7 @@ describe('createDockerHubClient', () => {
       retryAfterSeconds: 60,
     });
     expect(received.length).toBe(1);
-    expect(sleeps).toEqual([]);
+    expect(sleeps).toStrictEqual([]);
   });
 
   it('429 without Retry-After: uses x-ratelimit-reset and fails fast', async () => {
@@ -340,19 +340,19 @@ describe('createDockerHubClient', () => {
     expect(error.retryAfterSeconds).toBeGreaterThanOrEqual(58);
     expect(error.retryAfterSeconds).toBeLessThanOrEqual(60);
     expect(received.length).toBe(1);
-    expect(sleeps).toEqual([]);
+    expect(sleeps).toStrictEqual([]);
   });
 
   it('429 with no rate-limit headers: one retry after the default backoff', async () => {
     respond(json(429, { message: 'Too Many Requests' }), json(200, NGINX));
-    expect(await client().get(repoRequest, RepoSchema)).toEqual(NGINX);
+    expect(await client().get(repoRequest, RepoSchema)).toStrictEqual(NGINX);
     expect(received.length).toBe(2);
-    expect(sleeps).toEqual([RETRY_BACKOFF_BASE_MS + 125]);
+    expect(sleeps).toStrictEqual([RETRY_BACKOFF_BASE_MS + 125]);
   });
 
   it('5xx then 200: retries once after a jittered backoff', async () => {
     respond(json(503, { message: 'unavailable' }), json(200, NGINX));
-    expect(await client().get(repoRequest, RepoSchema)).toEqual(NGINX);
+    expect(await client().get(repoRequest, RepoSchema)).toStrictEqual(NGINX);
     expect(received.length).toBe(2);
     expect(sleeps.length).toBe(1);
     expect(sleeps[0]).toBeGreaterThanOrEqual(RETRY_BACKOFF_BASE_MS);
@@ -377,7 +377,7 @@ describe('createDockerHubClient', () => {
 
   it('timeout then 200: recovers on the retry', async () => {
     respond(slow(500), json(200, NGINX));
-    expect(await client({ timeoutMs: 50 }).get(repoRequest, RepoSchema)).toEqual(NGINX);
+    expect(await client({ timeoutMs: 50 }).get(repoRequest, RepoSchema)).toStrictEqual(NGINX);
     expect(received.length).toBe(2);
   });
 
@@ -466,7 +466,7 @@ describe('createDockerHubClient with MSW', () => {
         return HttpResponse.json({ ...NGINX, namespace: params.ns, name: params.repo });
       }),
     );
-    expect(await client({ baseUrl: HUB }).get(repoRequest, RepoSchema)).toEqual(NGINX);
+    expect(await client({ baseUrl: HUB }).get(repoRequest, RepoSchema)).toStrictEqual(NGINX);
     expect(userAgent).toBe(USER_AGENT);
   });
 

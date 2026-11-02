@@ -41,11 +41,11 @@ describe('MemoryCache basics', () => {
     const fetcher = counter('v1');
 
     const first = await c.get('k', TTL, fetcher);
-    expect(first).toEqual({ value: 'v1', status: 'MISS', isStale: false, ageMs: 0 });
+    expect(first).toStrictEqual({ value: 'v1', status: 'MISS', isStale: false, ageMs: 0 });
 
     vi.advanceTimersByTime(400);
     const second = await c.get('k', TTL, fetcher);
-    expect(second).toEqual({ value: 'v1', status: 'HIT', isStale: false, ageMs: 400 });
+    expect(second).toStrictEqual({ value: 'v1', status: 'HIT', isStale: false, ageMs: 400 });
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
@@ -176,7 +176,7 @@ describe('stale-while-revalidate', () => {
     // Several readers while the refresh is pending: none waits, one fetch total.
     for (let i = 0; i < 3; i += 1) {
       const result = await c.get('k', TTL, refresher);
-      expect(result).toEqual({ value: 'old', status: 'STALE', isStale: true, ageMs: 1000 });
+      expect(result).toStrictEqual({ value: 'old', status: 'STALE', isStale: true, ageMs: 1000 });
     }
     expect(refresher).toHaveBeenCalledTimes(1);
     expect(c.isFetching('k')).toBe(true);
@@ -186,7 +186,7 @@ describe('stale-while-revalidate', () => {
     expect(c.isFetching('k')).toBe(false);
 
     const fresh = await c.get('k', TTL, refresher);
-    expect(fresh).toEqual({ value: 'new', status: 'HIT', isStale: false, ageMs: 0 });
+    expect(fresh).toStrictEqual({ value: 'new', status: 'HIT', isStale: false, ageMs: 0 });
     expect(refresher).toHaveBeenCalledTimes(1);
   });
 

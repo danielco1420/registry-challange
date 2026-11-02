@@ -16,12 +16,14 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  // E2E runs against the production build, the way the app ships.
+  // E2E runs against a fresh production build, the way the app ships. Never reuse
+  // a server already on the port: it could be a dev server, another worktree or a
+  // stale build, and the run would test that instead of the current code.
   webServer: {
     command: 'pnpm build && pnpm start',
     url: `${BASE_URL}/api/health`,
     env: { PORT: String(PORT) },
-    reuseExistingServer: !CI,
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 });

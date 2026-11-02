@@ -27,7 +27,7 @@ pnpm build && pnpm start   # production server, PORT defaults to 3000
 
 Tests (Vitest, questionnaire F33):
 - `app/**/*.test.ts` run in Node (`node` project), `app/**/*.test.tsx` in jsdom with Testing Library and jest-dom (`dom` project). Import `describe`/`it`/`expect`/`vi` from `vitest` (no globals).
-- MSW (`test/msw/server.ts`) runs for every Node test. Add handlers per test with `server.use(...)`; they reset after each test. Unhandled requests to non-loopback hosts get a 500, so tests never reach the real Docker Hub. Recorded responses go in `fixtures/dockerhub/` (T08).
+- MSW (`test/msw/server.ts`) runs for every test in both projects. Add handlers per test with `server.use(...)`; they reset after each test. Unhandled HTTP requests to non-loopback hosts get a 500 and unhandled WebSockets get an error, so tests never reach the real Docker Hub. Recorded responses go in `fixtures/dockerhub/` (T08).
 - Coverage targets ~80% on `app/server` and `app/lib`; it is reported, not enforced.
 - E2E specs live in `e2e/*.spec.ts`. Run `pnpm exec playwright install chromium` once before the first `pnpm test:e2e`.
 

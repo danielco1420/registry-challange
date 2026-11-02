@@ -32,7 +32,7 @@ afterEach(() => {
 describe('counting', () => {
   it('allows requests under the limit and counts down `remaining`', () => {
     const limiter = createRateLimiter({ windowMs: 60_000, max: 3, now: fakeClock().now });
-    expect([1, 2, 3].map(() => limiter.hit('1.2.3.4'))).toEqual(
+    expect([1, 2, 3].map(() => limiter.hit('1.2.3.4'))).toStrictEqual(
       [2, 1, 0].map((remaining) => ({
         allowed: true,
         key: '1.2.3.4',
@@ -245,7 +245,7 @@ describe('request helpers', () => {
     expect(response.headers.get('Retry-After')).toBe('42');
     expect(response.headers.get('Cache-Control')).toBe('no-store');
     expect(response.headers.get('Content-Type')).toMatch(/^application\/json/);
-    expect(await response.json()).toEqual({
+    expect(await response.json()).toStrictEqual({
       error: { code: 'rate_limited', message: 'Too many requests. Try again later.' },
     });
   });
