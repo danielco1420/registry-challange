@@ -10,7 +10,7 @@ Update the status column as mitigations land. New risks go in the matching secti
 |---|---|---|---|---|
 | 1.1 | **Upstream rate limit** (~180 req/min per IP) is shared by every user, because all traffic leaves from the proxy's IP | 429s for everyone under modest load | Server-side cache with per-route TTLs; request coalescing (single-flight); stale-while-revalidate; honor `Retry-After`; proxy-wide budget of `UPSTREAM_BUDGET_PER_MIN` (≤150) upstream attempts per minute | 🟡 (cache, budget and `getCached` facade in `app/server/{cache,budget,upstream}.server.ts`; routes not wired yet, T13) |
 | 1.2 | **Cache stampede** when a hot key expires | Burst of upstream calls, which leads to 429s | Single-flight per key; jittered TTLs; serve stale while refreshing | 🟡 (`app/server/cache.server.ts`; routes not wired yet) |
-| 1.3 | **Undocumented `/api/search/v4`** changes or disappears | Search and Explore break | Valibot validation with clear errors; fallback to `/v2/search/repositories`; contract tests against recorded fixtures | ⬜ |
+| 1.3 | **Undocumented `/api/search/v4`** changes or disappears | Search and Explore break | Valibot validation with clear errors; fallback to `/v2/search/repositories`; contract tests against recorded fixtures | 🟡 (schemas in `app/server/dockerhub.schemas.server.ts`; schema failures are `bad_payload` with the failing `issuePath`; legacy fallback in `app/server/search.server.ts` for non-empty, unfiltered queries; contract tests against `fixtures/dockerhub/`; routes not wired yet, T13) |
 | 1.4 | **Cloudflare bot protection** challenges our server IP | Upstream returns HTML or 403 instead of JSON | Low request volume via caching; descriptive User-Agent; detect non-JSON responses and surface a degraded state | 🟡 (User-Agent and non-JSON detection in `app/server/dockerhub.server.ts`; `getCached` serves stale data with a `degraded` flag or a 503 in `app/server/upstream.server.ts`; routes and banner pending) |
 | 1.5 | **Terms of Service** for automated or undocumented API use | Access could be blocked | Keep traffic minimal, document the usage, prefer documented endpoints where they exist | ⬜ |
 | 1.6 | **Upstream latency or outages** | Hanging requests, blank UI | Timeouts (~8 s); retry with backoff for GETs; serve stale cache; degraded-mode banner | 🟡 (timeout and one retry honoring `Retry-After` in `app/server/dockerhub.server.ts`; stale fallback and 503 in `app/server/upstream.server.ts`; routes and banner pending) |
@@ -43,10 +43,10 @@ Update the status column as mitigations land. New risks go in the matching secti
 | # | Risk | Mitigation | Status |
 |---|---|---|---|
 | 4.1 | `library/` namespace: wrong pull command or URL | `pullCommand()` helper strips `library/`; unit tests | ⬜ |
-| 4.2 | Pull counts in mixed formats ("1B+" vs integer) | Normalize to `pulls` + `pullsLabel` in the proxy | ⬜ |
-| 4.3 | Missing fields (no logo, empty description, `full_size` 0) | Fallback avatar, "No description" copy, "—" for unknown size | ⬜ |
+| 4.2 | Pull counts in mixed formats ("1B+" vs integer) | Normalize to `pulls` + `pullsLabel` in the proxy | 🟡 (`normalizePulls` in `app/server/normalize.server.ts`, tested against every label in the fixtures; routes not wired yet) |
+| 4.3 | Missing fields (no logo, empty description, `full_size` 0) | Fallback avatar, "No description" copy, "—" for unknown size | 🟡 (normalizers return `logoUrl` absent, `description: ""`, `size: 0`; `formatSize` renders "—"; UI fallbacks pending) |
 | 4.4 | Clipboard API needs a secure context and a user gesture | Hidden `textarea` + `execCommand('copy')` fallback; show an error state if both fail | ⬜ |
 | 4.5 | Stale responses overwrite newer ones when typing fast | Query keys / AbortController; debounce | ⬜ |
 | 4.6 | Time zones and relative-date drift | Format with `Intl`; show the absolute date in a tooltip | ⬜ |
-| 4.7 | Archived, deleted or private repos return 404 | Friendly not-found page with a link back to Explore | ⬜ |
+| 4.7 | Deleted or private repos return 404 (archived ones return 200 with `status_description: "archived"`) | Friendly not-found page with a link back to Explore; `archived` flag on the DTOs for an "Archived" label | ⬜ |
 | 4.8 | Accessibility regressions | best-effort accessibility (no formal WCAG target, see E30): semantic HTML, Radix primitives, visible focus rings, keyboard nav; `aria-live` on copy feedback; axe checks in e2e | ⬜ |
