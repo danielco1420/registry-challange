@@ -296,8 +296,23 @@ Failures throw `UpstreamError` with a `kind` (plus `status` and `retryAfterSecon
 | 429 | `rate_limited` |
 | 5xx, timeout, network error, other non-2xx (e.g. a Cloudflare 403 challenge), redirect | `unavailable` |
 | 2xx with a non-JSON `Content-Type` or body (e.g. Cloudflare HTML), or JSON that fails the schema | `bad_payload` |
+| No upstream budget slot left (nothing sent) | `budget_exhausted` |
 
-Caching (T09) and the proxy-wide upstream budget (T10) wrap this client; every attempt, retries included, will count against the budget.
+## Upstream budget and failure path (`app/server/budget.server.ts`, `app/server/upstream.server.ts`)
+
+Every attempt the client sends, retries included, first takes a slot from the proxy-wide budget: at most `UPSTREAM_BUDGET_PER_MIN` (default and maximum 150) in any 60 s, a sliding window kept below Docker Hub's ~180 req/min. No slot for the first attempt: nothing is sent and the call fails with `budget_exhausted`. No slot for the retry: the retry is skipped and the first failure is thrown. Cache hits and single-flight followers never reach the client, so they don't count.
+
+Routes and loaders read through `getCached(key, ttlSeconds, fetcher)`, which returns `{ value, status, ageMs, degraded }`:
+
+| Situation | `/api/*` response | `degraded` |
+|---|---|---|
+| Fresh entry or successful fetch | 200, `X-Cache: HIT`/`MISS`, `Age`, `Cache-Control: public, max-age=<ttl>` | false |
+| Stale entry, background refresh running (healthy upstream) | 200, `X-Cache: STALE`, `Cache-Control: no-store` | false |
+| Stale entry, budget exhausted or its last refresh failed | 200, `X-Cache: STALE`, `Cache-Control: no-store`, no `Retry-After` | true |
+| No entry; budget exhausted, or 429 / 5xx / timeout / network error / bad payload | 503, `Cache-Control: no-store`, `Retry-After` | (thrown) |
+| No entry; 404 | `UpstreamError` `not_found` rethrown, the route answers 404 | (thrown) |
+
+The 503 body is `{ "error": { "code": "upstream_unavailable", "message": "Docker Hub is unavailable right now. Try again later." } }`. `Retry-After` is the seconds until the budget frees a slot when the budget is the cause; for an upstream failure it is the upstream's own `Retry-After` (or the larger budget wait), else 5 s. Always at least 1.
 
 ## Re-verify (curl probes)
 

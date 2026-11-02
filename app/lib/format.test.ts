@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { describe, it } from 'vitest';
 import { formatCompactNumber, formatRelativeDate, formatSize } from './format';
 
 const NOW = '2026-11-02T12:00:00.000Z';

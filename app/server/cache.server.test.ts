@@ -41,11 +41,23 @@ describe('MemoryCache basics', () => {
     const fetcher = counter('v1');
 
     const first = await c.get('k', TTL, fetcher);
-    expect(first).toStrictEqual({ value: 'v1', status: 'MISS', isStale: false, ageMs: 0 });
+    expect(first).toStrictEqual({
+      value: 'v1',
+      status: 'MISS',
+      isStale: false,
+      ageMs: 0,
+      refreshFailed: false,
+    });
 
     vi.advanceTimersByTime(400);
     const second = await c.get('k', TTL, fetcher);
-    expect(second).toStrictEqual({ value: 'v1', status: 'HIT', isStale: false, ageMs: 400 });
+    expect(second).toStrictEqual({
+      value: 'v1',
+      status: 'HIT',
+      isStale: false,
+      ageMs: 400,
+      refreshFailed: false,
+    });
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
@@ -176,7 +188,13 @@ describe('stale-while-revalidate', () => {
     // Several readers while the refresh is pending: none waits, one fetch total.
     for (let i = 0; i < 3; i += 1) {
       const result = await c.get('k', TTL, refresher);
-      expect(result).toStrictEqual({ value: 'old', status: 'STALE', isStale: true, ageMs: 1000 });
+      expect(result).toStrictEqual({
+        value: 'old',
+        status: 'STALE',
+        isStale: true,
+        ageMs: 1000,
+        refreshFailed: false,
+      });
     }
     expect(refresher).toHaveBeenCalledTimes(1);
     expect(c.isFetching('k')).toBe(true);
@@ -186,7 +204,13 @@ describe('stale-while-revalidate', () => {
     expect(c.isFetching('k')).toBe(false);
 
     const fresh = await c.get('k', TTL, refresher);
-    expect(fresh).toStrictEqual({ value: 'new', status: 'HIT', isStale: false, ageMs: 0 });
+    expect(fresh).toStrictEqual({
+      value: 'new',
+      status: 'HIT',
+      isStale: false,
+      ageMs: 0,
+      refreshFailed: false,
+    });
     expect(refresher).toHaveBeenCalledTimes(1);
   });
 
@@ -198,6 +222,7 @@ describe('stale-while-revalidate', () => {
     const failing = vi.fn(() => Promise.reject(new Error('429')));
     const stale = await c.get('k', TTL, failing);
     expect(stale.status).toBe('STALE');
+    expect(stale.refreshFailed).toBe(false); // the refresh has not run yet
     await flush();
     expect(failing).toHaveBeenCalledTimes(1);
     expect(c.isFetching('k')).toBe(false);
@@ -205,8 +230,21 @@ describe('stale-while-revalidate', () => {
     const stillStale = await c.get('k', TTL, failing);
     expect(stillStale.value).toBe('old');
     expect(stillStale.status).toBe('STALE');
+    expect(stillStale.refreshFailed).toBe(true);
     await flush();
     expect(failing).toHaveBeenCalledTimes(2);
+
+    // A successful refresh replaces the entry and clears the flag.
+    const ok = counter('new');
+    expect((await c.get('k', TTL, ok)).refreshFailed).toBe(true);
+    await flush();
+    expect(await c.get('k', TTL, ok)).toStrictEqual({
+      value: 'new',
+      status: 'HIT',
+      isStale: false,
+      ageMs: 0,
+      refreshFailed: false,
+    });
   });
 
   it('lets a miss join a refresh that is already in flight', async () => {
