@@ -45,3 +45,7 @@ _Pending implementation: the stack is chosen (pnpm, Node 22) but the app is not 
 - Update `docs/API.md` whenever an upstream call changes.
 - Handle loading, empty and error states for every data view.
 - Line endings are LF (enforced by `.gitattributes`). The dev machine is Windows.
+
+## Kanban autopilot
+
+A scheduled cloud routine runs [.claude/skills/kanban-autopilot/SKILL.md](.claude/skills/kanban-autopilot/SKILL.md): it takes up to 3 unblocked tasks from the project board, plans them on the issue, implements, opens a PR, reviews it and moves the card to "In review". Issues it owns carry the `autopilot` label; leave those alone unless you're the owner reviewing.

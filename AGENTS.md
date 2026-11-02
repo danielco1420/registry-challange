@@ -18,3 +18,4 @@ _Pending implementation: the stack is chosen (pnpm, Node 22) but the app is not 
 - No secrets in code or the client bundle.
 - Follow [CONTRIBUTING.md](CONTRIBUTING.md): Conventional Commits, PRs only, update CHANGELOG and docs in the same change.
 - Respect accepted ADRs in [docs/adr/](docs/adr/). Propose a new ADR to change one.
+- Issues labelled `autopilot` are being worked by the Kanban autopilot routine ([.claude/skills/kanban-autopilot/SKILL.md](.claude/skills/kanban-autopilot/SKILL.md)). Don't pick them up.
