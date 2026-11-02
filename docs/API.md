@@ -247,12 +247,35 @@ const pullCommand = (ns: string, repo: string, tag: string) =>
 | Our route | Upstream |
 |---|---|
 | `GET /api/popular` | A with `badges=official&sort=pull_count&order=desc&size=10` |
-| `GET /api/search?q=&page=&pageSize=&sort=` | A |
+| `GET /api/search?q=&page=&pageSize=&sort=&badge=` | A |
 | `GET /api/repos/:ns/:repo` | B |
 | `GET /api/repos/:ns/:repo/tags?page=&pageSize=&ordering=&name=` | C |
 | `GET /api/publishers/:name` | D |
 
 The proxy never forwards arbitrary paths or URLs.
+
+### Param validation
+
+Every param is parsed with the Valibot schemas in `app/lib/params.ts` before any upstream call. A failed parse returns `400` with `Cache-Control: no-store` and this body (built by `app/lib/validate.ts`; messages never echo the input):
+
+```json
+{ "error": { "code": "invalid_params", "message": "Invalid request parameters",
+             "issues": [{ "param": "page", "message": "page must be a whole number between 1 and 100" }] } }
+```
+
+| Our param | Rule | Default | Upstream |
+|---|---|---|---|
+| `:ns`, `:repo`, `:name` (publisher) | `^[a-z0-9]+(?:[._-][a-z0-9]+)*$`, ≤ 255 chars | | path segment, `encodeURIComponent` |
+| `:tag` | `^[\w][\w.-]{0,127}$` (ASCII) | | path segment |
+| `q` | trimmed, ≤ 100 chars, no control chars | `''` | `query` |
+| `page` | integer 1–100 | `1` | search: `from = (page - 1) * pageSize`; tags: `page` |
+| `pageSize` | integer 1–100 | `25` | search: `size`; tags: `page_size` |
+| `sort` (search) | `relevance` \| `pulls` \| `stars` \| `updated` | `relevance` | `sort` omitted \| `pull_count` \| `star_count` \| `updated_at`, with `order=desc` |
+| `badge` (search) | `official` \| `verified_publisher` \| `open_source` | none | `badges` |
+| `ordering` (tags) | `last_updated` \| `-last_updated` \| `name` \| `-name` | none | `ordering` |
+| `name` (tags) | trimmed, `[\w.-]*`, ≤ 128 chars | none | `name` |
+
+Query strings: unknown keys are ignored, empty values count as missing, and a repeated key uses its first value.
 
 ## Re-verify (curl probes)
 
