@@ -1,0 +1,456 @@
+{
+  "total": 181,
+  "results": [
+    {
+      "id": "library/nginx",
+      "name": "nginx",
+      "slug": "nginx",
+      "type": "image",
+      "publisher": { "id": "33ef574274c011e4bea40242ac11001b", "name": "library" },
+      "created_at": "2014-06-05T19:14:45Z",
+      "updated_at": "2026-10-31T01:52:43.634621Z",
+      "short_description": "Official build of Nginx.",
+      "badge": "official",
+      "star_count": 21414,
+      "pull_count": "1B+",
+      "operating_systems": [
+        { "name": "linux", "label": "Linux" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "architectures": [
+        { "name": "386", "label": "386" },
+        { "name": "mips64le", "label": "mips64le" },
+        { "name": "ppc64le", "label": "ppc64le" },
+        { "name": "unknown", "label": "unknown" },
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm", "label": "arm" },
+        { "name": "arm64", "label": "ARM 64" },
+        { "name": "riscv64", "label": "riscv64" },
+        { "name": "s390x", "label": "IBM Z" }
+      ],
+      "logo_url": {
+        "large": "https://djeqr6to3dedg.cloudfront.net/repo-logos/library/nginx/live/logo-1790032455953.png",
+        "small": "https://djeqr6to3dedg.cloudfront.net/repo-logos/library/nginx/live/logo-1790032455953.png"
+      },
+      "extension_reviewed": false,
+      "categories": [{ "slug": "web-servers", "name": "Web servers" }],
+      "archived": false,
+      "media_types": [
+        "application/octet-stream",
+        "application/vnd.docker.container.image.v1+json",
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.docker.distribution.manifest.v1+prettyjws",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["unrecognized", "image"],
+      "score": 933.1474,
+      "raw_pull_count": 13536895997,
+      "additional_metadata": { "has_security_attestations": false }
+    },
+    {
+      "id": "library/memcached",
+      "name": "memcached",
+      "slug": "memcached",
+      "type": "image",
+      "publisher": { "id": "33ef574274c011e4bea40242ac11001b", "name": "library" },
+      "created_at": "2015-01-01T01:13:49.166092Z",
+      "updated_at": "2026-10-30T14:34:47.799952Z",
+      "short_description": "Free \u0026 open source, high-performance, distributed memory object caching system.",
+      "badge": "official",
+      "star_count": 2473,
+      "pull_count": "1B+",
+      "operating_systems": [
+        { "name": "linux", "label": "Linux" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "architectures": [
+        { "name": "386", "label": "386" },
+        { "name": "arm", "label": "arm" },
+        { "name": "mips64le", "label": "mips64le" },
+        { "name": "riscv64", "label": "riscv64" },
+        { "name": "unknown", "label": "unknown" },
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm64", "label": "ARM 64" },
+        { "name": "ppc64le", "label": "ppc64le" },
+        { "name": "s390x", "label": "IBM Z" }
+      ],
+      "logo_url": {
+        "large": "https://www.gravatar.com/avatar/7510e100f7ebeca4a0b8c3c617349295?s=80\u0026r=g\u0026d=mm",
+        "small": "https://www.gravatar.com/avatar/7510e100f7ebeca4a0b8c3c617349295?s=80\u0026r=g\u0026d=mm"
+      },
+      "extension_reviewed": false,
+      "categories": [{ "slug": "databases-and-storage", "name": "Databases \u0026 storage" }],
+      "archived": false,
+      "media_types": [
+        "application/octet-stream",
+        "application/vnd.docker.container.image.v1+json",
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.docker.distribution.manifest.v1+prettyjws",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["image", "unrecognized"],
+      "score": 932.8255,
+      "raw_pull_count": 13428398341,
+      "additional_metadata": { "has_security_attestations": false }
+    },
+    {
+      "id": "library/busybox",
+      "name": "busybox",
+      "slug": "busybox",
+      "type": "image",
+      "publisher": { "id": "33ef574274c011e4bea40242ac11001b", "name": "library" },
+      "created_at": "2013-04-30T20:54:42Z",
+      "updated_at": "2026-10-30T10:58:14.081369Z",
+      "short_description": "Busybox base image.",
+      "badge": "official",
+      "star_count": 3527,
+      "pull_count": "1B+",
+      "operating_systems": [
+        { "name": "linux", "label": "Linux" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "architectures": [
+        { "name": "386", "label": "386" },
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm", "label": "arm" },
+        { "name": "mips64le", "label": "mips64le" },
+        { "name": "s390x", "label": "IBM Z" },
+        { "name": "unknown", "label": "unknown" },
+        { "name": "arm64", "label": "ARM 64" },
+        { "name": "ppc64le", "label": "ppc64le" },
+        { "name": "riscv64", "label": "riscv64" }
+      ],
+      "logo_url": {
+        "large": "https://djeqr6to3dedg.cloudfront.net/repo-logos/library/busybox/live/logo-1763770272161.png",
+        "small": "https://djeqr6to3dedg.cloudfront.net/repo-logos/library/busybox/live/logo-1763770272161.png"
+      },
+      "extension_reviewed": false,
+      "categories": [{ "slug": "operating-systems", "name": "Operating systems" }],
+      "archived": false,
+      "media_types": [
+        "application/octet-stream",
+        "application/vnd.docker.container.image.v1+json",
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.docker.distribution.manifest.v1+prettyjws",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["unrecognized", "image"],
+      "score": 931.4256,
+      "raw_pull_count": 12966569004,
+      "additional_metadata": { "has_security_attestations": false }
+    },
+    {
+      "id": "library/alpine",
+      "name": "alpine",
+      "slug": "alpine",
+      "type": "image",
+      "publisher": { "id": "33ef574274c011e4bea40242ac11001b", "name": "library" },
+      "created_at": "2015-03-17T23:16:05.407728Z",
+      "updated_at": "2026-10-23T05:24:50.064348Z",
+      "short_description": "A minimal Docker image based on Alpine Linux with a complete package index and only 5 MB in size!",
+      "badge": "official",
+      "star_count": 11579,
+      "pull_count": "1B+",
+      "operating_systems": [
+        { "name": "linux", "label": "Linux" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "architectures": [
+        { "name": "386", "label": "386" },
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm", "label": "arm" },
+        { "name": "arm64", "label": "ARM 64" },
+        { "name": "ppc64le", "label": "ppc64le" },
+        { "name": "riscv64", "label": "riscv64" },
+        { "name": "s390x", "label": "IBM Z" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "logo_url": {
+        "large": "https://djeqr6to3dedg.cloudfront.net/repo-logos/library/alpine/live/logo-1788588737954.png",
+        "small": "https://djeqr6to3dedg.cloudfront.net/repo-logos/library/alpine/live/logo-1788588737954.png"
+      },
+      "extension_reviewed": false,
+      "categories": [{ "slug": "operating-systems", "name": "Operating systems" }],
+      "archived": false,
+      "media_types": [
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.docker.distribution.manifest.v1+prettyjws",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["image"],
+      "score": 929.7898,
+      "raw_pull_count": 12446992049,
+      "additional_metadata": { "has_security_attestations": false }
+    },
+    {
+      "id": "library/postgres",
+      "name": "postgres",
+      "slug": "postgres",
+      "type": "image",
+      "publisher": { "id": "33ef574274c011e4bea40242ac11001b", "name": "library" },
+      "created_at": "2014-06-05T20:01:35Z",
+      "updated_at": "2026-11-01T10:08:06.55542Z",
+      "short_description": "The PostgreSQL object-relational database system provides reliability and data integrity.",
+      "badge": "official",
+      "star_count": 15044,
+      "pull_count": "1B+",
+      "operating_systems": [
+        { "name": "linux", "label": "Linux" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "architectures": [
+        { "name": "386", "label": "386" },
+        { "name": "arm", "label": "arm" },
+        { "name": "mips64le", "label": "mips64le" },
+        { "name": "ppc64le", "label": "ppc64le" },
+        { "name": "unknown", "label": "unknown" },
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm64", "label": "ARM 64" },
+        { "name": "riscv64", "label": "riscv64" },
+        { "name": "s390x", "label": "IBM Z" }
+      ],
+      "logo_url": {
+        "large": "https://djeqr6to3dedg.cloudfront.net/repo-logos/library/postgres/live/logo-1763770361454.png",
+        "small": "https://djeqr6to3dedg.cloudfront.net/repo-logos/library/postgres/live/logo-1763770361454.png"
+      },
+      "extension_reviewed": false,
+      "categories": [{ "slug": "databases-and-storage", "name": "Databases \u0026 storage" }],
+      "archived": false,
+      "media_types": [
+        "application/octet-stream",
+        "application/vnd.docker.container.image.v1+json",
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.docker.distribution.manifest.v1+prettyjws",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["unrecognized", "image"],
+      "score": 928.8282,
+      "raw_pull_count": 12151330970,
+      "additional_metadata": { "has_security_attestations": false }
+    },
+    {
+      "id": "library/redis",
+      "name": "redis",
+      "slug": "redis",
+      "type": "image",
+      "publisher": { "id": "33ef574274c011e4bea40242ac11001b", "name": "library" },
+      "created_at": "2014-06-05T20:04:50Z",
+      "updated_at": "2026-11-01T12:06:34.31371Z",
+      "short_description": "Redis is the world’s fastest data platform for caching, vector search, and NoSQL databases.",
+      "badge": "official",
+      "star_count": 13630,
+      "pull_count": "1B+",
+      "operating_systems": [
+        { "name": "linux", "label": "Linux" },
+        { "name": "windows", "label": "Windows" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "architectures": [
+        { "name": "386", "label": "386" },
+        { "name": "arm64", "label": "ARM 64" },
+        { "name": "mips64le", "label": "mips64le" },
+        { "name": "ppc64le", "label": "ppc64le" },
+        { "name": "riscv64", "label": "riscv64" },
+        { "name": "s390x", "label": "IBM Z" },
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm", "label": "arm" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "logo_url": {
+        "large": "https://djeqr6to3dedg.cloudfront.net/repo-logos/library/redis/live/logo-1763770365681.png",
+        "small": "https://djeqr6to3dedg.cloudfront.net/repo-logos/library/redis/live/logo-1763770365681.png"
+      },
+      "extension_reviewed": false,
+      "categories": [{ "slug": "databases-and-storage", "name": "Databases \u0026 storage" }],
+      "archived": false,
+      "media_types": [
+        "application/octet-stream",
+        "application/vnd.docker.container.image.v1+json",
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.docker.distribution.manifest.v1+prettyjws",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["image", "unrecognized"],
+      "score": 926.83936,
+      "raw_pull_count": 11561937775,
+      "additional_metadata": { "has_security_attestations": false }
+    },
+    {
+      "id": "library/ubuntu",
+      "name": "ubuntu",
+      "slug": "ubuntu",
+      "type": "image",
+      "publisher": { "id": "33ef574274c011e4bea40242ac11001b", "name": "library" },
+      "created_at": "2013-04-30T20:54:50Z",
+      "updated_at": "2026-10-29T04:04:53.431033Z",
+      "short_description": "Ubuntu is a Debian-based Linux operating system based on free software.",
+      "badge": "official",
+      "star_count": 17873,
+      "pull_count": "1B+",
+      "operating_systems": [
+        { "name": "linux", "label": "Linux" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "architectures": [
+        { "name": "ppc64le", "label": "ppc64le" },
+        { "name": "riscv64", "label": "riscv64" },
+        { "name": "s390x", "label": "IBM Z" },
+        { "name": "unknown", "label": "unknown" },
+        { "name": "386", "label": "386" },
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm", "label": "arm" },
+        { "name": "arm64", "label": "ARM 64" }
+      ],
+      "logo_url": {
+        "large": "https://djeqr6to3dedg.cloudfront.net/repo-logos/library/ubuntu/live/logo-1763770403542.png",
+        "small": "https://djeqr6to3dedg.cloudfront.net/repo-logos/library/ubuntu/live/logo-1763770403542.png"
+      },
+      "extension_reviewed": false,
+      "categories": [{ "slug": "operating-systems", "name": "Operating systems" }],
+      "archived": false,
+      "media_types": [
+        "application/octet-stream",
+        "application/vnd.docker.container.image.v1+json",
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.docker.distribution.manifest.v1+prettyjws",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["unrecognized", "image"],
+      "score": 921.5898,
+      "raw_pull_count": 10139898963,
+      "additional_metadata": { "has_security_attestations": false }
+    },
+    {
+      "id": "library/python",
+      "name": "python",
+      "slug": "python",
+      "type": "image",
+      "publisher": { "id": "33ef574274c011e4bea40242ac11001b", "name": "library" },
+      "created_at": "2014-06-24T09:53:24Z",
+      "updated_at": "2026-11-02T14:06:59.515252Z",
+      "short_description": "Python is an interpreted, interactive, object-oriented, open-source programming language.",
+      "badge": "official",
+      "star_count": 10543,
+      "pull_count": "1B+",
+      "operating_systems": [
+        { "name": "unknown", "label": "unknown" },
+        { "name": "linux", "label": "Linux" },
+        { "name": "windows", "label": "Windows" }
+      ],
+      "architectures": [
+        { "name": "386", "label": "386" },
+        { "name": "arm", "label": "arm" },
+        { "name": "arm64", "label": "ARM 64" },
+        { "name": "ppc64le", "label": "ppc64le" },
+        { "name": "s390x", "label": "IBM Z" },
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "mips64le", "label": "mips64le" },
+        { "name": "riscv64", "label": "riscv64" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "logo_url": {
+        "large": "https://djeqr6to3dedg.cloudfront.net/repo-logos/library/python/live/logo-1763770362992.png",
+        "small": "https://djeqr6to3dedg.cloudfront.net/repo-logos/library/python/live/logo-1763770362992.png"
+      },
+      "extension_reviewed": false,
+      "categories": [{ "slug": "languages-and-frameworks", "name": "Languages \u0026 frameworks" }],
+      "archived": false,
+      "media_types": [
+        "application/octet-stream",
+        "application/vnd.docker.container.image.v1+json",
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.docker.distribution.manifest.v1+prettyjws",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["unrecognized", "image"],
+      "score": 919.1156,
+      "raw_pull_count": 9531716963,
+      "additional_metadata": { "has_security_attestations": false }
+    },
+    {
+      "id": "library/node",
+      "name": "node",
+      "slug": "node",
+      "type": "image",
+      "publisher": { "id": "33ef574274c011e4bea40242ac11001b", "name": "library" },
+      "created_at": "2014-06-05T19:19:53Z",
+      "updated_at": "2026-10-28T23:43:42.992593Z",
+      "short_description": "Node.js is a JavaScript-based platform for server-side and networking applications.",
+      "badge": "official",
+      "star_count": 14213,
+      "pull_count": "1B+",
+      "operating_systems": [
+        { "name": "linux", "label": "Linux" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "architectures": [
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm", "label": "arm" },
+        { "name": "arm64", "label": "ARM 64" },
+        { "name": "ppc64le", "label": "ppc64le" },
+        { "name": "s390x", "label": "IBM Z" },
+        { "name": "unknown", "label": "unknown" },
+        { "name": "386", "label": "386" }
+      ],
+      "logo_url": {
+        "large": "https://djeqr6to3dedg.cloudfront.net/repo-logos/library/node/live/logo-1773058325562.png",
+        "small": "https://djeqr6to3dedg.cloudfront.net/repo-logos/library/node/live/logo-1773058325562.png"
+      },
+      "extension_reviewed": false,
+      "categories": [{ "slug": "languages-and-frameworks", "name": "Languages \u0026 frameworks" }],
+      "archived": false,
+      "media_types": [
+        "application/octet-stream",
+        "application/vnd.docker.container.image.v1+json",
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.docker.distribution.manifest.v1+prettyjws",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["unrecognized", "image"],
+      "score": 908.31036,
+      "raw_pull_count": 7275357587,
+      "additional_metadata": { "has_security_attestations": false }
+    },
+    {
+      "id": "library/mysql",
+      "name": "mysql",
+      "slug": "mysql",
+      "type": "image",
+      "publisher": { "id": "33ef574274c011e4bea40242ac11001b", "name": "library" },
+      "created_at": "2014-06-05T19:41:56Z",
+      "updated_at": "2026-10-28T02:03:38.218133Z",
+      "short_description": "MySQL is a widely used, open-source relational database management system (RDBMS).",
+      "badge": "official",
+      "star_count": 16193,
+      "pull_count": "1B+",
+      "operating_systems": [
+        { "name": "linux", "label": "Linux" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "architectures": [
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm64", "label": "ARM 64" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "logo_url": {
+        "large": "https://djeqr6to3dedg.cloudfront.net/repo-logos/library/mysql/live/logo-1773058323166.png",
+        "small": "https://djeqr6to3dedg.cloudfront.net/repo-logos/library/mysql/live/logo-1773058323166.png"
+      },
+      "extension_reviewed": false,
+      "categories": [{ "slug": "databases-and-storage", "name": "Databases \u0026 storage" }],
+      "archived": false,
+      "media_types": [
+        "application/octet-stream",
+        "application/vnd.docker.container.image.v1+json",
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.docker.distribution.manifest.v1+prettyjws",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["unrecognized", "image"],
+      "score": 895.07446,
+      "raw_pull_count": 5225732693,
+      "additional_metadata": { "has_security_attestations": false }
+    }
+  ],
+  "search_after": [5225732693, 895.07446]
+}
