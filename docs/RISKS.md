@@ -36,7 +36,7 @@ Update the status column as mitigations land. New risks go in the matching secti
 | 3.2 | **Third-party images** (cloudfront logos, gravatar) | Tracking/referrer leakage, broken images | CSP `img-src` allowlist; `referrerpolicy="no-referrer"`; fallback avatar; optionally proxy images | ⬜ |
 | 3.3 | **Missing security headers** | Clickjacking, MIME sniffing | CSP, HSTS, `X-Content-Type-Options: nosniff`, `frame-ancestors 'none'`, `Referrer-Policy: strict-origin-when-cross-origin` | ⬜ |
 | 3.4 | **Secret leakage** | Account compromise | We call Docker Hub anonymously, so there is no token. Any future secret: server env var only, never in the client bundle or logs; `.env` gitignored | ➖ (no secrets) |
-| 3.5 | **Supply chain** (malicious or vulnerable dependencies) | Compromise | Commit the lockfile; Dependabot; `audit` in CI; keep dependencies minimal | 🟡 (Dependabot config added) |
+| 3.5 | **Supply chain** (malicious or vulnerable dependencies) | Compromise | Commit the lockfile; Dependabot; `audit` in CI; keep dependencies minimal | 🟡 (Dependabot config added; `pnpm audit --audit-level=high` runs in CI; dependency install scripts are opt-in via `allowBuilds` in `pnpm-workspace.yaml`) |
 
 ## 4. UX & correctness
 

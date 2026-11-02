@@ -83,7 +83,7 @@ The stack is chosen. Remaining setup is tracked as GitHub issues; the unchecked 
 - [x] `package.json`, lockfile, `.nvmrc`
 - [x] Lint/format config (ESLint + Prettier)
 - [x] Git hooks (Husky + lint-staged + commitlint)
-- [ ] CI workflow (`.github/workflows/ci.yml`): lint, typecheck, test, build, audit, E2E
+- [x] CI workflow (`.github/workflows/ci.yml`): lint, typecheck, test, build, audit, E2E
 - [ ] `Dockerfile` + `docker-compose.yml`
 - [x] Test setup (Vitest + Testing Library, MSW, Playwright)
 - [ ] `.vscode/` recommended extensions and settings
