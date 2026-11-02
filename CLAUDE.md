@@ -21,7 +21,7 @@ The brief is in [docs/ASSIGNMENT.md](docs/ASSIGNMENT.md).
 
 ## Commands
 
-_To be added once the stack is chosen (install, dev, lint, typecheck, test, build)._
+_Pending implementation: the stack is chosen (pnpm, Node 22) but the app is not scaffolded yet. Install, dev, lint, typecheck, test and build commands will be added here with the scaffold._
 
 ## Hard rules
 

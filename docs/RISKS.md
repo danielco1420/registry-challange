@@ -48,4 +48,4 @@ Update the status column as mitigations land. New risks go in the matching secti
 | 4.5 | Stale responses overwrite newer ones when typing fast | Query keys / AbortController; debounce | ⬜ |
 | 4.6 | Time zones and relative-date drift | Format with `Intl`; show the absolute date in a tooltip | ⬜ |
 | 4.7 | Archived, deleted or private repos return 404 | Friendly not-found page with a link back to Explore | ⬜ |
-| 4.8 | Accessibility regressions | AA target; keyboard nav; `aria-live` on copy feedback; axe checks in e2e | ⬜ |
+| 4.8 | Accessibility regressions | best-effort accessibility (no formal WCAG target, see E30): semantic HTML, Radix primitives, visible focus rings, keyboard nav; `aria-live` on copy feedback; axe checks in e2e | ⬜ |

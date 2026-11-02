@@ -8,7 +8,7 @@ Instructions for AI coding agents (Codex, Cursor, Copilot, Claude, etc.). The fu
 - Docker Hub integration source of truth: [docs/API.md](docs/API.md).
 
 ## Setup / build / test
-_TBD once the stack is chosen._
+_Pending implementation: the stack is chosen (pnpm, Node 22) but the app is not scaffolded yet. Install, dev, lint, typecheck, test and build commands will be added here with the scaffold._
 
 ## Rules
 - Never call `hub.docker.com` from the browser. Use the allowlisted `/api/*` proxy routes ([ADR-0001](docs/adr/0001-backend-proxy-for-cors.md)).

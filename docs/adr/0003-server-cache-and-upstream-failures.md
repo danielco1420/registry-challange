@@ -12,7 +12,7 @@ Every user's traffic leaves from the proxy's IP, so we share one anonymous Docke
 - **Cache:** in-memory LRU, bounded by `CACHE_MAX_ENTRIES`, with single-flight per key and stale-while-revalidate. TTLs: popular 10 min, search 1 min, repo 5 min, tags 2 min, publisher 1 h, each overridable by env var.
 - **HTTP caching:** `/api/*` responses carry `Cache-Control` headers matching those TTLs.
 - **Failures (429, 5xx, timeout, non-JSON):** one retry with backoff that honors `Retry-After`; then serve stale cache if we have it; the UI shows a degraded banner when data is stale or upstream is failing; with no cache, show the "Docker Hub unavailable" state.
-- **Our own rate limit:** 60 req/min per client IP on `/api/*`, 429 with `Retry-After`.
+- **Our own rate limit:** 60 req/min per client IP on `/api/*` and direct page-loader requests, 429 with `Retry-After`.
 - **Anonymous only:** no Docker Hub token.
 
 ## Alternatives considered
