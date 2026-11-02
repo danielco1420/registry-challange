@@ -11,11 +11,13 @@ import { after, before, beforeEach, describe, it } from 'node:test';
 import * as v from 'valibot';
 import {
   MAX_ATTEMPTS,
+  MAX_REPORTED_RETRY_AFTER_SECONDS,
   RETRY_BACKOFF_BASE_MS,
   USER_AGENT,
   UpstreamError,
   buildUpstreamUrl,
   createDockerHubClient,
+  parseRateLimitReset,
   parseRetryAfter,
   type DockerHubClientOptions,
   type UpstreamErrorKind,
@@ -221,6 +223,23 @@ describe('buildUpstreamUrl', () => {
     }
   });
 
+  it('rejects picklist values and query text that bypassed validation', () => {
+    const bad = [
+      { endpoint: 'search', query: { q: 'x', page: 1, pageSize: 5, sort: 'constructor' } },
+      { endpoint: 'search', query: { q: 'x', page: 1, pageSize: 5, sort: 'pulls', badge: 'x' } },
+      { endpoint: 'search', query: { q: 'a\nb', page: 1, pageSize: 5, sort: 'pulls' } },
+      { endpoint: 'suggestions', q: 'a\u0000b' },
+      {
+        endpoint: 'tags',
+        params: { ns: 'a', repo: 'b' },
+        query: { page: 1, pageSize: 5, ordering: 'evil' },
+      },
+    ] as unknown as UpstreamRequest[];
+    for (const request of bad) {
+      assert.throws(() => buildUpstreamUrl(base, request), TypeError, JSON.stringify(request));
+    }
+  });
+
   it('keeps only the origin of the base URL', () => {
     assert.equal(
       buildUpstreamUrl('https://hub.docker.com/', repoRequest).href,
@@ -238,6 +257,27 @@ describe('parseRetryAfter', () => {
     const now = Date.parse('2026-11-02T12:00:00Z');
     assert.equal(parseRetryAfter('Mon, 02 Nov 2026 12:00:05 GMT', now), 5000);
     assert.equal(parseRetryAfter('Mon, 02 Nov 2026 11:59:00 GMT', now), 0);
+  });
+
+  it('rejects values Date.parse would misread', () => {
+    for (const value of ['1.5', '-1', '1 2', 'Nov 2 2026', '2026-11-02T12:00:05Z']) {
+      assert.equal(parseRetryAfter(value), undefined, value);
+    }
+  });
+
+  it('clamps huge values instead of returning Infinity', () => {
+    assert.equal(parseRetryAfter('9'.repeat(400)), MAX_REPORTED_RETRY_AFTER_SECONDS * 1000);
+  });
+});
+
+describe('parseRateLimitReset', () => {
+  it('turns a Unix reset time into a delay', () => {
+    const now = Date.parse('2026-11-02T12:00:00Z');
+    assert.equal(parseRateLimitReset(null, now), undefined);
+    assert.equal(parseRateLimitReset(String(now / 1000 + 42), now), 42_000);
+    assert.equal(parseRateLimitReset(String(now / 1000 - 5), now), 0);
+    assert.equal(parseRateLimitReset('soon', now), undefined);
+    assert.equal(parseRateLimitReset('9'.repeat(400), now), undefined);
   });
 });
 
@@ -294,6 +334,29 @@ describe('createDockerHubClient', () => {
     assert.deepEqual(sleeps, []);
   });
 
+  it('429 without Retry-After: uses x-ratelimit-reset and fails fast', async () => {
+    const reset = Math.floor(Date.now() / 1000) + 60;
+    respond(json(429, { message: 'Too Many Requests' }, { 'X-RateLimit-Reset': String(reset) }));
+    const error = await rejectsWith(client().get(repoRequest, RepoSchema), 'rate_limited', {
+      status: 429,
+    });
+    assert.ok(
+      error.retryAfterSeconds !== undefined &&
+        error.retryAfterSeconds >= 58 &&
+        error.retryAfterSeconds <= 60,
+      `retryAfterSeconds ${error.retryAfterSeconds}`,
+    );
+    assert.equal(received.length, 1);
+    assert.deepEqual(sleeps, []);
+  });
+
+  it('429 with no rate-limit headers: one retry after the default backoff', async () => {
+    respond(json(429, { message: 'Too Many Requests' }), json(200, NGINX));
+    assert.deepEqual(await client().get(repoRequest, RepoSchema), NGINX);
+    assert.equal(received.length, 2);
+    assert.deepEqual(sleeps, [RETRY_BACKOFF_BASE_MS + 125]);
+  });
+
   it('5xx then 200: retries once after a jittered backoff', async () => {
     respond(json(503, { message: 'unavailable' }), json(200, NGINX));
     assert.deepEqual(await client().get(repoRequest, RepoSchema), NGINX);
@@ -342,7 +405,9 @@ describe('createDockerHubClient', () => {
       raw(200, 'application/json', CLOUDFLARE_HTML),
       raw(200, 'application/json', CLOUDFLARE_HTML),
     );
-    await rejectsWith(client().get(repoRequest, RepoSchema), 'bad_payload');
+    const error = await rejectsWith(client().get(repoRequest, RepoSchema), 'bad_payload');
+    // Neither the message nor the cause may quote the upstream body.
+    assert.doesNotMatch(`${error.message} ${String(error.cause)}`, /DOCTYPE|cf challenge/i);
   });
 
   it('HTML 403 challenge: unavailable, no retry', async () => {

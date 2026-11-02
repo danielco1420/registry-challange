@@ -285,7 +285,7 @@ The only code that builds Docker Hub URLs. Callers pass a typed request (`search
 |---|---|
 | Request | `GET`, `Accept: application/json`, `User-Agent: registry-ui (+https://github.com/danielco1420/registry-challange)`, no auth, redirects not followed |
 | Timeout | `UPSTREAM_TIMEOUT_MS` (default 8000) per attempt, covering headers and body |
-| Retry | One retry (2 attempts max) on 429, 5xx, timeout, network error, or a 2xx that isn't JSON. Waits `Retry-After` (seconds or HTTP date) when sent, else 250–500 ms. A `Retry-After` over 3 s isn't waited for: the error is thrown at once with `retryAfterSeconds` |
+| Retry | One retry (2 attempts max) on 429, 5xx, timeout, network error, or a 2xx that isn't JSON. Waits `Retry-After` (delta seconds or IMF-fixdate; other formats are ignored) when sent; for a 429 without it, waits until `x-ratelimit-reset`; else 250–500 ms. A wait over 3 s (`MAX_RETRY_AFTER_MS`) isn't done in-request: the error is thrown at once with `retryAfterSeconds` (clamped to 86400) so the caller can serve stale data or pass the delay on. Worst case per call: 2 × `UPSTREAM_TIMEOUT_MS` + 3 s |
 | Not retried | 404, other 4xx/3xx, JSON that fails the schema |
 
 Failures throw `UpstreamError` with a `kind` (plus `status` and `retryAfterSeconds` when known; messages never include the upstream body):

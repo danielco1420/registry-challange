@@ -16,13 +16,17 @@
  */
 import * as v from 'valibot';
 import {
+  BADGES,
   NAME_MAX_LENGTH,
   NAME_PATTERN,
+  NO_CONTROL_CHARS,
   PAGE_MAX,
   PAGE_SIZE_MAX,
   QUERY_MAX_LENGTH,
+  SEARCH_SORTS,
   SEARCH_SORT_UPSTREAM,
   TAG_MAX_LENGTH,
+  TAG_ORDERINGS,
   TAG_PATTERN,
   type RepoParams,
   type SearchQuery,
@@ -49,6 +53,11 @@ export const RETRY_BACKOFF_JITTER_MS = 250;
  * caller can serve stale data or pass the delay on to the client.
  */
 export const MAX_RETRY_AFTER_MS = 3000;
+/**
+ * Upper bound for a parsed `Retry-After` / `x-ratelimit-reset` delay, so an
+ * absurd header can't turn into `Infinity` in `retryAfterSeconds`.
+ */
+export const MAX_REPORTED_RETRY_AFTER_SECONDS = 86_400;
 
 // ---------------------------------------------------------------------------
 // Errors
@@ -72,7 +81,9 @@ export interface UpstreamErrorOptions {
  * - `unavailable`: 5xx, timeout, network error, or any other non-2xx status (e.g. a Cloudflare 403).
  * - `bad_payload`: a 2xx that isn't JSON (e.g. a Cloudflare HTML page) or doesn't match the schema.
  *
- * Messages never include the upstream body.
+ * Messages never include the upstream body. For a schema mismatch, `cause` is
+ * a `ValiError` whose issues may quote upstream values: log it server-side,
+ * never send it to the client.
  */
 export class UpstreamError extends Error {
   override name = 'UpstreamError';
@@ -129,17 +140,24 @@ function segment(value: string, pattern: RegExp, maxLength: number, label: strin
 const name = (value: string, label: string) => segment(value, NAME_PATTERN, NAME_MAX_LENGTH, label);
 const tag = (value: string) => segment(value, TAG_PATTERN, TAG_MAX_LENGTH, 'tag');
 
-function int(value: number, min: number, max: number, label: string): string {
+function int(value: number, min: number, max: number, label: string): number {
   if (!Number.isInteger(value) || value < min || value > max) {
     throw new TypeError(`Invalid ${label} for an upstream request`);
   }
-  return String(value);
+  return value;
 }
 
+/** Free text for a query value: length-capped and free of control characters, like `QuerySchema`. */
 function text(value: string, maxLength: number, label: string): string {
-  if (typeof value !== 'string' || value.length > maxLength) {
+  if (typeof value !== 'string' || value.length > maxLength || !NO_CONTROL_CHARS.test(value)) {
     throw new TypeError(`Invalid ${label} for an upstream request`);
   }
+  return value;
+}
+
+/** A value from one of our picklists (`sort`, `badge`, `ordering`). */
+function oneOf<const T extends string>(value: T, allowed: readonly T[], label: string): T {
+  if (!allowed.includes(value)) throw new TypeError(`Invalid ${label} for an upstream request`);
   return value;
 }
 
@@ -152,19 +170,19 @@ function pathAndQuery(request: UpstreamRequest): { path: string; query?: URLSear
   switch (request.endpoint) {
     case 'search': {
       const { q, page, pageSize, sort, badge } = request.query;
-      const size = Number(int(pageSize, 1, PAGE_SIZE_MAX, 'pageSize'));
-      const from = (Number(int(page, 1, PAGE_MAX, 'page')) - 1) * size;
+      const size = int(pageSize, 1, PAGE_SIZE_MAX, 'pageSize');
+      const from = (int(page, 1, PAGE_MAX, 'page') - 1) * size;
       const query = new URLSearchParams({
         query: text(q, QUERY_MAX_LENGTH, 'q'),
         from: String(from),
         size: String(size),
       });
-      const upstreamSort = SEARCH_SORT_UPSTREAM[sort];
+      const upstreamSort = SEARCH_SORT_UPSTREAM[oneOf(sort, SEARCH_SORTS, 'sort')];
       if (upstreamSort) {
         query.set('sort', upstreamSort);
         query.set('order', 'desc');
       }
-      if (badge) query.set('badges', badge);
+      if (badge !== undefined) query.set('badges', oneOf(badge, BADGES, 'badge'));
       return { path: '/api/search/v4', query };
     }
     case 'suggestions':
@@ -177,10 +195,10 @@ function pathAndQuery(request: UpstreamRequest): { path: string; query?: URLSear
     case 'tags': {
       const { page, pageSize, ordering, name: filter } = request.query;
       const query = new URLSearchParams({
-        page: int(page, 1, PAGE_MAX, 'page'),
-        page_size: int(pageSize, 1, PAGE_SIZE_MAX, 'pageSize'),
+        page: String(int(page, 1, PAGE_MAX, 'page')),
+        page_size: String(int(pageSize, 1, PAGE_SIZE_MAX, 'pageSize')),
       });
-      if (ordering) query.set('ordering', ordering);
+      if (ordering !== undefined) query.set('ordering', oneOf(ordering, TAG_ORDERINGS, 'ordering'));
       if (filter) query.set('name', text(filter, TAG_MAX_LENGTH, 'name'));
       return { path: `${repoPath(request.params)}/tags`, query };
     }
@@ -214,9 +232,19 @@ export function buildUpstreamUrl(baseUrl: string, request: UpstreamRequest): URL
 // Client
 // ---------------------------------------------------------------------------
 
+/** RFC 9110 IMF-fixdate, e.g. `Mon, 02 Nov 2026 12:00:05 GMT`. `Date.parse` alone accepts `1.5` or `-1`. */
+const IMF_FIXDATE =
+  /^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun), \d{2} (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4} \d{2}:\d{2}:\d{2} GMT$/;
+
+const MAX_REPORTED_DELAY_MS = MAX_REPORTED_RETRY_AFTER_SECONDS * 1000;
+
+/** Clamps a delay to [0, MAX_REPORTED_RETRY_AFTER_SECONDS] in ms. */
+const clampDelay = (ms: number) => Math.min(Math.max(0, ms), MAX_REPORTED_DELAY_MS);
+
 /**
- * Parses a `Retry-After` header (delta seconds or HTTP date) into milliseconds.
- * Returns `undefined` when absent or unparseable.
+ * Parses a `Retry-After` header (delta seconds or IMF-fixdate) into milliseconds,
+ * clamped to `MAX_REPORTED_RETRY_AFTER_SECONDS`. Returns `undefined` when absent
+ * or unparseable.
  */
 export function parseRetryAfter(
   value: string | null,
@@ -224,10 +252,26 @@ export function parseRetryAfter(
 ): number | undefined {
   if (value === null) return undefined;
   const trimmed = value.trim();
-  if (/^\d+$/.test(trimmed)) return Number(trimmed) * 1000;
+  if (/^\d+$/.test(trimmed)) return clampDelay(Number(trimmed) * 1000);
+  if (!IMF_FIXDATE.test(trimmed)) return undefined;
   const date = Date.parse(trimmed);
   if (Number.isNaN(date)) return undefined;
-  return Math.max(0, date - now);
+  return clampDelay(date - now);
+}
+
+/**
+ * Parses Docker Hub's `x-ratelimit-reset` (Unix time in seconds, docs/API.md)
+ * into a delay in milliseconds. Used for a 429 without `Retry-After`, so we
+ * don't retry inside a rate-limit window that hasn't reset.
+ */
+export function parseRateLimitReset(
+  value: string | null,
+  now: number = Date.now(),
+): number | undefined {
+  if (value === null) return undefined;
+  const trimmed = value.trim();
+  if (!/^\d{1,12}$/.test(trimmed)) return undefined;
+  return clampDelay(Number(trimmed) * 1000 - now);
 }
 
 export interface DockerHubClientOptions {
@@ -312,7 +356,14 @@ export function createDockerHubClient(options: DockerHubClientOptions): DockerHu
         const retryAfterMs = parseRetryAfter(response.headers.get('retry-after'));
         if (status === 404) return fail('not_found', 'not found (404)', false, { status });
         if (status === 429) {
-          return fail('rate_limited', 'rate limited (429)', true, { status, retryAfterMs });
+          // No Retry-After: fall back to the rate-limit window reset, so a ~60 s
+          // window fails fast instead of being retried after a short backoff.
+          const waitMs =
+            retryAfterMs ?? parseRateLimitReset(response.headers.get('x-ratelimit-reset'));
+          return fail('rate_limited', 'rate limited (429)', true, {
+            status,
+            retryAfterMs: waitMs,
+          });
         }
         if (status >= 500) {
           return fail('unavailable', `server error (${status})`, true, { status, retryAfterMs });
@@ -328,8 +379,9 @@ export function createDockerHubClient(options: DockerHubClientOptions): DockerHu
       const raw = await response.text();
       try {
         return { ok: true, body: JSON.parse(raw) };
-      } catch (cause) {
-        return fail('bad_payload', 'response is not valid JSON', true, { status, cause });
+      } catch {
+        // No `cause`: V8's SyntaxError message quotes the start of the body.
+        return fail('bad_payload', 'response is not valid JSON', true, { status });
       }
     } catch (cause) {
       if (isTimeout(cause)) {
