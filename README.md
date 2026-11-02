@@ -57,9 +57,9 @@ Environment variables are documented in [.env.example](.env.example).
 
 ## Roadmap
 
-These files depend on the stack choice and will be added after the questionnaire:
+The stack is chosen. Remaining setup is tracked as GitHub issues; the unchecked items below are still to do:
 
-- [ ] `package.json`, lockfile, `.nvmrc`
+- [x] `package.json`, lockfile, `.nvmrc`
 - [ ] Lint/format config (ESLint + Prettier)
 - [ ] Git hooks (Husky + lint-staged + commitlint)
 - [ ] CI workflow (`.github/workflows/ci.yml`): lint, typecheck, test, build, audit, E2E
