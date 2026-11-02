@@ -28,10 +28,12 @@ pnpm install
 cp .env.example .env   # optional; defaults apply
 pnpm dev               # http://localhost:5173
 pnpm typecheck         # react-router typegen && tsc
+pnpm lint              # ESLint (pnpm lint:fix to autofix)
+pnpm format:check      # Prettier (pnpm format to write)
 pnpm build && pnpm start   # production server, PORT defaults to 3000
 ```
 
-Lint, test and e2e commands are added by their own tasks. Server-only code goes in `app/server/*.server.ts`. Read env vars only through `config` from `app/server/config.server.ts`, never `process.env` directly.
+`pnpm install` sets up Husky git hooks: pre-commit runs lint-staged (ESLint + Prettier on staged files), commit-msg runs commitlint (Conventional Commits). Test and e2e commands are added by their own tasks. Server-only code goes in `app/server/*.server.ts`. Read env vars only through `config` from `app/server/config.server.ts`, never `process.env` directly.
 
 ## Hard rules
 

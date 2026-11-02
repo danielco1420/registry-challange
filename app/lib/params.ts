@@ -95,7 +95,10 @@ export const SearchSortSchema = v.picklist(
 );
 
 /** Maps our sort value to `/api/search/v4`'s `sort` (always with `order=desc`). See docs/API.md. */
-export const SEARCH_SORT_UPSTREAM: Record<SearchSort, 'pull_count' | 'star_count' | 'updated_at' | undefined> = {
+export const SEARCH_SORT_UPSTREAM: Record<
+  SearchSort,
+  'pull_count' | 'star_count' | 'updated_at' | undefined
+> = {
   relevance: undefined,
   pulls: 'pull_count',
   stars: 'star_count',

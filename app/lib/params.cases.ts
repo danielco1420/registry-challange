@@ -123,7 +123,12 @@ export const PARAM_CASES: ParamCase[] = [
   { schema: 'q', label: 'empty (browse mode)', input: '', valid: true, output: '' },
   { schema: 'q', label: 'trimmed', input: '  nginx  ', valid: true, output: 'nginx' },
   { schema: 'q', label: 'unicode', input: 'base de données 日本 🐳', valid: true },
-  { schema: 'q', label: 'slashes are fine in a query value', input: '../library/nginx', valid: true },
+  {
+    schema: 'q',
+    label: 'slashes are fine in a query value',
+    input: '../library/nginx',
+    valid: true,
+  },
   { schema: 'q', label: 'max length', input: 'a'.repeat(100), valid: true },
   { schema: 'q', label: 'max length after trim', input: ` ${'a'.repeat(100)} `, valid: true },
   { schema: 'q', label: 'over max length', input: 'a'.repeat(101), valid: false },
@@ -207,7 +212,12 @@ export const PARAM_CASES: ParamCase[] = [
     input: { ns: 'library', repo: 'nginx', tag: '..' },
     valid: false,
   },
-  { schema: 'tagParams', label: 'missing tag', input: { ns: 'library', repo: 'nginx' }, valid: false },
+  {
+    schema: 'tagParams',
+    label: 'missing tag',
+    input: { ns: 'library', repo: 'nginx' },
+    valid: false,
+  },
 
   { schema: 'publisherParams', label: 'publisher', input: { name: 'bitnami' }, valid: true },
   { schema: 'publisherParams', label: 'encoded slash', input: { name: 'a%2Fb' }, valid: false },

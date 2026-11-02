@@ -11,7 +11,19 @@
     "build": "react-router build",
     "start": "node --env-file-if-exists=.env node_modules/@react-router/serve/bin.js ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
-    "test": "node --experimental-strip-types --import ./scripts/register-ts-resolve-hook.mjs scripts/check-params.ts"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "test": "node --experimental-strip-types --import ./scripts/register-ts-resolve-hook.mjs scripts/check-params.ts",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,mjs,cjs,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,yml,yaml,html}": "prettier --write"
   },
   "dependencies": {
     "@react-router/node": "^7.18.5",
@@ -23,11 +35,23 @@
     "valibot": "^1.5.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "@eslint/js": "^9.39.5",
     "@react-router/dev": "^7.18.5",
     "@types/node": "^22.20.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.14.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.9.10",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.72.1",
     "vite": "^7.3.7",
     "vite-tsconfig-paths": "^6.1.1"
   }

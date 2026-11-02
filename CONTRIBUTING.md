@@ -18,13 +18,17 @@
 ## Commit messages: [Conventional Commits](https://www.conventionalcommits.org/)
 
 ```
-<type>(<optional scope>): <imperative summary, ≤72 chars>
+<type>(<optional scope>): <imperative summary>   (whole line ≤72 chars)
 
 <optional body: what and why, not how>
 ```
 
 Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
 Breaking changes: `feat!: …` or a `BREAKING CHANGE:` footer.
+
+Git hooks (installed by `pnpm install` through Husky; they also run in Git for Windows):
+- `commit-msg` runs commitlint and rejects messages that don't follow this format. It enforces the `@commitlint/config-conventional` rules with the types above: the whole first line (type, scope and summary) is at most 72 characters, the summary isn't Sentence case or Title Case (`docs: Update README` is rejected, `docs: update README` passes), and body lines are at most 100 characters unless they contain a URL.
+- `pre-commit` runs ESLint and Prettier on staged files (lint-staged).
 
 Examples:
 - `feat(tags): add name filter to tag list`

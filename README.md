@@ -35,8 +35,13 @@ Requires Node 22.12 or newer (`.nvmrc`) and pnpm 12.16.1 (the version pinned in 
 pnpm install
 cp .env.example .env   # optional; defaults apply
 pnpm dev               # http://localhost:5173
+pnpm typecheck
+pnpm lint              # ESLint (pnpm lint:fix to autofix)
+pnpm format:check      # Prettier (pnpm format to write)
 pnpm build && pnpm start
 ```
+
+`pnpm install` also installs git hooks (Husky): staged files are linted and formatted on commit, and commit messages are checked against Conventional Commits.
 
 Environment variables are documented in [.env.example](.env.example). All are optional; unset or empty values use the defaults shown there.
 
@@ -72,8 +77,8 @@ They're validated when the server starts (`app/server/config.server.ts`). An inv
 The stack is chosen. Remaining setup is tracked as GitHub issues; the unchecked items below are still to do:
 
 - [x] `package.json`, lockfile, `.nvmrc`
-- [ ] Lint/format config (ESLint + Prettier)
-- [ ] Git hooks (Husky + lint-staged + commitlint)
+- [x] Lint/format config (ESLint + Prettier)
+- [x] Git hooks (Husky + lint-staged + commitlint)
 - [ ] CI workflow (`.github/workflows/ci.yml`): lint, typecheck, test, build, audit, E2E
 - [ ] `Dockerfile` + `docker-compose.yml`
 - [ ] Test setup (Vitest + Testing Library, MSW, Playwright)

@@ -11,7 +11,11 @@ let failures = 0;
 
 const searchParamsCases: Array<{ label: string; input: string; output: Record<string, string> }> = [
   { label: 'repeated key, empty first value', input: 'sort=&sort=stars', output: {} },
-  { label: 'repeated key, non-empty first value', input: 'sort=stars&sort=pulls', output: { sort: 'stars' } },
+  {
+    label: 'repeated key, non-empty first value',
+    input: 'sort=stars&sort=pulls',
+    output: { sort: 'stars' },
+  },
   { label: '__proto__ key is plain data', input: '__proto__=x', output: { ['__proto__']: 'x' } },
 ];
 
