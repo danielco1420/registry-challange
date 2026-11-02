@@ -116,6 +116,9 @@ export function createGetCached({ cache, budget }: GetCachedDeps): GetCached {
     ttlSeconds: number,
     fetcher: () => Promise<T>,
   ): Promise<Cached<T>> {
+    // Sampled before `cache.get`: a stale read starts its refresh before we
+    // resume, and a refresh that takes the last slot is healthy, not degraded.
+    const exhaustedBefore = budget.isExhausted();
     let result: CacheResult<T>;
     try {
       result = await cache.get(key, { ttlMs: ttlSeconds * 1000 }, fetcher);
@@ -126,7 +129,7 @@ export function createGetCached({ cache, budget }: GetCachedDeps): GetCached {
       value: result.value,
       status: result.status,
       ageMs: result.ageMs,
-      degraded: result.isStale && (result.refreshFailed || budget.isExhausted()),
+      degraded: result.isStale && (result.refreshFailed || exhaustedBefore),
     };
   };
 }

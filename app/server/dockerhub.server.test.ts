@@ -90,10 +90,17 @@ beforeEach(() => {
   sleeps = [];
 });
 
+/** A budget that never runs out, for tests that aren't about the budget. */
+const unlimitedBudget: DockerHubClientOptions['budget'] = {
+  tryAcquire: () => true,
+  retryAfterSeconds: () => 0,
+};
+
 function client(overrides: Partial<DockerHubClientOptions> = {}) {
   return createDockerHubClient({
     baseUrl,
     timeoutMs: 1000,
+    budget: unlimitedBudget,
     sleep: async (ms) => {
       sleeps.push(ms);
     },

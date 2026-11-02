@@ -296,9 +296,10 @@ export interface DockerHubClientOptions {
   random?: () => number;
   /**
    * Proxy-wide upstream budget; every attempt, retries included, takes a slot.
-   * Omitted: unlimited (tests only; the app's client uses `upstreamBudget`).
+   * Required so no client can bypass it by accident: the app's client uses
+   * `upstreamBudget`, and tests pass a stub.
    */
-  budget?: Pick<UpstreamBudget, 'tryAcquire' | 'retryAfterSeconds'>;
+  budget: Pick<UpstreamBudget, 'tryAcquire' | 'retryAfterSeconds'>;
 }
 
 export interface DockerHubClient {
@@ -410,13 +411,12 @@ export function createDockerHubClient(options: DockerHubClientOptions): DockerHu
       const url = buildUpstreamUrl(options.baseUrl, request);
       const { endpoint } = request;
       const { budget } = options;
-      const acquire = () => budget === undefined || budget.tryAcquire();
 
-      if (!acquire()) {
+      if (!budget.tryAcquire()) {
         throw new UpstreamError(
           'budget_exhausted',
           `Docker Hub ${endpoint}: upstream budget exhausted, request not sent`,
-          { endpoint, retryAfterSeconds: budget?.retryAfterSeconds() },
+          { endpoint, retryAfterSeconds: budget.retryAfterSeconds() },
         );
       }
       let result = await attempt(url, endpoint);
@@ -428,7 +428,7 @@ export function createDockerHubClient(options: DockerHubClientOptions): DockerHu
         if (delay > MAX_RETRY_AFTER_MS) break;
         await sleep(delay);
         // The retry counts against the budget too; with no slot left, keep the failure we have.
-        if (!acquire()) break;
+        if (!budget.tryAcquire()) break;
         result = await attempt(url, endpoint);
       }
       if (!result.ok) throw result.error;

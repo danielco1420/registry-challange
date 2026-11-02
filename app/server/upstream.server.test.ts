@@ -203,6 +203,20 @@ describe('getCached: budget exhausted', () => {
     assert.deepEqual(await response.json(), { name: 'nginx', pull_count: 1 });
   });
 
+  it('a refresh that takes the last slot is not degraded', async () => {
+    setup(2);
+    replies = [ok('nginx'), ok('nginx')];
+    await read('nginx');
+    advance(TTL * 1000);
+
+    const result = await read('nginx'); // its refresh takes the last slot
+    assert.equal(result.status, 'STALE');
+    assert.equal(result.degraded, false);
+    await flush();
+    assert.equal(sent.length, 2, 'the refresh was sent');
+    assert.equal(budget.isExhausted(), true);
+  });
+
   it('with no entry, throws UpstreamUnavailableError with seconds until the budget resets', async () => {
     setup(1);
     replies = [ok('nginx')];
