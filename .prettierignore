@@ -3,6 +3,8 @@ build/
 coverage/
 node_modules/
 pnpm-lock.yaml
+# Local tooling, e.g. git worktrees under .claude/worktrees/.
+.claude/
 
 # Docs are hand-wrapped prose; keep Prettier off Markdown for now.
 *.md
