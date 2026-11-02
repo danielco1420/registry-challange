@@ -1,79 +1,73 @@
-# 🚀 Full Stack Home Assignment: Registry UI Challenge
+# Registry UI
 
-Welcome to the "Registry UI Challenge!"  
-Your mission: create a simplified UI experience similar to DockerHub. You'll explore DockerHub's public APIs on your own and use them to build a polished, functional web app.  
+A simplified Docker Hub–style web app for browsing and searching public container image repositories and their tags, built on Docker Hub's public APIs.
 
----
+> The original assignment brief lives in [docs/ASSIGNMENT.md](docs/ASSIGNMENT.md).
 
-## 🎯 Objective
+## Status
 
-Build a small but complete frontend application that consumes DockerHub's public APIs and allows browsing/searching repositories and tags.
+🟡 **Foundation phase.** The API exploration, risk analysis and repo conventions are done. The tech stack and UI design are being decided in [docs/DESIGN_QUESTIONNAIRE.md](docs/DESIGN_QUESTIONNAIRE.md). No application code exists yet.
 
-👉 **Note:** We don't provide the API specification. Part of the challenge is to figure out how to access and use DockerHub's APIs yourself.
+## Features (planned)
 
----
+- **Explore**: search repositories by keyword and see a showcase of the 10 most popular official images (logo, name, description, owner).
+- **Repository details**: title, description, owner, last updated, rendered overview.
+- **Tags**: name, last updated, size, and a one-click **Copy** for `docker pull <repo>:<tag>`.
+- Product extras: decided in the questionnaire (section E).
 
-## 📋 Your Tasks
+## Architecture at a glance
 
-1. Discover and use DockerHub's APIs to:  
-   - Search repositories by keyword.  
-   - Display repository details (tags, last updated, size).  
-   - Show tag lists for a repository.  
+```
+Browser (UI) ──► Our API proxy (BFF) ──► hub.docker.com
+                 • allowlisted routes      • /api/search/v4          (search, undocumented)
+                 • cache + coalescing      • /v2/namespaces/.../...  (repo, tags, documented)
+                 • rate limiting           • /v2/orgs|users/{name}   (avatar fallback)
+                 • response normalization
+```
 
-2. Implement the following two pages (your own design):
+Docker Hub doesn't send CORS headers, so the browser can't call it directly. We need a proxy. See [ADR-0001](docs/adr/0001-backend-proxy-for-cors.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-### 🔍 A. Explore Repositories
+## Getting started
 
-- A search bar at the top to search for repositories by keyword.  
-- A showcase of 10 popular image repositories displayed as cards or any other format you find appropriate (no need for filters).  
-- Each repository entry should include at least: logo, repository name, description, and owner.  
-- Clicking a repository should take the user to the Repository Details page.  
+> Filled in once the stack is chosen (questionnaire section A).
 
-🔗 **Reference:** [DockerHub Explore](https://hub.docker.com/search?sort=pull_count&order=desc)  
+```bash
+# placeholder: e.g.
+# pnpm install
+# cp .env.example .env
+# pnpm dev
+```
 
-### 📄 B. Repository Details
+Environment variables are documented in [.env.example](.env.example).
 
-- Show repository title, description, owner, and last updated.  
-- Display a list of tags for the repository, each with:  
-  - Tag name  
-  - Last updated  
-  - Size  
-  - A "Copy Command" button (to copy `docker pull <repo>:<tag>`)  
+## Documentation
 
-🔗 **Reference:** [Example Repository – Fluent Bit](https://hub.docker.com/r/fluent/fluent-bit)  
+| Doc | What's in it |
+|---|---|
+| [docs/API.md](docs/API.md) | Docker Hub endpoints, params, responses, and the fields we use |
+| [docs/DESIGN_QUESTIONNAIRE.md](docs/DESIGN_QUESTIONNAIRE.md) | Every design decision, with options and answers |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, data flow, caching |
+| [docs/RISKS.md](docs/RISKS.md) | Known risks and mitigations |
+| [docs/adr/](docs/adr/) | Architecture Decision Records |
+| [docs/SUMMARY.md](docs/SUMMARY.md) | Assignment deliverable: decisions, lessons, future work |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Branching, commits, PR rules |
+| [CHANGELOG.md](CHANGELOG.md) | Release history |
+| [CLAUDE.md](CLAUDE.md) / [AGENTS.md](AGENTS.md) | Guidance for AI coding assistants |
+| [SECURITY.md](SECURITY.md) | Reporting vulnerabilities |
 
----
+## Roadmap
 
-## 🧠 Product Thinking
+These files depend on the stack choice and will be added after the questionnaire:
 
-We expect you to treat this as a real product: think about what a user would need beyond the list above, and tell us what you added and why. Product judgment is part of the evaluation.  
+- [ ] `package.json`, lockfile, `.nvmrc`
+- [ ] Lint/format config (ESLint + Prettier or Biome)
+- [ ] Git hooks (Husky + lint-staged + commitlint)
+- [ ] CI workflow (`.github/workflows/ci.yml`): lint, typecheck, test, build
+- [ ] `Dockerfile` + `docker-compose.yml`
+- [ ] Test setup (unit, API mocks, e2e)
+- [ ] `.vscode/` recommended extensions and settings
+- [ ] Set the Dependabot ecosystem in `.github/dependabot.yml`
 
-Using AI tools is fine and expected — we care about the decisions behind the result.
+## License
 
----
-
-## 📦 Deliverables
-
-1. **A working web app:**  
-   - Clean structure (components, API layer, etc.)  
-   - Instructions to run locally (README).  
-
-2. **A short summary document that includes:**  
-   - APIs you used and how you discovered them.  
-   - Key design decisions.  
-   - Product decisions: what you added or left out from a user's point of view, and why.  
-   - Challenges or lessons learned.  
-   - What you'd improve with more time.  
-
----
-
-## 💡 Reminder
-
-- Part of the assignment is API exploration – show us how you approach discovering and integrating external APIs.  
-- Prioritize clarity, maintainability, and a nice-looking UI.  
-- Handle UX gracefully (loading states, errors, empty results).  
-
----
-
-Have fun! For all questions and clarifications – don't hesitate to reach out 🙂  
-Good luck! 🚀
+[MIT](LICENSE)
