@@ -11,9 +11,9 @@ Update the status column as mitigations land. New risks go in the matching secti
 | 1.1 | **Upstream rate limit** (~180 req/min per IP) is shared by every user, because all traffic leaves from the proxy's IP | 429s for everyone under modest load | Server-side cache with per-route TTLs; request coalescing (single-flight); stale-while-revalidate; honor `Retry-After` | ⬜ |
 | 1.2 | **Cache stampede** when a hot key expires | Burst of upstream calls, which leads to 429s | Single-flight per key; jittered TTLs; serve stale while refreshing | ⬜ |
 | 1.3 | **Undocumented `/api/search/v4`** changes or disappears | Search and Explore break | Valibot validation with clear errors; fallback to `/v2/search/repositories`; contract tests against recorded fixtures | ⬜ |
-| 1.4 | **Cloudflare bot protection** challenges our server IP | Upstream returns HTML or 403 instead of JSON | Low request volume via caching; descriptive User-Agent; detect non-JSON responses and surface a degraded state | ⬜ |
+| 1.4 | **Cloudflare bot protection** challenges our server IP | Upstream returns HTML or 403 instead of JSON | Low request volume via caching; descriptive User-Agent; detect non-JSON responses and surface a degraded state | 🟡 (User-Agent and non-JSON detection in `app/server/dockerhub.server.ts`; caching and degraded state pending) |
 | 1.5 | **Terms of Service** for automated or undocumented API use | Access could be blocked | Keep traffic minimal, document the usage, prefer documented endpoints where they exist | ⬜ |
-| 1.6 | **Upstream latency or outages** | Hanging requests, blank UI | Timeouts (~8 s); retry with backoff for GETs; serve stale cache; degraded-mode banner | ⬜ |
+| 1.6 | **Upstream latency or outages** | Hanging requests, blank UI | Timeouts (~8 s); retry with backoff for GETs; serve stale cache; degraded-mode banner | 🟡 (timeout and one retry honoring `Retry-After` in `app/server/dockerhub.server.ts`; stale cache and banner pending) |
 
 ## 2. Our proxy: abuse & load
 

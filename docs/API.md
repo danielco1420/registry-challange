@@ -277,6 +277,28 @@ Valibot schemas (`app/lib/params.ts`) and a `400` helper (`app/lib/validate.ts`)
 
 Query strings: unknown keys are ignored, empty values count as missing, and a repeated key uses its first value.
 
+## Upstream client (`app/server/dockerhub.server.ts`)
+
+The only code that builds Docker Hub URLs. Callers pass a typed request (`search`, `suggestions`, `repository`, `tags`, `tag`, `org`, `user`) made from the validated param types above, plus a Valibot schema for the response. It never accepts a URL or path: path segments are re-checked against the `:ns`/`:repo`/`:tag` patterns and `encodeURIComponent`-ed, query values go through `URLSearchParams`, and the URL must stay on `DOCKERHUB_BASE_URL`.
+
+| Aspect | Behavior |
+|---|---|
+| Request | `GET`, `Accept: application/json`, `User-Agent: registry-ui (+https://github.com/danielco1420/registry-challange)`, no auth, redirects not followed |
+| Timeout | `UPSTREAM_TIMEOUT_MS` (default 8000) per attempt, covering headers and body |
+| Retry | One retry (2 attempts max) on 429, 5xx, timeout, network error, or a 2xx that isn't JSON. Waits `Retry-After` (seconds or HTTP date) when sent, else 250–500 ms. A `Retry-After` over 3 s isn't waited for: the error is thrown at once with `retryAfterSeconds` |
+| Not retried | 404, other 4xx/3xx, JSON that fails the schema |
+
+Failures throw `UpstreamError` with a `kind` (plus `status` and `retryAfterSeconds` when known; messages never include the upstream body):
+
+| Upstream result | `kind` |
+|---|---|
+| 404 (`{"message":"object not found","errinfo":{}}`) | `not_found` |
+| 429 | `rate_limited` |
+| 5xx, timeout, network error, other non-2xx (e.g. a Cloudflare 403 challenge), redirect | `unavailable` |
+| 2xx with a non-JSON `Content-Type` or body (e.g. Cloudflare HTML), or JSON that fails the schema | `bad_payload` |
+
+Caching (T09) and the proxy-wide upstream budget (T10) wrap this client; every attempt, retries included, will count against the budget.
+
 ## Re-verify (curl probes)
 
 ```bash

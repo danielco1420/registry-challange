@@ -25,7 +25,7 @@ Why a proxy: Docker Hub sends no CORS headers. See [ADR-0001](adr/0001-backend-p
 | Hooks / data layer | Server-state queries, URL state | Only calls our `/api/*` |
 | API client (frontend) | Typed fetchers for `/api/*` | The only frontend code that does network calls |
 | Proxy routes | Validate, cache, call upstream, normalize | Allowlist only (see [API.md](API.md#proxy-routes-allowlist-only)) |
-| Upstream client | Docker Hub calls, timeouts, retries, Valibot parsing | The only code that knows Docker Hub URLs |
+| Upstream client (`app/server/dockerhub.server.ts`, in place) | Docker Hub calls, timeouts, retries, Valibot parsing, typed `UpstreamError` | The only code that knows Docker Hub URLs; takes typed requests, never URLs or paths (see [API.md](API.md#upstream-client-appserverdockerhubserverts)) |
 
 ## Data flow: Repository details
 
