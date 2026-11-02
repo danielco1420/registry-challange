@@ -14,6 +14,13 @@ describe('pullCommand', () => {
     );
   });
 
+  it('only strips an exact `library` namespace, not a prefix match', () => {
+    assert.equal(
+      pullCommand('librarytools', 'nginx', '1.27'),
+      'docker pull librarytools/nginx:1.27',
+    );
+  });
+
   it('is case-sensitive about the library namespace', () => {
     // Only the exact `library` namespace is stripped; params.ts already
     // enforces lowercase, but this guards the helper's own behavior.
