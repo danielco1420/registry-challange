@@ -19,13 +19,14 @@ Update the status column as mitigations land. New risks go in the matching secti
 
 | # | Risk | Impact | Mitigation | Status |
 |---|---|---|---|---|
-| 2.1 | **Flooding / DoS of the proxy** (the Rack::Attack concern) | Proxy overload, and it also burns our upstream quota | Per-IP rate limit in the app (60 req/min, 429 + `Retry-After`); cap `pageSize` and `page` depth; small request body limits | ⬜ |
+| 2.1 | **Flooding / DoS of the proxy** (the Rack::Attack concern) | Proxy overload, and it also burns our upstream quota | Per-IP rate limit in the app (60 req/min, 429 + `Retry-After`); cap `pageSize` and `page` depth; small request body limits | 🟡 (per-client limiter in `app/server/rateLimit.server.ts`; routes and loaders not wired yet, T13; off until `TRUST_PROXY_HOPS` is set, see 2.8. Fixed window, so a client can burst up to 2 × 60 across a window boundary) |
 | 2.2 | **Open proxy / SSRF**: attacker makes us fetch arbitrary URLs | Abuse of our server | Allowlisted routes only; build upstream URLs from validated params; never forward user-supplied URLs or paths | 🟡 (param schemas in `app/lib/params.ts`; upstream client `app/server/dockerhub.server.ts` takes typed requests only, pins the origin and doesn't follow redirects; routes not wired yet) |
 | 2.3 | **Path or parameter injection** (`../`, encoded slashes, huge strings) | Unexpected upstream calls, errors | Validate `namespace`/`repo` with `^[a-z0-9]+(?:[._-][a-z0-9]+)*$`, tags with `^[\w][\w.-]{0,127}$`; length limits; `encodeURIComponent` | 🟡 (schemas and 400 helper in `app/lib`; the upstream client re-checks every segment and `encodeURIComponent`s it; routes not wired yet) |
 | 2.4 | **Scrapers** using us as a free mirror | Quota exhaustion | Rate limits, cache headers, optional edge bot protection | ⬜ |
 | 2.5 | **Huge tag lists** (thousands of tags) | Slow pages, memory use | Server-side pagination; never fetch all pages; list virtualization if we use infinite scroll | ⬜ |
 | 2.6 | **Unbounded in-memory cache** | Memory leak or crash | LRU with max entries; move to Redis if we scale horizontally | 🟡 (LRU bounded by `CACHE_MAX_ENTRIES` in `app/server/cache.server.ts`; routes not wired yet) |
 | 2.7 | **Multiple instances** each hold their own cache | Lower hit rate, more upstream calls | Shared cache (Redis) or CDN caching via `Cache-Control` | ➖ until scaling |
+| 2.8 | **Client IP spoofing** via `X-Forwarded-For` to dodge the per-client limit | Rate limit bypassed | Trust the header only when `TRUST_PROXY_HOPS` > 0, and then only the entry that many hops from the right (the app must be reachable only through those proxies); IPv6 bucketed by /64; tracked clients capped (10,000) with expired windows evicted. Without a trusted proxy the loader can't see the client IP, so those requests aren't limited (logged once) rather than sharing one bucket | 🟡 (`app/server/rateLimit.server.ts`; set `TRUST_PROXY_HOPS` per deployment) |
 
 ## 3. Frontend security & privacy
 
