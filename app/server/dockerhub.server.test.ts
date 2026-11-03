@@ -9,7 +9,16 @@ import type { AddressInfo } from 'node:net';
 import { http, HttpResponse } from 'msw';
 import * as v from 'valibot';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { HUB, dockerHubHandlers } from '../../test/msw/dockerhub';
 import { server as msw } from '../../test/msw/server';
+import {
+  OrgSchema,
+  RepositorySchema,
+  SearchV4ResponseSchema,
+  TagSchema,
+  TagsResponseSchema,
+  UserSchema,
+} from './dockerhub.schemas.server';
 import {
   MAX_ATTEMPTS,
   MAX_REPORTED_RETRY_AFTER_SECONDS,
@@ -18,6 +27,7 @@ import {
   UpstreamError,
   buildUpstreamUrl,
   createDockerHubClient,
+  isSchemaMismatch,
   parseRateLimitReset,
   parseRetryAfter,
   type DockerHubClientOptions,
@@ -167,6 +177,12 @@ describe('buildUpstreamUrl', () => {
     expect(
       href({ endpoint: 'search', query: { q: 'a b&c', page: 1, pageSize: 5, sort: 'relevance' } }),
     ).toBe('https://hub.docker.com/api/search/v4?query=a+b%26c&from=0&size=5');
+  });
+
+  it('maps the legacy search fallback to /v2/search/repositories/', () => {
+    expect(href({ endpoint: 'legacySearch', query: { q: 'a b', page: 2, pageSize: 25 } })).toBe(
+      'https://hub.docker.com/v2/search/repositories/?query=a+b&page=2&page_size=25',
+    );
   });
 
   it('encodes suggestions queries', () => {
@@ -420,7 +436,18 @@ describe('createDockerHubClient', () => {
     respond(json(200, { namespace: 'library', name: 'nginx', pull_count: '1B+' }));
     const error = await rejectsWith(client().get(repoRequest, RepoSchema), 'bad_payload');
     expect(error.cause).toBeInstanceOf(v.ValiError);
+    expect(error.issuePath).toBe('$.pull_count');
+    expect(error.message).toContain('$.pull_count');
+    expect(error.message).not.toContain('1B+');
+    expect(isSchemaMismatch(error)).toBe(true);
     expect(received.length).toBe(1);
+  });
+
+  it('non-JSON bad_payload has no issuePath, so it is not a schema mismatch', async () => {
+    respond(raw(200, 'text/html', CLOUDFLARE_HTML), raw(200, 'text/html', CLOUDFLARE_HTML));
+    const error = await rejectsWith(client().get(repoRequest, RepoSchema), 'bad_payload');
+    expect(error.issuePath).toBeUndefined();
+    expect(isSchemaMismatch(error)).toBe(false);
   });
 
   it('redirect: unavailable, not followed', async () => {
@@ -463,8 +490,6 @@ describe('createDockerHubClient', () => {
 // ---------------------------------------------------------------------------
 
 describe('createDockerHubClient with MSW', () => {
-  const HUB = 'https://hub.docker.com';
-
   it('reads a repository from the mocked Docker Hub origin', async () => {
     let userAgent: string | null = null;
     msw.use(
@@ -486,6 +511,42 @@ describe('createDockerHubClient with MSW', () => {
     await rejectsWith(client({ baseUrl: HUB }).get(repoRequest, RepoSchema), 'not_found', {
       status: 404,
     });
+  });
+
+  it('reads every endpoint from the recorded fixtures with the real schemas', async () => {
+    msw.use(...dockerHubHandlers);
+    const hub = client({ baseUrl: HUB });
+    const repo = await hub.get(repoRequest, RepositorySchema);
+    expect(repo).toMatchObject({ namespace: 'library', name: 'nginx' });
+    const tags = await hub.get(
+      {
+        endpoint: 'tags',
+        params: { ns: 'fluent', repo: 'fluent-bit' },
+        query: { page: 1, pageSize: 25 },
+      },
+      TagsResponseSchema,
+    );
+    expect(tags.count).toBe(2189);
+    const tag = await hub.get(
+      { endpoint: 'tag', params: { ns: 'library', repo: 'nginx', tag: 'latest' } },
+      TagSchema,
+    );
+    expect(tag.name).toBe('latest');
+    expect((await hub.get({ endpoint: 'org', name: 'docker' }, OrgSchema)).orgname).toBe('docker');
+    expect((await hub.get({ endpoint: 'user', name: 'kernel528' }, UserSchema)).username).toBe(
+      'kernel528',
+    );
+    expect(
+      (await hub.get({ endpoint: 'suggestions', q: 'ngi' }, SearchV4ResponseSchema)).results.length,
+    ).toBe(10);
+    await rejectsWith(
+      hub.get(
+        { endpoint: 'repository', params: { ns: 'nobody', repo: 'nothing' } },
+        RepositorySchema,
+      ),
+      'not_found',
+      { status: 404 },
+    );
   });
 });
 

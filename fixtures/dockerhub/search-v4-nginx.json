@@ -1,0 +1,913 @@
+{
+  "total": 295811,
+  "results": [
+    {
+      "id": "dhi/nginx",
+      "name": "Nginx",
+      "slug": "dhi/nginx",
+      "type": "dhi",
+      "publisher": { "id": "b3ca4e261ea244c3a662a24602a90a2a", "name": "dhi" },
+      "created_at": "2025-03-13T08:09:23.111065Z",
+      "updated_at": "2026-11-02T18:10:46.87672884Z",
+      "short_description": "nginx (\"engine x\") is an HTTP web server, reverse proxy, content cache, load balancer, TCP/UDP proxy server, and mail proxy server.",
+      "badge": "hardened",
+      "star_count": 0,
+      "pull_count": "5M+",
+      "operating_systems": [{ "name": "linux", "label": "Linux" }],
+      "architectures": [
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm64", "label": "ARM 64" }
+      ],
+      "logo_url": {
+        "large": "https://djeqr6to3dedg.cloudfront.net/repo-logos/dhi/nginx/live/logo-1793643047208",
+        "small": "https://djeqr6to3dedg.cloudfront.net/repo-logos/dhi/nginx/live/logo-1793643047208"
+      },
+      "extension_reviewed": false,
+      "categories": [{ "slug": "Web servers", "name": "Web servers" }],
+      "archived": false,
+      "media_types": ["application/vnd.oci.image.index.v1+json"],
+      "content_types": ["image"],
+      "score": 45558260,
+      "raw_pull_count": 7270180,
+      "additional_metadata": {
+        "els_available": true,
+        "fips_compliant": true,
+        "has_security_attestations": false,
+        "stig_certified": true,
+        "tools": [],
+        "url": "https://nginx.org/"
+      }
+    },
+    {
+      "id": "library/nginx",
+      "name": "nginx",
+      "slug": "nginx",
+      "type": "image",
+      "publisher": { "id": "33ef574274c011e4bea40242ac11001b", "name": "library" },
+      "created_at": "2014-06-05T19:14:45Z",
+      "updated_at": "2026-10-31T01:52:43.634621Z",
+      "short_description": "Official build of Nginx.",
+      "badge": "official",
+      "star_count": 21414,
+      "pull_count": "1B+",
+      "operating_systems": [
+        { "name": "linux", "label": "Linux" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "architectures": [
+        { "name": "386", "label": "386" },
+        { "name": "mips64le", "label": "mips64le" },
+        { "name": "ppc64le", "label": "ppc64le" },
+        { "name": "unknown", "label": "unknown" },
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm", "label": "arm" },
+        { "name": "arm64", "label": "ARM 64" },
+        { "name": "riscv64", "label": "riscv64" },
+        { "name": "s390x", "label": "IBM Z" }
+      ],
+      "logo_url": {
+        "large": "https://djeqr6to3dedg.cloudfront.net/repo-logos/library/nginx/live/logo-1790032455953.png",
+        "small": "https://djeqr6to3dedg.cloudfront.net/repo-logos/library/nginx/live/logo-1790032455953.png"
+      },
+      "extension_reviewed": false,
+      "categories": [{ "slug": "web-servers", "name": "Web servers" }],
+      "archived": false,
+      "media_types": [
+        "application/octet-stream",
+        "application/vnd.docker.container.image.v1+json",
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.docker.distribution.manifest.v1+prettyjws",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["unrecognized", "image"],
+      "score": 10136239,
+      "raw_pull_count": 13536895997,
+      "additional_metadata": { "has_security_attestations": false }
+    },
+    {
+      "id": "nginx/nginx-ingress",
+      "name": "nginx/nginx-ingress",
+      "slug": "nginx/nginx-ingress",
+      "type": "image",
+      "publisher": { "id": "4fc42e3e74c011e4bea40242ac11001b", "name": "NGINX Inc." },
+      "created_at": "2018-04-13T14:35:20.051378Z",
+      "updated_at": "2026-11-01T01:21:59.096876Z",
+      "short_description": "NGINX and  NGINX Plus Ingress Controllers for Kubernetes",
+      "badge": "verified_publisher",
+      "star_count": 124,
+      "pull_count": "1B+",
+      "operating_systems": [
+        { "name": "linux", "label": "Linux" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "architectures": [
+        { "name": "s390x", "label": "IBM Z" },
+        { "name": "unknown", "label": "unknown" },
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm", "label": "arm" },
+        { "name": "arm64", "label": "ARM 64" },
+        { "name": "ppc64le", "label": "ppc64le" }
+      ],
+      "logo_url": {
+        "large": "https://www.gravatar.com/avatar/6a6c67f4815a0379d3b697174b4f6805?s=80\u0026r=g\u0026d=mm",
+        "small": "https://www.gravatar.com/avatar/6a6c67f4815a0379d3b697174b4f6805?s=80\u0026r=g\u0026d=mm"
+      },
+      "extension_reviewed": false,
+      "categories": [],
+      "archived": false,
+      "media_types": [
+        "application/vnd.docker.container.image.v1+json",
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["image"],
+      "score": 2481812.5,
+      "raw_pull_count": 1088301299,
+      "additional_metadata": { "has_security_attestations": true }
+    },
+    {
+      "id": "nginx/nginx-prometheus-exporter",
+      "name": "nginx/nginx-prometheus-exporter",
+      "slug": "nginx/nginx-prometheus-exporter",
+      "type": "image",
+      "publisher": { "id": "4fc42e3e74c011e4bea40242ac11001b", "name": "NGINX Inc." },
+      "created_at": "2018-05-29T14:01:56.936677Z",
+      "updated_at": "2026-10-30T14:19:32.757787Z",
+      "short_description": "NGINX Prometheus Exporter for NGINX and NGINX Plus",
+      "badge": "verified_publisher",
+      "star_count": 53,
+      "pull_count": "50M+",
+      "operating_systems": [
+        { "name": "linux", "label": "Linux" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "architectures": [
+        { "name": "386", "label": "386" },
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "riscv64", "label": "riscv64" },
+        { "name": "s390x", "label": "IBM Z" },
+        { "name": "unknown", "label": "unknown" },
+        { "name": "arm", "label": "arm" },
+        { "name": "arm64", "label": "ARM 64" },
+        { "name": "mips64le", "label": "mips64le" },
+        { "name": "ppc64le", "label": "ppc64le" }
+      ],
+      "logo_url": {
+        "large": "https://www.gravatar.com/avatar/6a6c67f4815a0379d3b697174b4f6805?s=80\u0026r=g\u0026d=mm",
+        "small": "https://www.gravatar.com/avatar/6a6c67f4815a0379d3b697174b4f6805?s=80\u0026r=g\u0026d=mm"
+      },
+      "extension_reviewed": false,
+      "categories": [
+        { "slug": "integration-and-delivery", "name": "Integration \u0026 delivery" },
+        { "slug": "monitoring-and-observability", "name": "Monitoring \u0026 observability" },
+        { "slug": "web-servers", "name": "Web servers" }
+      ],
+      "archived": false,
+      "media_types": [
+        "application/vnd.docker.container.image.v1+json",
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["image"],
+      "score": 2194161.2,
+      "raw_pull_count": 92198909,
+      "additional_metadata": { "has_security_attestations": true }
+    },
+    {
+      "id": "nginx/nginx-ingress-operator",
+      "name": "nginx/nginx-ingress-operator",
+      "slug": "nginx/nginx-ingress-operator",
+      "type": "image",
+      "publisher": { "id": "4fc42e3e74c011e4bea40242ac11001b", "name": "NGINX Inc." },
+      "created_at": "2020-08-05T10:56:59.115769Z",
+      "updated_at": "2026-10-30T04:49:14.550306Z",
+      "short_description": "NGINX Ingress Operator for NGINX and NGINX Plus Ingress Controllers. Based on the Helm chart for NGI",
+      "badge": "verified_publisher",
+      "star_count": 5,
+      "pull_count": "1M+",
+      "operating_systems": [
+        { "name": "unknown", "label": "unknown" },
+        { "name": "linux", "label": "Linux" }
+      ],
+      "architectures": [
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm64", "label": "ARM 64" },
+        { "name": "ppc64le", "label": "ppc64le" },
+        { "name": "s390x", "label": "IBM Z" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "logo_url": {
+        "large": "https://www.gravatar.com/avatar/6a6c67f4815a0379d3b697174b4f6805?s=80\u0026r=g\u0026d=mm",
+        "small": "https://www.gravatar.com/avatar/6a6c67f4815a0379d3b697174b4f6805?s=80\u0026r=g\u0026d=mm"
+      },
+      "extension_reviewed": false,
+      "categories": [
+        { "slug": "integration-and-delivery", "name": "Integration \u0026 delivery" },
+        { "slug": "monitoring-and-observability", "name": "Monitoring \u0026 observability" },
+        { "slug": "networking", "name": "Networking" }
+      ],
+      "archived": false,
+      "media_types": [
+        "application/vnd.docker.container.image.v1+json",
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["image"],
+      "score": 1650405.2,
+      "raw_pull_count": 1312074,
+      "additional_metadata": { "has_security_attestations": true }
+    },
+    {
+      "id": "nginx/nginx-unprivileged",
+      "name": "nginx/nginx-unprivileged",
+      "slug": "nginx/nginx-unprivileged",
+      "type": "image",
+      "publisher": { "id": "4fc42e3e74c011e4bea40242ac11001b", "name": "NGINX Inc." },
+      "created_at": "2026-10-13T20:31:09.925807Z",
+      "updated_at": "2026-11-02T04:13:45.006476Z",
+      "short_description": "Unprivileged NGINX images",
+      "badge": "verified_publisher",
+      "star_count": 2,
+      "pull_count": "100K+",
+      "operating_systems": [{ "name": "linux", "label": "Linux" }],
+      "architectures": [
+        { "name": "arm64", "label": "ARM 64" },
+        { "name": "ppc64le", "label": "ppc64le" },
+        { "name": "riscv64", "label": "riscv64" },
+        { "name": "s390x", "label": "IBM Z" },
+        { "name": "386", "label": "386" },
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm", "label": "arm" }
+      ],
+      "logo_url": {
+        "large": "https://www.gravatar.com/avatar/6a6c67f4815a0379d3b697174b4f6805?s=80\u0026r=g\u0026d=mm",
+        "small": "https://www.gravatar.com/avatar/6a6c67f4815a0379d3b697174b4f6805?s=80\u0026r=g\u0026d=mm"
+      },
+      "extension_reviewed": false,
+      "categories": [],
+      "archived": false,
+      "media_types": ["application/vnd.oci.image.index.v1+json"],
+      "content_types": ["image"],
+      "score": 1384226.5,
+      "raw_pull_count": 127786,
+      "additional_metadata": { "has_security_attestations": true }
+    },
+    {
+      "id": "extension/nginx/docker-extension",
+      "name": "NGINX Development Center",
+      "slug": "nginx/docker-extension",
+      "type": "extension",
+      "publisher": { "id": "", "name": "NGINX Inc." },
+      "created_at": "2023-03-20T10:04:32.72909316Z",
+      "updated_at": "2023-04-17T17:45:22.346709421Z",
+      "short_description": "NGINX Development Center for Docker Desktop",
+      "badge": "verified_publisher",
+      "star_count": 0,
+      "pull_count": "50K+",
+      "operating_systems": [],
+      "architectures": [],
+      "logo_url": {
+        "large": "https://desktop.docker.com/extensions/nginx_docker-extension/raw_githubusercontent_com/nginx/docker-extension/main/logo.svg",
+        "small": "https://desktop.docker.com/extensions/nginx_docker-extension/raw_githubusercontent_com/nginx/docker-extension/main/logo.svg"
+      },
+      "extension_reviewed": false,
+      "categories": [],
+      "archived": false,
+      "media_types": null,
+      "content_types": null,
+      "score": 1281779.5,
+      "raw_pull_count": 60000,
+      "additional_metadata": null
+    },
+    {
+      "id": "nginx/nginxaas-loadbalancer-kubernetes",
+      "name": "nginx/nginxaas-loadbalancer-kubernetes",
+      "slug": "nginx/nginxaas-loadbalancer-kubernetes",
+      "type": "image",
+      "publisher": { "id": "4fc42e3e74c011e4bea40242ac11001b", "name": "NGINX Inc." },
+      "created_at": "2024-10-01T20:45:54.339343Z",
+      "updated_at": "2026-10-23T00:07:45.214108Z",
+      "short_description": "",
+      "badge": "verified_publisher",
+      "star_count": 1,
+      "pull_count": "10K+",
+      "operating_systems": [{ "name": "linux", "label": "Linux" }],
+      "architectures": [{ "name": "amd64", "label": "x86-64" }],
+      "logo_url": {
+        "large": "https://www.gravatar.com/avatar/6a6c67f4815a0379d3b697174b4f6805?s=80\u0026r=g\u0026d=mm",
+        "small": "https://www.gravatar.com/avatar/6a6c67f4815a0379d3b697174b4f6805?s=80\u0026r=g\u0026d=mm"
+      },
+      "extension_reviewed": false,
+      "categories": [],
+      "archived": false,
+      "media_types": ["application/vnd.docker.container.image.v1+json"],
+      "content_types": ["image"],
+      "score": 1031035.94,
+      "raw_pull_count": 18140,
+      "additional_metadata": { "has_security_attestations": false }
+    },
+    {
+      "id": "nginx/nginx-s3-gateway",
+      "name": "nginx/nginx-s3-gateway",
+      "slug": "nginx/nginx-s3-gateway",
+      "type": "image",
+      "publisher": { "id": "4fc42e3e74c011e4bea40242ac11001b", "name": "NGINX Inc." },
+      "created_at": "2026-10-13T23:47:29.504468Z",
+      "updated_at": "2026-11-02T00:09:42.854556Z",
+      "short_description": "Authenticating and caching gateway based on NGINX for S3 API back-ends",
+      "badge": "verified_publisher",
+      "star_count": 0,
+      "pull_count": "4.2K",
+      "operating_systems": [{ "name": "linux", "label": "Linux" }],
+      "architectures": [
+        { "name": "arm64", "label": "ARM 64" },
+        { "name": "amd64", "label": "x86-64" }
+      ],
+      "logo_url": {
+        "large": "https://www.gravatar.com/avatar/6a6c67f4815a0379d3b697174b4f6805?s=80\u0026r=g\u0026d=mm",
+        "small": "https://www.gravatar.com/avatar/6a6c67f4815a0379d3b697174b4f6805?s=80\u0026r=g\u0026d=mm"
+      },
+      "extension_reviewed": false,
+      "categories": [],
+      "archived": false,
+      "media_types": ["application/vnd.oci.image.index.v1+json"],
+      "content_types": ["image"],
+      "score": 950622.6,
+      "raw_pull_count": 4154,
+      "additional_metadata": { "has_security_attestations": false }
+    },
+    {
+      "id": "bitnamicharts/nginx",
+      "name": "bitnamicharts/nginx",
+      "slug": "bitnamicharts/nginx",
+      "type": "image",
+      "publisher": { "id": "de99cb60826b4700a1f837a5c00621aa", "name": "VMware" },
+      "created_at": "2023-01-24T10:50:59.733538Z",
+      "updated_at": "2026-10-26T15:57:17.55676Z",
+      "short_description": "Bitnami Helm chart for NGINX Open Source",
+      "badge": "verified_publisher",
+      "star_count": 4,
+      "pull_count": "10M+",
+      "operating_systems": [],
+      "architectures": [],
+      "logo_url": {
+        "large": "https://www.gravatar.com/avatar/85bcf547a6bf62b855df2c682af81a4e?s=80\u0026r=g\u0026d=mm",
+        "small": "https://www.gravatar.com/avatar/85bcf547a6bf62b855df2c682af81a4e?s=80\u0026r=g\u0026d=mm"
+      },
+      "extension_reviewed": false,
+      "categories": [
+        { "slug": "api-management", "name": "API management" },
+        { "slug": "security", "name": "Security" },
+        { "slug": "web-servers", "name": "Web servers" }
+      ],
+      "archived": false,
+      "media_types": [
+        "application/vnd.cncf.helm.config.v1+json",
+        "application/vnd.oci.image.config.v1+json",
+        "application/vnd.oci.image.index.v1+json",
+        "application/vnd.vmware.tac.metadata.config.v1+json"
+      ],
+      "content_types": ["helm", "image", "unrecognized"],
+      "score": 542866.3,
+      "raw_pull_count": 12388978,
+      "additional_metadata": { "has_security_attestations": false }
+    },
+    {
+      "id": "ubuntu/nginx",
+      "name": "ubuntu/nginx",
+      "slug": "ubuntu/nginx",
+      "type": "image",
+      "publisher": { "id": "57abbb9e74c011e4bea40242ac11001b", "name": "Canonical" },
+      "created_at": "2020-11-23T13:21:13.865485Z",
+      "updated_at": "2026-09-07T06:38:10.242871Z",
+      "short_description": "Nginx, a high-performance reverse proxy \u0026 web server. Long-term tracks maintained by Canonical.",
+      "badge": "verified_publisher",
+      "star_count": 143,
+      "pull_count": "10M+",
+      "operating_systems": [{ "name": "linux", "label": "Linux" }],
+      "architectures": [
+        { "name": "s390x", "label": "IBM Z" },
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm64", "label": "ARM 64" },
+        { "name": "ppc64le", "label": "ppc64le" }
+      ],
+      "logo_url": {
+        "large": "https://www.gravatar.com/avatar/4f24cbdaee59b3bc490c581e720accdb?s=80\u0026r=g\u0026d=mm",
+        "small": "https://www.gravatar.com/avatar/4f24cbdaee59b3bc490c581e720accdb?s=80\u0026r=g\u0026d=mm"
+      },
+      "extension_reviewed": false,
+      "categories": [{ "slug": "web-servers", "name": "Web servers" }],
+      "archived": false,
+      "media_types": [
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["image"],
+      "score": 511542.2,
+      "raw_pull_count": 13086103,
+      "additional_metadata": { "has_security_attestations": false }
+    },
+    {
+      "id": "kasmweb/nginx",
+      "name": "kasmweb/nginx",
+      "slug": "kasmweb/nginx",
+      "type": "image",
+      "publisher": { "id": "e84141f727934f2cb65120b346ad251e", "name": "Kasm Technologies" },
+      "created_at": "2021-03-26T20:52:38.480315Z",
+      "updated_at": "2026-11-02T08:07:54.192404Z",
+      "short_description": "An Nginx image based off nginx:alpine and includes logrotate.",
+      "badge": "verified_publisher",
+      "star_count": 9,
+      "pull_count": "1M+",
+      "operating_systems": [{ "name": "linux", "label": "Linux" }],
+      "architectures": [
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm64", "label": "ARM 64" }
+      ],
+      "logo_url": {
+        "large": "https://www.gravatar.com/avatar/4ae97ef58b1f41ee117a830d31e4a1d1?s=80\u0026r=g\u0026d=mm",
+        "small": "https://www.gravatar.com/avatar/4ae97ef58b1f41ee117a830d31e4a1d1?s=80\u0026r=g\u0026d=mm"
+      },
+      "extension_reviewed": false,
+      "categories": [
+        { "slug": "integration-and-delivery", "name": "Integration \u0026 delivery" },
+        { "slug": "security", "name": "Security" },
+        { "slug": "web-servers", "name": "Web servers" }
+      ],
+      "archived": false,
+      "media_types": [
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["image"],
+      "score": 480123.6,
+      "raw_pull_count": 2775816,
+      "additional_metadata": { "has_security_attestations": true }
+    },
+    {
+      "id": "rancher/nginx",
+      "name": "rancher/nginx",
+      "slug": "rancher/nginx",
+      "type": "image",
+      "publisher": { "id": "2180c25274c111e4bea40242ac11001b", "name": "Rancher by SUSE" },
+      "created_at": "2015-09-16T07:05:52.46385Z",
+      "updated_at": "2026-05-27T17:47:36.146401Z",
+      "short_description": "",
+      "badge": "verified_publisher",
+      "star_count": 4,
+      "pull_count": "10M+",
+      "operating_systems": [
+        { "name": "linux", "label": "Linux" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "architectures": [
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm64", "label": "ARM 64" },
+        { "name": "s390x", "label": "IBM Z" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "logo_url": {},
+      "extension_reviewed": false,
+      "categories": [],
+      "archived": false,
+      "media_types": [
+        "application/vnd.docker.container.image.v1+json",
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.docker.distribution.manifest.v1+prettyjws",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["image"],
+      "score": 452146.88,
+      "raw_pull_count": 23925586,
+      "additional_metadata": null
+    },
+    {
+      "id": "linuxserver/nginx",
+      "name": "linuxserver/nginx",
+      "slug": "linuxserver/nginx",
+      "type": "image",
+      "publisher": { "id": "7c6da8d4215e4c51a1fcb21d25b1a29b", "name": "linuxserver.io" },
+      "created_at": "2015-10-14T08:57:13.206714Z",
+      "updated_at": "2026-10-29T10:57:12.66843Z",
+      "short_description": "An Nginx container, brought to you by LinuxServer.io. ",
+      "badge": "open_source",
+      "star_count": 236,
+      "pull_count": "50M+",
+      "operating_systems": [
+        { "name": "linux", "label": "Linux" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "architectures": [
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm", "label": "arm" },
+        { "name": "arm64", "label": "ARM 64" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "logo_url": {
+        "large": "https://www.gravatar.com/avatar/43bbe74c9925ba1647aab2bbe6638f18?s=80\u0026r=g\u0026d=mm",
+        "small": "https://www.gravatar.com/avatar/43bbe74c9925ba1647aab2bbe6638f18?s=80\u0026r=g\u0026d=mm"
+      },
+      "extension_reviewed": false,
+      "categories": [
+        { "slug": "api-management", "name": "API management" },
+        { "slug": "security", "name": "Security" },
+        { "slug": "web-servers", "name": "Web servers" }
+      ],
+      "archived": false,
+      "media_types": [
+        "application/vnd.docker.container.image.v1+json",
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.docker.distribution.manifest.v1+prettyjws",
+        "application/vnd.oci.image.config.v1+json",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["image"],
+      "score": 443730.78,
+      "raw_pull_count": 71770023,
+      "additional_metadata": { "has_security_attestations": true }
+    },
+    {
+      "id": "dtagdevsec/nginx",
+      "name": "dtagdevsec/nginx",
+      "slug": "dtagdevsec/nginx",
+      "type": "image",
+      "publisher": {
+        "id": "2b27fca474c011e4bea40242ac11001b",
+        "name": "Deutsche Telekom Security GmbH"
+      },
+      "created_at": "2018-02-20T18:00:59.760216Z",
+      "updated_at": "2026-10-30T21:33:05.917076Z",
+      "short_description": "T-Pot Nginx",
+      "badge": "open_source",
+      "star_count": 0,
+      "pull_count": "1M+",
+      "operating_systems": [
+        { "name": "linux", "label": "Linux" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "architectures": [
+        { "name": "unknown", "label": "unknown" },
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm64", "label": "ARM 64" }
+      ],
+      "logo_url": {},
+      "extension_reviewed": false,
+      "categories": [
+        { "slug": "monitoring-and-observability", "name": "Monitoring \u0026 observability" },
+        { "slug": "security", "name": "Security" },
+        { "slug": "web-servers", "name": "Web servers" }
+      ],
+      "archived": false,
+      "media_types": ["application/vnd.oci.image.index.v1+json"],
+      "content_types": ["image"],
+      "score": 379825.1,
+      "raw_pull_count": 1594320,
+      "additional_metadata": { "has_security_attestations": true }
+    },
+    {
+      "id": "activestate/nginx",
+      "name": "activestate/nginx",
+      "slug": "activestate/nginx",
+      "type": "image",
+      "publisher": { "id": "c12481c874c011e4bea40242ac11001b", "name": "ActiveState" },
+      "created_at": "2025-09-24T13:00:34.97404Z",
+      "updated_at": "2026-11-02T13:01:56.019266Z",
+      "short_description": "ActiveState's customizable, low-to-no vulnerability container image for Nginx.",
+      "badge": "verified_publisher",
+      "star_count": 0,
+      "pull_count": "10K+",
+      "operating_systems": [{ "name": "linux", "label": "Linux" }],
+      "architectures": [{ "name": "amd64", "label": "x86-64" }],
+      "logo_url": {
+        "large": "https://www.gravatar.com/avatar/00f2271c9334e63bc0c88f1544b25849?s=80\u0026r=g\u0026d=mm",
+        "small": "https://www.gravatar.com/avatar/00f2271c9334e63bc0c88f1544b25849?s=80\u0026r=g\u0026d=mm"
+      },
+      "extension_reviewed": false,
+      "categories": [{ "slug": "languages-and-frameworks", "name": "Languages \u0026 frameworks" }],
+      "archived": false,
+      "media_types": [
+        "application/vnd.oci.image.config.v1+json",
+        "text/markdown",
+        "x-application/scan-report+json"
+      ],
+      "content_types": ["image", "unrecognized"],
+      "score": 312116.78,
+      "raw_pull_count": 16948,
+      "additional_metadata": { "has_security_attestations": false }
+    },
+    {
+      "id": "cleanstart/nginx",
+      "name": "cleanstart/nginx",
+      "slug": "cleanstart/nginx",
+      "type": "image",
+      "publisher": { "id": "ea5a1da1200e4687990ce873c85e8455", "name": "CleanStart" },
+      "created_at": "2024-07-01T02:35:20.618006Z",
+      "updated_at": "2026-11-02T00:51:25.782509Z",
+      "short_description": "Secure by Design, Built for Speed, Hardened Container Images on a minimal base CleanStart OS.",
+      "badge": "verified_publisher",
+      "star_count": 0,
+      "pull_count": "100K+",
+      "operating_systems": [{ "name": "linux", "label": "Linux" }],
+      "architectures": [
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm64", "label": "ARM 64" }
+      ],
+      "logo_url": {
+        "large": "https://djeqr6to3dedg.cloudfront.net/repo-logos/cleanstart/nginx/live/logo-1752574096635.png",
+        "small": "https://djeqr6to3dedg.cloudfront.net/repo-logos/cleanstart/nginx/live/logo-1752574096635.png"
+      },
+      "extension_reviewed": false,
+      "categories": [{ "slug": "web-servers", "name": "Web servers" }],
+      "archived": false,
+      "media_types": [
+        "application/vnd.docker.container.image.v1+json",
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.oci.image.config.v1+json"
+      ],
+      "content_types": ["image"],
+      "score": 312087.62,
+      "raw_pull_count": 131236,
+      "additional_metadata": { "has_security_attestations": true }
+    },
+    {
+      "id": "paketobuildpacks/nginx",
+      "name": "paketobuildpacks/nginx",
+      "slug": "paketobuildpacks/nginx",
+      "type": "image",
+      "publisher": { "id": "0f2153b1635b459499176175b7c3b7bd", "name": "Linux Foundation" },
+      "created_at": "2021-01-22T16:06:59.630406Z",
+      "updated_at": "2026-10-28T05:12:55.930066Z",
+      "short_description": "",
+      "badge": "open_source",
+      "star_count": 0,
+      "pull_count": "5M+",
+      "operating_systems": [{ "name": "linux", "label": "Linux" }],
+      "architectures": [
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm64", "label": "ARM 64" }
+      ],
+      "logo_url": {
+        "large": "https://www.gravatar.com/avatar/13aa7c24043d8806b76b6cf2346e5468?s=80\u0026r=g\u0026d=mm",
+        "small": "https://www.gravatar.com/avatar/13aa7c24043d8806b76b6cf2346e5468?s=80\u0026r=g\u0026d=mm"
+      },
+      "extension_reviewed": false,
+      "categories": [],
+      "archived": false,
+      "media_types": [
+        "application/vnd.docker.container.image.v1+json",
+        "application/vnd.oci.image.config.v1+json",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["image"],
+      "score": 310911.44,
+      "raw_pull_count": 5824687,
+      "additional_metadata": { "has_security_attestations": false }
+    },
+    {
+      "id": "vmware/nginx",
+      "name": "vmware/nginx",
+      "slug": "vmware/nginx",
+      "type": "image",
+      "publisher": { "id": "63fbd4a674c011e4bea40242ac11001b", "name": "VMware" },
+      "created_at": "2017-04-07T07:05:53.855276Z",
+      "updated_at": "2017-04-07T07:05:54.138804Z",
+      "short_description": "",
+      "badge": "verified_publisher",
+      "star_count": 3,
+      "pull_count": "100K+",
+      "operating_systems": [{ "name": "linux", "label": "Linux" }],
+      "architectures": [{ "name": "amd64", "label": "x86-64" }],
+      "logo_url": {
+        "large": "https://www.gravatar.com/avatar/a2f8df640a1273dcd89023dca0110906?s=80\u0026r=g\u0026d=mm",
+        "small": "https://www.gravatar.com/avatar/a2f8df640a1273dcd89023dca0110906?s=80\u0026r=g\u0026d=mm"
+      },
+      "extension_reviewed": false,
+      "categories": [],
+      "archived": false,
+      "media_types": ["application/vnd.docker.container.image.v1+json"],
+      "content_types": ["image"],
+      "score": 307916.75,
+      "raw_pull_count": 112112,
+      "additional_metadata": null
+    },
+    {
+      "id": "gluufederation/nginx",
+      "name": "gluufederation/nginx",
+      "slug": "gluufederation/nginx",
+      "type": "image",
+      "publisher": { "id": "dc2c2672624a4be486ca42134dfd1481", "name": "gluufederation" },
+      "created_at": "2016-11-01T22:54:39.458329Z",
+      "updated_at": "2026-11-02T07:51:48.837981Z",
+      "short_description": " A customized NGINX image containing a consul-template and an NGINX server.",
+      "badge": "open_source",
+      "star_count": 1,
+      "pull_count": "100K+",
+      "operating_systems": [
+        { "name": "unknown", "label": "unknown" },
+        { "name": "linux", "label": "Linux" }
+      ],
+      "architectures": [
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "logo_url": {},
+      "extension_reviewed": false,
+      "categories": [
+        { "slug": "api-management", "name": "API management" },
+        { "slug": "security", "name": "Security" },
+        { "slug": "web-servers", "name": "Web servers" }
+      ],
+      "archived": false,
+      "media_types": [
+        "application/vnd.docker.container.image.v1+json",
+        "application/vnd.oci.image.config.v1+json",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["image"],
+      "score": 305805.97,
+      "raw_pull_count": 157994,
+      "additional_metadata": { "has_security_attestations": false }
+    },
+    {
+      "id": "antrea/nginx",
+      "name": "antrea/nginx",
+      "slug": "antrea/nginx",
+      "type": "image",
+      "publisher": { "id": "e9083876782145bf852089af5dc1902a", "name": "CNCF" },
+      "created_at": "2022-01-27T06:06:24.925923Z",
+      "updated_at": "2022-01-27T06:06:25.315731Z",
+      "short_description": "Nginx server used for Antrea e2e testing",
+      "badge": "open_source",
+      "star_count": 0,
+      "pull_count": "100K+",
+      "operating_systems": [{ "name": "linux", "label": "Linux" }],
+      "architectures": [{ "name": "amd64", "label": "x86-64" }],
+      "logo_url": {
+        "large": "https://www.gravatar.com/avatar/5ae44961cd3d94e153aedff621edc8e6?s=80\u0026r=g\u0026d=mm",
+        "small": "https://www.gravatar.com/avatar/5ae44961cd3d94e153aedff621edc8e6?s=80\u0026r=g\u0026d=mm"
+      },
+      "extension_reviewed": false,
+      "categories": [
+        { "slug": "web-servers", "name": "Web servers" },
+        { "slug": "developer-tools", "name": "Developer tools" }
+      ],
+      "archived": false,
+      "media_types": ["application/vnd.docker.container.image.v1+json"],
+      "content_types": ["image"],
+      "score": 291282.12,
+      "raw_pull_count": 124809,
+      "additional_metadata": null
+    },
+    {
+      "id": "intel/nginx",
+      "name": "intel/nginx",
+      "slug": "intel/nginx",
+      "type": "image",
+      "publisher": { "id": "2c6bf59874c011e4bea40242ac11001b", "name": "Intel Corporation" },
+      "created_at": "2022-07-20T21:30:28.79222Z",
+      "updated_at": "2023-10-16T21:22:05.261313Z",
+      "short_description": "",
+      "badge": "verified_publisher",
+      "star_count": 0,
+      "pull_count": "10K+",
+      "operating_systems": [{ "name": "linux", "label": "Linux" }],
+      "architectures": [{ "name": "amd64", "label": "x86-64" }],
+      "logo_url": {
+        "large": "https://www.gravatar.com/avatar/9d2eb115ddd65132d6179073c8552e5e?s=80\u0026r=g\u0026d=mm",
+        "small": "https://www.gravatar.com/avatar/9d2eb115ddd65132d6179073c8552e5e?s=80\u0026r=g\u0026d=mm"
+      },
+      "extension_reviewed": false,
+      "categories": [
+        { "slug": "integration-and-delivery", "name": "Integration \u0026 delivery" },
+        { "slug": "security", "name": "Security" },
+        { "slug": "web-servers", "name": "Web servers" }
+      ],
+      "archived": false,
+      "media_types": ["application/vnd.docker.container.image.v1+json"],
+      "content_types": ["image"],
+      "score": 283632.75,
+      "raw_pull_count": 42536,
+      "additional_metadata": null
+    },
+    {
+      "id": "docksal/nginx",
+      "name": "docksal/nginx",
+      "slug": "docksal/nginx",
+      "type": "image",
+      "publisher": { "id": "7448dba9fe7442658f535ad61828953f", "name": "docksal" },
+      "created_at": "2019-02-04T18:19:18.152946Z",
+      "updated_at": "2022-04-24T10:09:30.057667Z",
+      "short_description": "Nginx service image for Docksal",
+      "badge": "open_source",
+      "star_count": 1,
+      "pull_count": "10K+",
+      "operating_systems": [{ "name": "linux", "label": "Linux" }],
+      "architectures": [
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm64", "label": "ARM 64" }
+      ],
+      "logo_url": {
+        "large": "https://www.gravatar.com/avatar/ea56b3c0271f3c3fcfdfc824a46bcbf3?s=80\u0026r=g\u0026d=mm",
+        "small": "https://www.gravatar.com/avatar/ea56b3c0271f3c3fcfdfc824a46bcbf3?s=80\u0026r=g\u0026d=mm"
+      },
+      "extension_reviewed": false,
+      "categories": [
+        { "slug": "integration-and-delivery", "name": "Integration \u0026 delivery" },
+        { "slug": "security", "name": "Security" },
+        { "slug": "web-servers", "name": "Web servers" }
+      ],
+      "archived": false,
+      "media_types": [
+        "application/vnd.docker.container.image.v1+json",
+        "application/vnd.docker.distribution.manifest.list.v2+json"
+      ],
+      "content_types": ["image"],
+      "score": 270273.12,
+      "raw_pull_count": 37799,
+      "additional_metadata": null
+    },
+    {
+      "id": "geokrety/nginx",
+      "name": "geokrety/nginx",
+      "slug": "geokrety/nginx",
+      "type": "image",
+      "publisher": { "id": "fe652492e0e943f989aef1568012e9b1", "name": "GeoKrety" },
+      "created_at": "2023-08-06T13:59:39.505537Z",
+      "updated_at": "2026-01-25T12:35:45.783Z",
+      "short_description": "Our customized nginx image",
+      "badge": "open_source",
+      "star_count": 0,
+      "pull_count": "10K+",
+      "operating_systems": [
+        { "name": "unknown", "label": "unknown" },
+        { "name": "linux", "label": "Linux" }
+      ],
+      "architectures": [
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "logo_url": {
+        "large": "https://www.gravatar.com/avatar/342eed67498b734c5c9c44ab643276ee?s=80\u0026r=g\u0026d=mm",
+        "small": "https://www.gravatar.com/avatar/342eed67498b734c5c9c44ab643276ee?s=80\u0026r=g\u0026d=mm"
+      },
+      "extension_reviewed": false,
+      "categories": [
+        { "slug": "networking", "name": "Networking" },
+        { "slug": "security", "name": "Security" },
+        { "slug": "web-servers", "name": "Web servers" }
+      ],
+      "archived": false,
+      "media_types": [
+        "application/vnd.docker.container.image.v1+json",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["image"],
+      "score": 267524.97,
+      "raw_pull_count": 28484,
+      "additional_metadata": null
+    },
+    {
+      "id": "ilios/nginx",
+      "name": "ilios/nginx",
+      "slug": "ilios/nginx",
+      "type": "image",
+      "publisher": { "id": "ac774564fffa4cafbf947a6fe4c81f10", "name": "UCSF" },
+      "created_at": "2017-02-04T18:50:09.130644Z",
+      "updated_at": "2026-11-02T16:33:48.586235Z",
+      "short_description": "Nginx customized to run Ilios along with the php-fpm image.",
+      "badge": "open_source",
+      "star_count": 0,
+      "pull_count": "50K+",
+      "operating_systems": [
+        { "name": "linux", "label": "Linux" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "architectures": [
+        { "name": "amd64", "label": "x86-64" },
+        { "name": "arm64", "label": "ARM 64" },
+        { "name": "unknown", "label": "unknown" }
+      ],
+      "logo_url": {
+        "large": "https://www.gravatar.com/avatar/2ef1307f4e2cde16ff2256db34500541?s=80\u0026r=g\u0026d=mm",
+        "small": "https://www.gravatar.com/avatar/2ef1307f4e2cde16ff2256db34500541?s=80\u0026r=g\u0026d=mm"
+      },
+      "extension_reviewed": false,
+      "categories": [
+        { "slug": "content-management-system", "name": "Content management system" },
+        { "slug": "security", "name": "Security" },
+        { "slug": "web-servers", "name": "Web servers" }
+      ],
+      "archived": false,
+      "media_types": [
+        "application/vnd.docker.container.image.v1+json",
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.oci.image.index.v1+json"
+      ],
+      "content_types": ["image"],
+      "score": 263287.66,
+      "raw_pull_count": 62868,
+      "additional_metadata": { "has_security_attestations": false }
+    }
+  ],
+  "search_after": [263287.66, "ilios/nginx"]
+}
