@@ -3,7 +3,8 @@
 import './server/config.server';
 
 // The rest is React Router's default Node entry
-// (@react-router/dev/dist/config/defaults/entry.server.node.tsx), unchanged.
+// (@react-router/dev/dist/config/defaults/entry.server.node.tsx), plus the
+// security headers and CSP nonce (see app/server/securityHeaders.server.ts).
 import { PassThrough } from 'node:stream';
 
 import type { EntryContext } from 'react-router';
@@ -12,6 +13,7 @@ import { ServerRouter } from 'react-router';
 import { isbot } from 'isbot';
 import type { RenderToPipeableStreamOptions } from 'react-dom/server';
 import { renderToPipeableStream } from 'react-dom/server';
+import { createNonce, setDocumentSecurityHeaders } from './server/securityHeaders.server';
 
 export const streamTimeout = 5_000;
 
@@ -21,6 +23,10 @@ export default function handleRequest(
   responseHeaders: Headers,
   routerContext: EntryContext,
 ) {
+  // A fresh nonce per document. Only inline scripts carrying it can run.
+  const nonce = createNonce();
+  setDocumentSecurityHeaders(responseHeaders, nonce, { dev: import.meta.env.DEV });
+
   // https://httpwg.org/specs/rfc9110.html#HEAD
   if (request.method.toUpperCase() === 'HEAD') {
     return new Response(null, {
@@ -45,8 +51,9 @@ export default function handleRequest(
     );
 
     const { pipe, abort } = renderToPipeableStream(
-      <ServerRouter context={routerContext} url={request.url} />,
+      <ServerRouter context={routerContext} url={request.url} nonce={nonce} />,
       {
+        nonce,
         [readyOption]() {
           shellRendered = true;
           const body = new PassThrough({

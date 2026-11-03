@@ -50,3 +50,14 @@ In-memory LRU with single-flight and stale-while-revalidate; TTLs overridable by
 The cache mechanics live in `app/server/cache.server.ts`: `cache.get(key, { ttlMs }, fetcher)` returns `{ value, status, isStale, ageMs, refreshFailed }`, where `status` is `HIT`, `MISS` or `STALE` for the `X-Cache` header. Each entry's TTL gets ±10% jitter. A stale entry is served at once while one background refresh runs; a failed refresh keeps it (and sets `refreshFailed`), and only LRU eviction removes it. The module never calls Docker Hub or sets headers.
 
 Routes and loaders don't use the cache directly: they call `getCached(key, ttlSeconds, fetcher)` from `app/server/upstream.server.ts`, which wires the cache, the upstream client and the proxy-wide budget (`app/server/budget.server.ts`, a sliding window of `UPSTREAM_BUDGET_PER_MIN` upstream attempts per 60 s, retries included; cache hits and single-flight followers don't count). It returns `{ value, status, ageMs, degraded }`. `degraded` is true when a stale value is served because the budget is exhausted or the key's last refresh failed; loaders pass it to the degraded banner. With no cached value and a failing or refused upstream call, it throws `UpstreamUnavailableError`, which `upstreamUnavailableResponse` turns into the 503. `cachedJson` sets `X-Cache`, `Age` and `Cache-Control` (`public, max-age=<ttl>` when fresh, `no-store` when stale).
+
+## Security headers
+
+`app/server/securityHeaders.server.ts` (questionnaire G43, [RISKS](RISKS.md) 3.2/3.3) sets `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` and a Content Security Policy on everything the router answers:
+
+| Response | CSP | Set by |
+|---|---|---|
+| HTML documents, including 404 and error pages | `default-src 'self'; script-src 'self' 'nonce-…'; img-src 'self' https://*.cloudfront.net https://www.gravatar.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'` | `app/entry.server.tsx`, with a fresh nonce per render |
+| `/api/*` resource routes, `.data` requests | `default-src 'none'; frame-ancestors 'none'` | the root route's `middleware` (`future.v8_middleware`) |
+
+The document's nonce goes to `<ServerRouter nonce>` and `renderToPipeableStream({ nonce })`; React Router passes it on to `<Scripts>`, `<ScrollRestoration>` and the streamed hydration scripts, so no route needs to handle it. Any inline `<script>` added later must take the nonce the same way, and a new image host goes into `IMAGE_HOSTS`. In `pnpm dev` only, `style-src` also allows `'unsafe-inline'`, because Vite injects CSS as `<style>` tags; production links CSS files from `'self'`. Static files that `react-router-serve` answers before the router (`/assets/*`, `public/`) and React Router's `/__manifest` route discovery JSON don't get these headers.

@@ -2,6 +2,12 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
 import { I18nextProvider } from 'react-i18next';
 
 import i18next from './i18n/i18next';
+import type { Route } from './+types/root';
+import { securityHeadersMiddleware } from './server/securityHeaders.server';
+
+// Security headers on resource route (/api/*) and .data responses. Documents get
+// theirs, with the CSP nonce, in entry.server.tsx.
+export const middleware: Route.MiddlewareFunction[] = [securityHeadersMiddleware];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
