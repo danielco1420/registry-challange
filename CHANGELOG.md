@@ -12,8 +12,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Risk register with mitigations (`docs/RISKS.md`).
 - Architecture stub, project summary skeleton, and ADR-0001 (backend proxy, because Docker Hub has no CORS).
 - Contribution rules, AI assistant guides (`CLAUDE.md`, `AGENTS.md`), GitHub templates, Dependabot, security policy, and editor/git config.
-
-### Added
 - Answers to every design questionnaire question; ADR-0002 (React Router v7 single app) and ADR-0003 (server cache and upstream failure handling).
 - React Router v7 app (framework mode, SSR) with TypeScript strict, pnpm and Node 22; placeholder home page and `/api/health`.
 - ESLint (typescript-eslint, React Hooks, jsx-a11y) and Prettier, with `pnpm lint`, `pnpm lint:fix`, `pnpm format` and `pnpm format:check`.
@@ -35,11 +33,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Search fallback (`app/server/search.server.ts`): when `/api/search/v4` fails its schema, one call to the legacy `/v2/search/repositories/` (new `legacySearch` client endpoint) answers instead, marked `source: "legacy"`. Not used for popular or badge-filtered searches; a sorted search falls back in relevance order.
 - Recorded Docker Hub responses in `fixtures/dockerhub/` (popular, search, suggestions, legacy search, nginx, fluent/fluent-bit, a repo without a logo, an archived repo, publishers, a 404), MSW handlers that serve them (`test/msw/dockerhub.ts`), and contract tests for the schemas and normalizers.
 - i18n with `react-i18next`/`i18next` (`app/i18n/i18next.ts`): one instance initialized synchronously from bundled resources (`app/i18n/en/common.json`), language fixed to `en`, identical on server and client (no hydration mismatch), wrapped around the app via `I18nextProvider` in `app/root.tsx`. The home route's copy now goes through `t()`/`i18next.t()`, with keys typed against the catalog so a typo fails `pnpm typecheck`. A dev-only `missingKeyHandler` throws on a missing key (logs once per key outside dev), covered by `app/i18n/i18next.test.ts`.
+- Docker Hub proxy routes: `GET /api/popular`, `/api/search`, `/api/search/suggestions`, `/api/repos/:ns/:repo`, `/api/repos/:ns/:repo/tags`, `/api/repos/:ns/:repo/tags/:tag` and `/api/publishers/:name` (org, else user). Each applies the per-client rate limit, validates its params (`400`), reads through the server cache and upstream budget, and returns a normalized DTO with `X-Cache`, `Age` and a `Cache-Control` matching its TTL; stale data when Docker Hub is failing, else `503` with `Retry-After`. A missing repository, tag or publisher answers a cached JSON `404` (for tags, also a page past the last one). A write method answers a JSON `405` with `Allow: GET, HEAD`. Search and tags reject `page × pageSize > 1000` with a `400`, since Docker Hub answers `403` past the first 1000 results without sign-in. Any other `/api/*` path answers a JSON `404` and calls nothing upstream. New DTOs `SearchPage` (with `source`) and `Publisher`; errors share one `{ error: { code, message } }` shape.
 
 ### Fixed
 - `searchParamsToObject` now keeps the first occurrence of a repeated query key even when it's empty, instead of falling through to a later value (e.g. `?sort=&sort=stars` now keeps `sort` missing).
 
 ### Changed
+- `docs/API.md`, `CLAUDE.md` and `AGENTS.md` list the suggestions and single-tag routes in the allowlist; `docs/RISKS.md` statuses updated now that the routes are wired.
 - A Docker Hub response that fails its schema now reports where: `UpstreamError` has `issuePath` (e.g. `$.results[3].name`, keys only, never values), also appended to the message.
 - `docs/API.md`: documented what the live responses actually contain (v4 `name` and `publisher.name` semantics, `logo_url: {}`, pull-count labels, non-repository search results, archived repos answering 200, reversed tag `ordering`, attestation images, `/v2/users/{org}` redirecting to `/v2/orgs/{org}`), the normalization rules and the search fallback.
 - Calling Docker Hub anonymously: removed `DOCKERHUB_PAT` from `.env.example`.

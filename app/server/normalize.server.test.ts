@@ -10,10 +10,12 @@ import { NAME_PATTERN } from '../lib/params';
 import { cloneFixture, fixtures } from '../../test/msw/dockerhub';
 import {
   LegacySearchResponseSchema,
+  OrgSchema,
   RepositorySchema,
   SearchV4ResponseSchema,
   TagSchema,
   TagsResponseSchema,
+  UserSchema,
 } from './dockerhub.schemas.server';
 import {
   normalizePulls,
@@ -23,10 +25,12 @@ import {
   splitRepoId,
   toBadge,
   toLegacySearchPage,
+  toOrgPublisher,
   toRepoDetails,
   toSearchPage,
   toTag,
   toTagsPage,
+  toUserPublisher,
 } from './normalize.server';
 
 const paging = { page: 1, pageSize: 25 };
@@ -342,6 +346,46 @@ describe('tags → Page<Tag>', () => {
 
   it('kernel528/archived: an archived repository still lists its tags', () => {
     expect(tags(fixtures.tagsKernel528Archived)).toMatchObject({ total: 5 });
+  });
+});
+
+describe('orgs / users → Publisher', () => {
+  it('an org with a full name, avatar and badge', () => {
+    expect(toOrgPublisher(v.parse(OrgSchema, fixtures.orgDocker))).toEqual({
+      name: 'docker',
+      displayName: 'Docker, Inc.',
+      kind: 'organization',
+      avatarUrl: 'https://www.gravatar.com/avatar/0fb5734bc033c43c456a233739d1eb05?s=80&r=g&d=mm',
+      badge: 'verified_publisher',
+    });
+  });
+
+  it('an org without a full name falls back to the company', () => {
+    expect(toOrgPublisher(v.parse(OrgSchema, fixtures.orgFluent))).toMatchObject({
+      name: 'fluent',
+      displayName: 'Fluent organization: Fluentd project',
+      badge: 'open_source',
+    });
+  });
+
+  it('a user without a name or avatar: the username, no avatar, no badge', () => {
+    expect(toUserPublisher(v.parse(UserSchema, fixtures.userKernel528))).toEqual({
+      name: 'kernel528',
+      displayName: 'kernel528',
+      kind: 'user',
+      avatarUrl: undefined,
+      badge: 'none',
+    });
+  });
+
+  it('drops a non-https avatar and an unknown badge', () => {
+    const org = cloneFixture(fixtures.orgDocker);
+    org.gravatar_url = 'http://example.com/a.png';
+    org.badge = 'sponsored';
+    expect(toOrgPublisher(v.parse(OrgSchema, org))).toMatchObject({
+      avatarUrl: undefined,
+      badge: 'none',
+    });
   });
 });
 
