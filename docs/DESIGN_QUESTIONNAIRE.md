@@ -59,7 +59,7 @@ Options: TanStack Query · SWR · RTK Query · plain fetch.
 
 ### B8. ✅ Client state (theme, recent searches, favorites)
 Options: none (URL + localStorage) · React Context · Zustand.
-**Answer:** No state library. URL for view state (B13), small hooks around `localStorage` for recent searches and favorites, theme in a cookie so SSR renders the right theme without a flash.
+**Answer:** No state library. URL for view state (B13), small hooks around `localStorage` for recent searches and favorites, theme in a cookie so SSR renders the right theme without a flash (done in T17, see D19).
 
 ### B9. ✅ Server-side caching
 Options: in-memory LRU · Redis · HTTP `Cache-Control` + CDN · a combination.
@@ -117,6 +117,7 @@ Options: Tailwind · CSS Modules · CSS-in-JS.
 ### D19. ✅ Dark mode
 Options: system preference only · toggle · both (toggle that defaults to system).
 **Answer:** Toggle with Light / Dark / System, defaulting to System. Stored in a cookie (see B8).
+**Follow-up:** Done (T17). The `theme` cookie holds `light` or `dark`; System is the default, so choosing it deletes the cookie. The root loader reads it and the server renders `<html class="light|dark">`. System has no class: `app/app.css` applies the dark tokens under `@media (prefers-color-scheme: dark)` for `:root:not(.light)`, so the browser resolves it before first paint, with no inline script (and no CSP change). The toggle posts to `POST /theme` (`app/routes/theme.ts`) through a fetcher, with an optimistic update, and falls back to a plain form without JavaScript.
 
 ### D20. ✅ Brand
 Palette (Docker-like blue or our own)? Typeface? Logo or name for the app?
