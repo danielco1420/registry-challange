@@ -51,6 +51,25 @@ The cache mechanics live in `app/server/cache.server.ts`: `cache.get(key, { ttlM
 
 Routes and loaders don't use the cache directly: they call `getCached(key, ttlSeconds, fetcher)` from `app/server/upstream.server.ts`, which wires the cache, the upstream client and the proxy-wide budget (`app/server/budget.server.ts`, a sliding window of `UPSTREAM_BUDGET_PER_MIN` upstream attempts per 60 s, retries included; cache hits and single-flight followers don't count). It returns `{ value, status, ageMs, degraded }`. `degraded` is true when a stale value is served because the budget is exhausted or the key's last refresh failed; loaders pass it to the degraded banner. With no cached value and a failing or refused upstream call, it throws `UpstreamUnavailableError`, which `upstreamUnavailableResponse` turns into the 503. `cachedJson` sets `X-Cache`, `Age` and `Cache-Control` (`public, max-age=<ttl>` when fresh, `no-store` when stale).
 
+## Loading, empty and error states
+
+Shared components in `app/components/state/` (questionnaire C16, D25), all copy through `t()` under `state.*`:
+
+- `Loading`: spinner with short text, `role="status"`.
+- `Empty`: title, description and a required `action` (e.g. "Clear filters").
+- `ErrorState`: `kind` is `not_found`, `repo_not_found`, `unavailable`, `rate_limited` or `unexpected`. The last three require a `retry` callback ("Try again"); every kind links back to Explore, and an optional `retryAfterSeconds` says when to retry.
+- `DegradedBanner`: rendered by a view whose loader returned `degraded: true` (stale data, see Caching).
+
+The root `ErrorBoundary` (`app/root.tsx`) renders `RouteErrorState`, which maps the thrown value with `classifyRouteError` (`app/lib/route-error.ts`). React Router replaces a thrown `Error` with a generic one in production, so page loaders don't let `UpstreamError` or `UpstreamUnavailableError` escape: they `throw toPageErrorResponse(error, { notFound })` (`app/server/pageError.server.ts`), a `data({ kind, retryAfterSeconds }, { status })` with `Retry-After` and `Cache-Control: no-store`:
+
+| Error | Status | Kind |
+|---|---|---|
+| `UpstreamError` `not_found` | 404 | `not_found`, or `repo_not_found` on the repository page |
+| `UpstreamError` `rate_limited` / `budget_exhausted`; `UpstreamUnavailableError` `budget_exhausted` | 429 | `rate_limited` |
+| `UpstreamError` `unavailable` / `bad_payload`; `UpstreamUnavailableError` `upstream_failed` | 503 | `unavailable` |
+
+Other thrown responses map by their `ApiErrorBody` code or status (an unmatched URL is React Router's 404, the per-client rate limit a 429), and anything else is `unexpected`. "Try again" revalidates the loaders after a thrown response and reloads the page after a render error.
+
 ## Styling
 
 Tailwind CSS v4 through `@tailwindcss/vite`, with shadcn/ui components copied into `app/components/ui/` (`components.json` points the shadcn CLI there and at `~/lib/utils`). `app/app.css` holds the brand tokens as CSS variables for light (`:root`) and dark (`.dark` on `<html>`), mapped to Tailwind colors with `@theme inline`, so components use `bg-primary`, `text-brand`, `ring-ring` and so on instead of raw colors. It scans only `app/` for class names. `app/root.tsx` imports it; the production build links it as a file from `'self'`, so the CSP needs no `style-src` exception. Tokens are hex values so `app/lib/theme-contrast.test.ts` can check their WCAG contrast. Inline `style` attributes in server-rendered markup would be blocked by the production CSP, so components style with classes.
