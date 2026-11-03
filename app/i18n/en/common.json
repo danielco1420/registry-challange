@@ -4,5 +4,17 @@
   },
   "home": {
     "placeholder": "Placeholder. The Explore page lands in a later task."
+  },
+  "shell": {
+    "skipToContent": "Skip to main content",
+    "footer": {
+      "disclaimer": "Repository data comes from Docker Hub. Danny's Dockers is not affiliated with or endorsed by Docker, Inc."
+    }
+  },
+  "theme": {
+    "label": "Color theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   }
 }

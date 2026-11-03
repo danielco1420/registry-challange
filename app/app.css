@@ -13,14 +13,28 @@
  * - `--accent` keeps shadcn's meaning (hover and highlighted surfaces), tinted
  *   green.
  *
- * Dark mode applies under a `.dark` class on <html> (shadcn's convention); the
- * Light / Dark / System toggle that sets it lands with the app shell (T17).
+ * Theme (questionnaire D19, `app/lib/theme.ts`): the server renders <html> with
+ * `class="dark"` or `class="light"` for an explicit choice from the theme
+ * cookie, and no class for System. Dark tokens apply under `.dark` (shadcn's
+ * convention) and, for System, under `prefers-color-scheme: dark` unless
+ * <html> is `.light`. The browser resolves System before first paint, so no
+ * script is needed and there's no flash of the wrong theme.
  */
 
 /* Scan only app/ for class names (not docs, node_modules or .claude/ worktrees). */
 @import 'tailwindcss' source('.');
 
-@custom-variant dark (&:is(.dark *));
+/* `dark:` utilities: explicit Dark, or System on a dark OS. */
+@custom-variant dark {
+  &:where(.dark, .dark *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not(.light), :root:not(.light) *) {
+      @slot;
+    }
+  }
+}
 
 :root {
   color-scheme: light;
@@ -74,6 +88,37 @@
   --ring: #4ade80;
 }
 
+/*
+ * System on a dark OS: the same tokens as `.dark`. Keep the two blocks in sync;
+ * app/lib/theme-contrast.test.ts fails if they differ.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    color-scheme: dark;
+
+    --background: #0a0a0a;
+    --foreground: #fafafa;
+    --card: #171717;
+    --card-foreground: #fafafa;
+    --popover: #171717;
+    --popover-foreground: #fafafa;
+    --primary: #4ade80;
+    --primary-foreground: #052e16;
+    --secondary: #262626;
+    --secondary-foreground: #fafafa;
+    --muted: #262626;
+    --muted-foreground: #a3a3a3;
+    --accent: #052e16;
+    --accent-foreground: #bbf7d0;
+    --brand: #4ade80;
+    --destructive: #f87171;
+    --destructive-foreground: #450a0a;
+    --border: #262626;
+    --input: #404040;
+    --ring: #4ade80;
+  }
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -109,5 +154,14 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+  }
+
+  /*
+   * A visible focus ring on everything keyboard-focusable (links, the skip
+   * link, future inputs), in `--ring` (contrast-checked at 3:1). Components
+   * with their own ring, like Button, override it with `outline-hidden`.
+   */
+  :focus-visible {
+    @apply outline-2 outline-offset-2;
   }
 }
