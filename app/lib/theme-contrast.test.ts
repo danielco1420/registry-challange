@@ -12,6 +12,10 @@ function tokens(selector: ':root' | '.dark'): Record<string, string> {
   const escaped = selector.replace('.', '\\.');
   const block = new RegExp(`^${escaped}\\s*\\{([^}]*)\\}`, 'm').exec(css)?.[1];
   if (!block) throw new Error(`No "${selector}" block in app/app.css`);
+  return parseTokens(block);
+}
+
+function parseTokens(block: string): Record<string, string> {
   return Object.fromEntries(
     [...block.matchAll(/--([\w-]+):\s*(#[0-9a-f]{6})\s*;/gi)].map(([, name, value]) => [
       name,
@@ -19,6 +23,20 @@ function tokens(selector: ':root' | '.dark'): Record<string, string> {
     ]),
   ) as Record<string, string>;
 }
+
+// System on a dark OS repeats the `.dark` tokens inside a media query (no CSS
+// mixins), so a palette change to one block must reach the other.
+describe('System theme on a dark OS', () => {
+  it('uses exactly the .dark tokens', () => {
+    const block =
+      /@media \(prefers-color-scheme: dark\)\s*\{\s*:root:not\(\.light\)\s*\{([^}]*)\}/.exec(
+        css,
+      )?.[1];
+    expect(block, 'no System dark block in app/app.css').toBeDefined();
+    expect(parseTokens(block as string)).toEqual(tokens('.dark'));
+    expect(block).toMatch(/color-scheme:\s*dark;/);
+  });
+});
 
 /** [foreground token, background token, minimum ratio] */
 const PAIRS: [string, string, number][] = [

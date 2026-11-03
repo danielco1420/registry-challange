@@ -43,5 +43,17 @@
       "title": "Showing saved data.",
       "description": "Docker Hub isn't responding, so this may be out of date. Try again in a minute for the latest."
     }
+  },
+  "shell": {
+    "skipToContent": "Skip to main content",
+    "footer": {
+      "disclaimer": "Repository data comes from Docker Hub. Danny's Dockers is not affiliated with or endorsed by Docker, Inc."
+    }
+  },
+  "theme": {
+    "label": "Color theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   }
 }

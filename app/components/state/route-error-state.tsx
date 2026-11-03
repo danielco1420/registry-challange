@@ -30,7 +30,7 @@ export function RouteErrorState({ error }: RouteErrorStateProps) {
   };
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12">
+    <div className="mx-auto max-w-5xl px-6 py-12">
       <title>{t(`state.error.${kind}.title`)}</title>
       {isRetryable(kind) ? (
         <ErrorState
@@ -42,6 +42,6 @@ export function RouteErrorState({ error }: RouteErrorStateProps) {
       ) : (
         <ErrorState kind={kind} headingLevel={1} />
       )}
-    </main>
+    </div>
   );
 }
