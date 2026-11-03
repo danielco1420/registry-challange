@@ -1,0 +1,113 @@
+/*
+ * Tailwind v4 + shadcn/ui design tokens for Danny's Dockers (questionnaire D17-D20).
+ *
+ * Neutral grays with a light green accent. Every color is a hex value so
+ * `app/lib/theme-contrast.test.ts` can read this file and check the WCAG
+ * contrast of the pairs the UI uses, in both themes.
+ *
+ * - `--primary` is the light green fill (primary buttons, the wordmark's mark),
+ *   with dark green text on it.
+ * - `--brand` is the green for text, icons and focus rings on the page
+ *   background. In light mode it's a darker shade of the accent, because the
+ *   light green itself is only 1.4:1 against white.
+ * - `--accent` keeps shadcn's meaning (hover and highlighted surfaces), tinted
+ *   green.
+ *
+ * Dark mode applies under a `.dark` class on <html> (shadcn's convention); the
+ * Light / Dark / System toggle that sets it lands with the app shell (T17).
+ */
+
+/* Scan only app/ for class names (not docs, node_modules or .claude/ worktrees). */
+@import 'tailwindcss' source('.');
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  color-scheme: light;
+  --radius: 0.625rem;
+
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #86efac;
+  --primary-foreground: #052e16;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #171717;
+  --muted: #f5f5f5;
+  --muted-foreground: #525252;
+  --accent: #f0fdf4;
+  --accent-foreground: #14532d;
+  --brand: #15803d;
+  /* red-700, not red-600: white on the 90% hover fill stays above 4.5:1. */
+  --destructive: #b91c1c;
+  --destructive-foreground: #ffffff;
+  --border: #e5e5e5;
+  --input: #d4d4d4;
+  --ring: #15803d;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --card: #171717;
+  --card-foreground: #fafafa;
+  --popover: #171717;
+  --popover-foreground: #fafafa;
+  --primary: #4ade80;
+  --primary-foreground: #052e16;
+  --secondary: #262626;
+  --secondary-foreground: #fafafa;
+  --muted: #262626;
+  --muted-foreground: #a3a3a3;
+  --accent: #052e16;
+  --accent-foreground: #bbf7d0;
+  --brand: #4ade80;
+  --destructive: #f87171;
+  --destructive-foreground: #450a0a;
+  --border: #262626;
+  --input: #404040;
+  --ring: #4ade80;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-brand: var(--brand);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}

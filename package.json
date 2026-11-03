@@ -29,14 +29,18 @@
     "*.{json,css,yml,yaml,html}": "prettier --write"
   },
   "dependencies": {
+    "@radix-ui/react-slot": "^1.5.0",
     "@react-router/node": "^7.18.5",
     "@react-router/serve": "^7.18.5",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "i18next": "^26.7.1",
     "isbot": "^5.2.2",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-i18next": "^17.1.11",
     "react-router": "^7.18.5",
+    "tailwind-merge": "^3.7.0",
     "valibot": "^1.5.0"
   },
   "devDependencies": {
@@ -45,6 +49,7 @@
     "@eslint/js": "^9.39.5",
     "@playwright/test": "^1.64.1",
     "@react-router/dev": "^7.18.5",
+    "@tailwindcss/vite": "^4.3.3",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
@@ -62,6 +67,7 @@
     "lint-staged": "^16.4.0",
     "msw": "^3.0.3",
     "prettier": "^3.9.10",
+    "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.72.1",
     "vite": "^7.3.7",

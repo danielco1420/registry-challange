@@ -51,6 +51,10 @@ The cache mechanics live in `app/server/cache.server.ts`: `cache.get(key, { ttlM
 
 Routes and loaders don't use the cache directly: they call `getCached(key, ttlSeconds, fetcher)` from `app/server/upstream.server.ts`, which wires the cache, the upstream client and the proxy-wide budget (`app/server/budget.server.ts`, a sliding window of `UPSTREAM_BUDGET_PER_MIN` upstream attempts per 60 s, retries included; cache hits and single-flight followers don't count). It returns `{ value, status, ageMs, degraded }`. `degraded` is true when a stale value is served because the budget is exhausted or the key's last refresh failed; loaders pass it to the degraded banner. With no cached value and a failing or refused upstream call, it throws `UpstreamUnavailableError`, which `upstreamUnavailableResponse` turns into the 503. `cachedJson` sets `X-Cache`, `Age` and `Cache-Control` (`public, max-age=<ttl>` when fresh, `no-store` when stale).
 
+## Styling
+
+Tailwind CSS v4 through `@tailwindcss/vite`, with shadcn/ui components copied into `app/components/ui/` (`components.json` points the shadcn CLI there and at `~/lib/utils`). `app/app.css` holds the brand tokens as CSS variables for light (`:root`) and dark (`.dark` on `<html>`), mapped to Tailwind colors with `@theme inline`, so components use `bg-primary`, `text-brand`, `ring-ring` and so on instead of raw colors. It scans only `app/` for class names. `app/root.tsx` imports it; the production build links it as a file from `'self'`, so the CSP needs no `style-src` exception. Tokens are hex values so `app/lib/theme-contrast.test.ts` can check their WCAG contrast. Inline `style` attributes in server-rendered markup would be blocked by the production CSP, so components style with classes.
+
 ## Security headers
 
 `app/server/securityHeaders.server.ts` (questionnaire G43, [RISKS](RISKS.md) 3.2/3.3) sets `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` and a Content Security Policy on everything the router answers:

@@ -33,7 +33,7 @@ describe('i18next instance', () => {
   it('is initialized synchronously with English resources, fixed to en', () => {
     expect(i18next.isInitialized).toBe(true);
     expect(i18next.language).toBe('en');
-    expect(i18next.t('home.heading')).toBe("Danny's Dockers");
+    expect(i18next.t('brand.name')).toBe("Danny's Dockers");
   });
 
   it('surfaces a missing key through t() in dev', () => {

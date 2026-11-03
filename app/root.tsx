@@ -1,6 +1,7 @@
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
 import { I18nextProvider } from 'react-i18next';
 
+import './app.css';
 import i18next from './i18n/i18next';
 import type { Route } from './+types/root';
 import { securityHeadersMiddleware } from './server/securityHeaders.server';
