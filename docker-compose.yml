@@ -1,0 +1,25 @@
+services:
+  app:
+    build: .
+    image: registry-challange:local
+    ports:
+      - '3000:3000'
+    env_file:
+      # Optional: copy .env.example to .env to override defaults
+      # (app/server/config.server.ts). Missing file is fine; compose only
+      # loads it if present.
+      - path: .env
+        required: false
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:3000/api/health').then(r=>{if(!r.ok)throw new Error(r.status)}).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3

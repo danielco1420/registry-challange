@@ -1,0 +1,29 @@
+# Dependencies & build output (reinstalled / rebuilt inside the image)
+node_modules
+build
+.react-router
+coverage
+playwright-report
+test-results
+
+# Env, secrets, and local config — never enter the build context
+.env
+.env.*
+!.env.example
+
+# VCS, editor, CI
+.git
+.gitignore
+.github
+.vscode
+*.log
+
+# Docker itself
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Docs, not needed to build or run the app
+docs
+*.md
+!README.md

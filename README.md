@@ -61,6 +61,23 @@ Environment variables are documented in [.env.example](.env.example). All are op
 
 They're validated when the server starts (`app/server/config.server.ts`). An invalid value, including `UPSTREAM_BUDGET_PER_MIN` above 150, stops `pnpm start` with a message naming the variable. In `pnpm dev` the error appears on the first request.
 
+## Docker
+
+Build and run the production image directly:
+
+```bash
+docker build -t registry-challange .
+docker run --rm -p 3000:3000 --env-file .env registry-challange   # --env-file is optional
+```
+
+Or with Compose, which reads `.env` automatically if present:
+
+```bash
+docker compose up --build
+```
+
+Either way the app is served on <http://localhost:3000>, with a container healthcheck polling `/api/health`. The final image runs as a non-root user, contains only production dependencies, and never bakes in a `.env` file — environment variables are supplied at `docker run`/`docker compose up` time.
+
 ## Documentation
 
 | Doc | What's in it |
@@ -84,7 +101,7 @@ The stack is chosen. Remaining setup is tracked as GitHub issues; the unchecked 
 - [x] Lint/format config (ESLint + Prettier)
 - [x] Git hooks (Husky + lint-staged + commitlint)
 - [x] CI workflow (`.github/workflows/ci.yml`): lint, typecheck, test, build, audit, E2E
-- [ ] `Dockerfile` + `docker-compose.yml`
+- [x] `Dockerfile` + `docker-compose.yml`
 - [x] Test setup (Vitest + Testing Library, MSW, Playwright)
 - [ ] `.vscode/` recommended extensions and settings
 - [ ] Set the Dependabot ecosystem in `.github/dependabot.yml`
