@@ -1,14 +1,20 @@
+import { useTranslation } from 'react-i18next';
+
+import i18next from '~/i18n/i18next';
+
 import type { Route } from './+types/home';
 
 export function meta(_args: Route.MetaArgs) {
-  return [{ title: "Danny's Dockers" }];
+  return [{ title: i18next.t('home.title') }];
 }
 
 export default function Home() {
+  const { t } = useTranslation();
+
   return (
     <main>
-      <h1>Danny&apos;s Dockers</h1>
-      <p>Placeholder. The Explore page lands in a later task.</p>
+      <h1>{t('home.heading')}</h1>
+      <p>{t('home.placeholder')}</p>
     </main>
   );
 }

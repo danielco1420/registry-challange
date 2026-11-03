@@ -1,4 +1,7 @@
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
+import { I18nextProvider } from 'react-i18next';
+
+import i18next from './i18n/i18next';
 import type { Route } from './+types/root';
 import { securityHeadersMiddleware } from './server/securityHeaders.server';
 
@@ -8,7 +11,7 @@ export const middleware: Route.MiddlewareFunction[] = [securityHeadersMiddleware
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang={i18next.language}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -25,5 +28,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <I18nextProvider i18n={i18next}>
+      <Outlet />
+    </I18nextProvider>
+  );
 }
