@@ -132,6 +132,7 @@ Options: card grid · list rows. Columns per breakpoint (e.g. 1 / 2 / 3 / 4)?
 Choose from: logo · name · owner · description · badge · pulls · stars · updated · arch chips.
 **Answer:** Logo, name, owner, description. Plus the official / verified badge (from E28).
 **Why:** Keeps cards clean; stats live on the repository page.
+**Follow-up:** Done (T19): `RepoCard`, `RepoLogo` and `RepoBadge` in `app/components/repo/`. The badge also labels the DTO's other values ("Sponsored OSS", "Hardened Image"), since they come with the same data. A missing logo falls back to the publisher avatar, looked up in the browser through `/api/publishers/:name` only when needed, then to initials.
 
 ### D23. ✅ Tags layout
 Options: table with sortable columns · cards. Expandable row for the per-architecture breakdown?
@@ -155,6 +156,7 @@ Skeletons or spinners? Illustrations? Copy text for each state?
 ### D27. ✅ Copy-command feedback
 Options: inline "Copied ✓" · toast. Fallback when the Clipboard API isn't available?
 **Answer:** Inline: the button shows "Copied ✓" for ~2 s, announced through `aria-live`. Fallback: select the command in a read-only input so the user can copy it manually.
+**Follow-up:** Done (T19): `CopyButton` (`app/components/copy/copy-button.tsx`). The fallback also covers a rejected `writeText` (for example, permission denied), not just a missing Clipboard API. No `execCommand('copy')`: it's deprecated, and the selected input already does the job.
 
 ---
 
