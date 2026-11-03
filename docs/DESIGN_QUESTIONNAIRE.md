@@ -121,7 +121,7 @@ Options: system preference only · toggle · both (toggle that defaults to syste
 ### D20. ✅ Brand
 Palette (Docker-like blue or our own)? Typeface? Logo or name for the app?
 **Answer:** App name **Danny's Dockers**. Neutral grays with a light green accent instead of Docker blue. No Docker logo or trademarks.
-**Follow-up:** check the green accent's contrast against both themes for text and focus rings.
+**Follow-up:** check the green accent's contrast against both themes for text and focus rings. Done (T16): tokens in `app/app.css`. The light green (`--primary`, #86efac light / #4ade80 dark) is a fill with dark green text on it (10.6:1 / 8.6:1). It's only 1.4:1 on white, so light mode uses a darker green, `--brand` #15803d, for green text and the focus ring (5.0:1 on the background, 4.6:1 on muted surfaces); dark mode uses #4ade80 (11.4:1 on the background, 8.7:1 on muted). `app/lib/theme-contrast.test.ts` checks every token pair in both themes against AA (4.5:1 text, 3:1 focus rings).
 
 ### D21. ✅ Explore layout
 Options: card grid · list rows. Columns per breakpoint (e.g. 1 / 2 / 3 / 4)?

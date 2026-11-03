@@ -1,7 +1,9 @@
 {
+  "brand": {
+    "name": "Danny's Dockers"
+  },
   "home": {
     "title": "Danny's Dockers",
-    "heading": "Danny's Dockers",
     "placeholder": "Placeholder. The Explore page lands in a later task."
   }
 }
