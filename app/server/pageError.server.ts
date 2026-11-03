@@ -88,8 +88,8 @@ export function toPageErrorResponse(error: unknown): unknown {
   }
 
   if (error instanceof Response && error.status === 429) {
-    // The per-client limit: its JSON body has no seconds, and the error boundary
-    // can't read headers, so carry `Retry-After` in the page error body.
+    // The per-client limit: map it to a `PageErrorBody`, carrying `Retry-After`
+    // in the body since the error boundary can't read headers.
     const retryAfterSeconds = retryAfterOf(error);
     return pageError(
       429,

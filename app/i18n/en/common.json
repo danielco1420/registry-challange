@@ -41,7 +41,7 @@
     },
     "degraded": {
       "title": "Showing saved data.",
-      "description": "Docker Hub isn't responding, so this may be out of date. Try again in a minute for the latest."
+      "description": "We couldn't refresh it just now, so it may be out of date. Try again in a minute for the latest."
     }
   }
 }

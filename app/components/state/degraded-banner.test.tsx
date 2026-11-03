@@ -12,7 +12,11 @@ describe('DegradedBanner', () => {
 
     const banner = screen.getByRole('status');
     expect(banner).toHaveTextContent('Showing saved data.');
+    expect(banner).toHaveTextContent("We couldn't refresh it just now");
     expect(banner).toHaveTextContent('Try again in a minute for the latest.');
+    // The banner also shows when our own upstream budget is spent, so it
+    // mustn't blame Docker Hub (ADR-0003).
+    expect(banner).not.toHaveTextContent('Docker Hub');
 
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(retry).toHaveBeenCalledOnce();

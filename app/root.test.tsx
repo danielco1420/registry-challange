@@ -131,7 +131,7 @@ describe('root ErrorBoundary', () => {
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
   });
 
-  it('still shows "too many requests" for a raw 429 thrown without the mapping', async () => {
+  it('still shows "too many requests", with the wait, for a raw 429 thrown without the mapping', async () => {
     renderApp('/r/library/nginx', {
       loader: () => {
         throw rateLimitedResponse({ retryAfterSeconds: 9 });
@@ -141,6 +141,7 @@ describe('root ErrorBoundary', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Too many requests' }),
     ).toBeInTheDocument();
+    expect(screen.getByText(/You can try again in 9 seconds\./)).toBeInTheDocument();
   });
 
   it('shows "something went wrong" for a render error, with both next actions', async () => {
