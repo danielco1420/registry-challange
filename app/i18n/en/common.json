@@ -32,7 +32,7 @@
       },
       "rate_limited": {
         "title": "Too many requests",
-        "description": "Docker Hub is limiting requests right now. Wait a few seconds, then try again."
+        "description": "You've sent a lot of requests in a short time. Wait a few seconds, then try again."
       },
       "unexpected": {
         "title": "Something went wrong",

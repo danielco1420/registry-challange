@@ -27,7 +27,9 @@
  * ```
  *
  * A thrown `Response` is returned as-is from a resource route and reaches the
- * error boundary (with its status) from a page loader. Use `checkRateLimit` and
+ * error boundary (with its status) from a page loader; pass it through
+ * `toPageErrorResponse` (`pageError.server.ts`) so the error page also shows
+ * the `Retry-After` wait. Use `checkRateLimit` and
  * `rateLimitedResponse` instead when the caller wants to branch on the result.
  *
  * ## Client IP resolution (security-sensitive)

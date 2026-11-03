@@ -11,6 +11,11 @@ import { securityHeadersMiddleware } from './server/securityHeaders.server';
 // theirs, with the CSP nonce, in entry.server.tsx.
 export const middleware: Route.MiddlewareFunction[] = [securityHeadersMiddleware];
 
+// When a loader throws a page error (`toPageErrorResponse`), the document gets
+// its `Retry-After` and `Cache-Control: no-store`. Without a `headers` export,
+// React Router copies only the thrown response's cookies.
+export const headers: Route.HeadersFunction = ({ errorHeaders }) => errorHeaders ?? new Headers();
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang={i18next.language}>
