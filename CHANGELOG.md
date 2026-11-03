@@ -12,13 +12,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Risk register with mitigations (`docs/RISKS.md`).
 - Architecture stub, project summary skeleton, and ADR-0001 (backend proxy, because Docker Hub has no CORS).
 - Contribution rules, AI assistant guides (`CLAUDE.md`, `AGENTS.md`), GitHub templates, Dependabot, security policy, and editor/git config.
-
-### Added
 - Answers to every design questionnaire question; ADR-0002 (React Router v7 single app) and ADR-0003 (server cache and upstream failure handling).
 - React Router v7 app (framework mode, SSR) with TypeScript strict, pnpm and Node 22; placeholder home page and `/api/health`.
 - ESLint (typescript-eslint, React Hooks, jsx-a11y) and Prettier, with `pnpm lint`, `pnpm lint:fix`, `pnpm format` and `pnpm format:check`.
 - Husky git hooks: pre-commit runs lint-staged, commit-msg runs commitlint (Conventional Commits, types from `CONTRIBUTING.md`).
-- Valibot schemas for every route param (`namespace`, `repo`, `tag`, `q`, `page`, `pageSize`, `sort`, `badge`, `ordering`, tag filter) and a helper that turns a failed parse into a `400` JSON error (`app/lib/params.ts`, `app/lib/validate.ts`).
+- Valibot schemas for every route param (`namespace`, `repo`, `tag`, `q`, `page`, `pageSize`, `sort`, `badge`, `ordering`, tag filter) and a helper that turns a failed parse into a `400` JSON error (`app/lib/params.ts`, `app/lib/validate.ts`). A repeated query key keeps its first occurrence, even when it's empty (e.g. `?sort=&sort=stars` leaves `sort` missing).
 - Table-driven param cases (`app/lib/params.cases.ts`), run against the schemas by `pnpm test` (`app/lib/params.test.ts`).
 - Typed env config (`app/server/config.server.ts`), validated with Valibot at startup. Invalid values, including `UPSTREAM_BUDGET_PER_MIN` above 150, stop the server with a clear message.
 - Docker Hub upstream client (`app/server/dockerhub.server.ts`): builds URLs only from typed, validated requests; `UPSTREAM_TIMEOUT_MS` timeout; descriptive User-Agent; one retry on 429/5xx/timeout/non-JSON honoring `Retry-After` (or `x-ratelimit-reset` on a 429), failing fast instead when the wait is over 3 s; typed `UpstreamError` (`not_found`, `rate_limited`, `unavailable`, `bad_payload`); responses validated with a caller-supplied Valibot schema. Tests run in `pnpm test`.
@@ -35,11 +33,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Search fallback (`app/server/search.server.ts`): when `/api/search/v4` fails its schema, one call to the legacy `/v2/search/repositories/` (new `legacySearch` client endpoint) answers instead, marked `source: "legacy"`. Not used for popular or badge-filtered searches; a sorted search falls back in relevance order.
 - Recorded Docker Hub responses in `fixtures/dockerhub/` (popular, search, suggestions, legacy search, nginx, fluent/fluent-bit, a repo without a logo, an archived repo, publishers, a 404), MSW handlers that serve them (`test/msw/dockerhub.ts`), and contract tests for the schemas and normalizers.
 - Security headers on every page and API response (`app/server/securityHeaders.server.ts`): a nonce-based Content Security Policy on HTML pages (`default-src 'self'`, scripts only from our origin or with the per-request nonce, images also from `https://*.cloudfront.net` and `https://www.gravatar.com`, `frame-ancestors 'none'`), a CSP that allows nothing on `/api/*` and `.data` responses, plus `Strict-Transport-Security`, `X-Content-Type-Options: nosniff` and `Referrer-Policy: strict-origin-when-cross-origin`. `pnpm dev` also allows inline styles for Vite's injected CSS. React Router's route middleware is now on (`future.v8_middleware`).
-
-### Fixed
-- `searchParamsToObject` now keeps the first occurrence of a repeated query key even when it's empty, instead of falling through to a later value (e.g. `?sort=&sort=stars` now keeps `sort` missing).
+- Docker Hub proxy routes: `GET /api/popular`, `/api/search`, `/api/search/suggestions`, `/api/repos/:ns/:repo`, `/api/repos/:ns/:repo/tags`, `/api/repos/:ns/:repo/tags/:tag` and `/api/publishers/:name` (org, else user). Each applies the per-client rate limit, validates its params (`400`), reads through the server cache and upstream budget, and returns a normalized DTO with `X-Cache`, `Age` and a `Cache-Control` matching its TTL; stale data when Docker Hub is failing, else `503` with `Retry-After`. A missing repository, tag or publisher answers a cached JSON `404` (for tags, also a page past the last one). A write method answers a JSON `405` with `Allow: GET, HEAD`. Search and tags reject `page × pageSize > 1000` with a `400`, since Docker Hub answers `403` past the first 1000 results without sign-in. Any other `/api/*` path answers a JSON `404` and calls nothing upstream. New DTOs `SearchPage` (with `source`) and `Publisher`; errors share one `{ error: { code, message } }` shape.
 
 ### Changed
+- `docs/API.md`, `CLAUDE.md` and `AGENTS.md` list the suggestions and single-tag routes in the allowlist; `docs/RISKS.md` statuses updated now that the routes are wired.
 - A Docker Hub response that fails its schema now reports where: `UpstreamError` has `issuePath` (e.g. `$.results[3].name`, keys only, never values), also appended to the message.
 - `docs/API.md`: documented what the live responses actually contain (v4 `name` and `publisher.name` semantics, `logo_url: {}`, pull-count labels, non-repository search results, archived repos answering 200, reversed tag `ordering`, attestation images, `/v2/users/{org}` redirecting to `/v2/orgs/{org}`), the normalization rules and the search fallback.
 - Calling Docker Hub anonymously: removed `DOCKERHUB_PAT` from `.env.example`.
