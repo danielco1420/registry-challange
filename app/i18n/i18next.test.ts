@@ -1,7 +1,10 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { createMissingKeyHandler } from './i18next';
-import i18next from './i18next';
+import i18next, { createMissingKeyHandler } from './i18next';
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('createMissingKeyHandler', () => {
   it('throws in dev so a missing key is surfaced immediately', () => {
@@ -12,14 +15,17 @@ describe('createMissingKeyHandler', () => {
     );
   });
 
-  it('logs instead of throwing outside dev', () => {
+  it('logs instead of throwing outside dev, once per key', () => {
     const handler = createMissingKeyHandler(false);
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
     expect(() => handler(['en'], 'common', 'does.not.exist')).not.toThrow();
-    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('does.not.exist'));
+    handler(['en'], 'common', 'does.not.exist');
+    handler(['en'], 'common', 'also.missing');
 
-    errorSpy.mockRestore();
+    expect(errorSpy).toHaveBeenCalledTimes(2);
+    expect(errorSpy).toHaveBeenNthCalledWith(1, expect.stringContaining('does.not.exist'));
+    expect(errorSpy).toHaveBeenNthCalledWith(2, expect.stringContaining('also.missing'));
   });
 });
 
@@ -28,5 +34,12 @@ describe('i18next instance', () => {
     expect(i18next.isInitialized).toBe(true);
     expect(i18next.language).toBe('en');
     expect(i18next.t('home.heading')).toBe("Danny's Dockers");
+  });
+
+  it('surfaces a missing key through t() in dev', () => {
+    expect(import.meta.env.DEV).toBe(true);
+
+    // @ts-expect-error -- keys are typed against the catalog, so a missing key doesn't compile either.
+    expect(() => i18next.t('does.not.exist')).toThrow(/missing key "does\.not\.exist"/);
   });
 });
