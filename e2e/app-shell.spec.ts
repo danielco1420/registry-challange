@@ -10,7 +10,10 @@ function bodyBackground(page: Page) {
 
 test.describe('theme', () => {
   test('the server renders the theme from the cookie, so nothing flashes', async ({ request }) => {
-    const dark = await (await request.get('/', { headers: { Cookie: 'theme=dark' } })).text();
+    const darkResponse = await request.get('/', { headers: { Cookie: 'theme=dark' } });
+    // The HTML depends on the cookie, so shared caches must key on it.
+    expect(darkResponse.headers()['vary']).toMatch(/\bCookie\b/i);
+    const dark = await darkResponse.text();
     expect(dark).toMatch(/<html lang="en" class="dark">/);
 
     const light = await (await request.get('/', { headers: { Cookie: 'theme=light' } })).text();
@@ -64,6 +67,16 @@ test.describe('theme', () => {
     await expect(page).toHaveURL('/');
     await expect(page.locator('html')).toHaveClass('dark');
     await context.close();
+  });
+
+  test('a cross-site form cannot change the theme', async ({ request }) => {
+    const response = await request.post('/theme', {
+      headers: { Origin: 'https://evil.example' },
+      form: { theme: 'dark', redirectTo: '/' },
+      maxRedirects: 0,
+    });
+    expect(response.status()).toBe(403);
+    expect(response.headers()['set-cookie']).toBeUndefined();
   });
 });
 

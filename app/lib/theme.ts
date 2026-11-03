@@ -40,10 +40,15 @@ export function themeClassName(theme: Theme): 'light' | 'dark' | undefined {
   return theme === 'system' ? undefined : theme;
 }
 
+/** Placeholder origin `safeRedirectPath` resolves against; never sent anywhere. */
+const REDIRECT_BASE = 'http://localhost';
+
 /**
  * A same-origin path to redirect to after the no-JS form post, or `/`. Rejects
  * anything that could leave the site: absolute URLs, protocol-relative `//host`,
- * `/\host` (browsers treat `\` as `/`) and control characters.
+ * `/\host` (browsers treat `\` as `/`) and control characters. The result is
+ * re-serialized by the URL parser, so non-ASCII is percent-encoded (a raw
+ * `Location` header can't carry it, and the server would answer 500).
  */
 export function safeRedirectPath(value: unknown): string {
   if (typeof value !== 'string') return '/';
@@ -51,5 +56,13 @@ export function safeRedirectPath(value: unknown): string {
   if (!value.startsWith('/') || /^\/[/\\]/.test(value) || /[\u0000-\u001f\u007f]/.test(value)) {
     return '/';
   }
-  return value;
+  let url: URL;
+  try {
+    url = new URL(value, REDIRECT_BASE);
+  } catch {
+    return '/';
+  }
+  // Belt and braces: whatever the parser made of it must still be on our origin.
+  if (url.origin !== REDIRECT_BASE) return '/';
+  return url.pathname + url.search + url.hash;
 }

@@ -14,9 +14,18 @@ import type { Route } from './+types/theme';
  *   cookie; the root loader then revalidates and `<html>` gets the new class.
  * - From the native form (no JavaScript): the form also sends `redirectTo`,
  *   and the action answers a 303 back to it, limited to same-origin paths.
+ *
+ * A cross-origin POST gets a `403`. React Router checks the `Origin` header
+ * itself for document and `.data` actions, but not for resource routes like
+ * this one, which the no-JS form posts to directly.
  */
 export async function action({ request }: Route.ActionArgs) {
-  const form = await request.formData();
+  if (isCrossOrigin(request)) {
+    return new Response('Forbidden', { status: 403, headers: { 'Cache-Control': 'no-store' } });
+  }
+
+  // A body that isn't form data (JSON, a broken multipart boundary) is a 400, not a 500.
+  const form = await request.formData().catch(() => new FormData());
   const parsed = parseParams(ThemeFormSchema, Object.fromEntries(form));
   if (!parsed.ok) return parsed.response;
 
@@ -26,4 +35,14 @@ export async function action({ request }: Route.ActionArgs) {
     return redirect(safeRedirectPath(redirectTo), { status: 303, headers });
   }
   return data({ theme }, { headers });
+}
+
+/**
+ * True when a browser sent this request from another origin. Same check as
+ * React Router's own for actions: the `Origin` header, when present, must match
+ * the request URL's origin (`Origin: null` doesn't).
+ */
+function isCrossOrigin(request: Request): boolean {
+  const origin = request.headers.get('Origin');
+  return origin !== null && origin !== new URL(request.url).origin;
 }

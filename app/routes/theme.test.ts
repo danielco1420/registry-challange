@@ -4,11 +4,16 @@ import type { BadRequestBody } from '../lib/validate';
 import type { Route } from './+types/theme';
 import { action } from './theme';
 
-function post(fields: Record<string, string>): Route.ActionArgs {
+function post(fields: Record<string, string>, headers?: HeadersInit): Route.ActionArgs {
   const request = new Request('http://localhost/theme', {
     method: 'POST',
     body: new URLSearchParams(fields),
+    headers,
   });
+  return args(request);
+}
+
+function args(request: Request): Route.ActionArgs {
   return { request, params: {}, context: {} } as unknown as Route.ActionArgs;
 }
 
@@ -42,6 +47,41 @@ describe('POST /theme', () => {
       post({ theme: 'light', redirectTo: '//evil.example/' }),
     )) as Response;
     expect(response.headers.get('Location')).toBe('/');
+  });
+
+  it('percent-encodes a non-ASCII redirect path instead of failing', async () => {
+    const response = (await action(
+      post({ theme: 'dark', redirectTo: '/search?q=日本' }),
+    )) as Response;
+    expect(response.status).toBe(303);
+    expect(response.headers.get('Location')).toBe('/search?q=%E6%97%A5%E6%9C%AC');
+  });
+
+  it('accepts a same-origin POST', async () => {
+    const result = await action(post({ theme: 'dark' }, { Origin: 'http://localhost' }));
+    expect(result).not.toBeInstanceOf(Response);
+  });
+
+  it.each(['https://evil.example', 'null'])(
+    'rejects a POST from origin %s with a 403 and no cookie',
+    async (origin) => {
+      const response = (await action(
+        post({ theme: 'dark', redirectTo: '/' }, { Origin: origin }),
+      )) as Response;
+      expect(response.status).toBe(403);
+      expect(response.headers.get('Set-Cookie')).toBeNull();
+    },
+  );
+
+  it('answers 400, not 500, when the body is not form data', async () => {
+    const request = new Request('http://localhost/theme', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ theme: 'dark' }),
+    });
+    const response = (await action(args(request))) as Response;
+    expect(response.status).toBe(400);
+    expect(response.headers.get('Set-Cookie')).toBeNull();
   });
 
   it.each<Record<string, string>>([{}, { theme: 'blue' }])(

@@ -26,6 +26,9 @@ export default function handleRequest(
   // A fresh nonce per document. Only inline scripts carrying it can run.
   const nonce = createNonce();
   setDocumentSecurityHeaders(responseHeaders, nonce, { dev: import.meta.env.DEV });
+  // The HTML depends on the theme cookie (`<html class>`, app/root.tsx), so a
+  // shared cache must never serve one visitor's page to another.
+  responseHeaders.append('Vary', 'Cookie');
 
   // https://httpwg.org/specs/rfc9110.html#HEAD
   if (request.method.toUpperCase() === 'HEAD') {

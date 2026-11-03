@@ -39,9 +39,14 @@ describe('safeRedirectPath', () => {
     'search',
     '',
     '/foo\nSet-Cookie: x=1',
+    '/\t/evil.example/',
     undefined,
     42,
   ])('falls back to / for %j', (value) => {
     expect(safeRedirectPath(value)).toBe('/');
+  });
+
+  it('percent-encodes non-ASCII, which a Location header cannot carry raw', () => {
+    expect(safeRedirectPath('/search?q=日本')).toBe('/search?q=%E6%97%A5%E6%9C%AC');
   });
 });
