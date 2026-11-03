@@ -27,7 +27,10 @@
  * ```
  *
  * A thrown `Response` is returned as-is from a resource route and reaches the
- * error boundary (with its status) from a page loader. Use `checkRateLimit` and
+ * error boundary (with its status) from a page loader, where page loaders pass
+ * it through `toPageErrorResponse` (`pageError.server.ts`). The error boundary
+ * can't read response headers, so the body repeats `Retry-After` as
+ * `retryAfterSeconds` and the error page shows the wait. Use `checkRateLimit` and
  * `rateLimitedResponse` instead when the caller wants to branch on the result.
  *
  * ## Client IP resolution (security-sensitive)
@@ -272,17 +275,24 @@ export interface RateLimitedBody {
     code: 'rate_limited';
     message: string;
   };
+  /**
+   * Same value as `Retry-After`. A page's error boundary can't read response
+   * headers, so it reads this instead (`classifyRouteError`).
+   */
+  retryAfterSeconds: number;
 }
 
 /** A `429 Too Many Requests` JSON response with `Retry-After`. Never cached. */
 export function rateLimitedResponse(result: Pick<RateLimitResult, 'retryAfterSeconds'>): Response {
+  const retryAfterSeconds = Math.max(1, Math.ceil(result.retryAfterSeconds));
   const body: RateLimitedBody = {
     error: { code: 'rate_limited', message: 'Too many requests. Try again later.' },
+    retryAfterSeconds,
   };
   return Response.json(body, {
     status: 429,
     headers: {
-      'Retry-After': String(Math.max(1, result.retryAfterSeconds)),
+      'Retry-After': String(retryAfterSeconds),
       'Cache-Control': 'no-store',
     },
   });

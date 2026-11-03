@@ -8,9 +8,8 @@ import type * as React from 'react';
 import { createRoutesStub, Outlet } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ErrorBoundary } from './root';
-import { UpstreamError } from './server/dockerhub.server';
-import { toPageErrorResponse } from './server/pageError.server';
+import { ErrorBoundary, headers } from './root';
+import { pageNotFound, toPageErrorResponse } from './server/pageError.server';
 import { rateLimitedResponse } from './server/rateLimit.server';
 import { UpstreamUnavailableError } from './server/upstream.server';
 
@@ -40,14 +39,31 @@ function renderApp(
   return render(<Stub initialEntries={[path]} />);
 }
 
-const notFound = () =>
-  new UpstreamError('not_found', 'not found', { endpoint: 'repository', status: 404 });
+describe('root headers', () => {
+  const args = (errorHeaders?: Headers) => ({
+    loaderHeaders: new Headers(),
+    parentHeaders: new Headers(),
+    actionHeaders: new Headers(),
+    errorHeaders,
+  });
+
+  it("passes a thrown page error's Retry-After and no-store on to the document", () => {
+    const thrown = new Headers({ 'Retry-After': '7', 'Cache-Control': 'no-store' });
+    const result = new Headers(headers(args(thrown)));
+    expect(result.get('Retry-After')).toBe('7');
+    expect(result.get('Cache-Control')).toBe('no-store');
+  });
+
+  it('adds nothing without an error', () => {
+    expect([...new Headers(headers(args())).keys()]).toEqual([]);
+  });
+});
 
 describe('root ErrorBoundary', () => {
   it('shows "repository not found" for a missing repository, with a way back', async () => {
     renderApp('/r/acme/missing', {
       loader: () => {
-        throw toPageErrorResponse(notFound(), { notFound: 'repo_not_found' });
+        throw toPageErrorResponse(pageNotFound('repo_not_found'));
       },
     });
 
@@ -88,7 +104,7 @@ describe('root ErrorBoundary', () => {
     expect(loader).toHaveBeenCalledTimes(2);
   });
 
-  it('shows "too many requests" when the upstream budget is spent', async () => {
+  it('shows "Docker Hub unavailable" when the upstream budget is spent (ADR-0003)', async () => {
     renderApp('/r/library/nginx', {
       loader: () => {
         throw toPageErrorResponse(new UpstreamUnavailableError('budget_exhausted', 20));
@@ -96,12 +112,26 @@ describe('root ErrorBoundary', () => {
     });
 
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Too many requests' }),
+      await screen.findByRole('heading', { level: 1, name: 'Docker Hub is unavailable' }),
     ).toBeInTheDocument();
     expect(screen.getByText(/You can try again in 20 seconds\./)).toBeInTheDocument();
   });
 
-  it('shows "too many requests" for the per-client rate limit', async () => {
+  it('shows "too many requests" for the per-client rate limit, with the wait', async () => {
+    renderApp('/r/library/nginx', {
+      loader: () => {
+        throw toPageErrorResponse(rateLimitedResponse({ retryAfterSeconds: 9 }));
+      },
+    });
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Too many requests' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/You can try again in 9 seconds\./)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+  });
+
+  it('still shows "too many requests", with the wait, for a raw 429 thrown without the mapping', async () => {
     renderApp('/r/library/nginx', {
       loader: () => {
         throw rateLimitedResponse({ retryAfterSeconds: 9 });
@@ -111,7 +141,7 @@ describe('root ErrorBoundary', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Too many requests' }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+    expect(screen.getByText(/You can try again in 9 seconds\./)).toBeInTheDocument();
   });
 
   it('shows "something went wrong" for a render error, with both next actions', async () => {

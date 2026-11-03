@@ -20,6 +20,11 @@ export function loader({ request }: Route.LoaderArgs) {
   return { theme: readTheme(request) };
 }
 
+// When a loader throws a page error (`toPageErrorResponse`), the document gets
+// its `Retry-After` and `Cache-Control: no-store`. Without a `headers` export,
+// React Router copies only the thrown response's cookies.
+export const headers: Route.HeadersFunction = ({ errorHeaders }) => errorHeaders ?? new Headers();
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const theme = useTheme();
 

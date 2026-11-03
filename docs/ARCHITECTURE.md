@@ -60,15 +60,15 @@ Shared components in `app/components/state/` (questionnaire C16, D25), all copy 
 - `ErrorState`: `kind` is `not_found`, `repo_not_found`, `unavailable`, `rate_limited` or `unexpected`. The last three require a `retry` callback ("Try again"); every kind links back to Explore, and an optional `retryAfterSeconds` says when to retry.
 - `DegradedBanner`: rendered by a view whose loader returned `degraded: true` (stale data, see Caching).
 
-The root `ErrorBoundary` (`app/root.tsx`) renders `RouteErrorState`, which maps the thrown value with `classifyRouteError` (`app/lib/route-error.ts`). React Router replaces a thrown `Error` with a generic one in production, so page loaders don't let `UpstreamError` or `UpstreamUnavailableError` escape: they `throw toPageErrorResponse(error, { notFound })` (`app/server/pageError.server.ts`), a `data({ kind, retryAfterSeconds }, { status })` with `Retry-After` and `Cache-Control: no-store`:
+The root `ErrorBoundary` (`app/root.tsx`) renders `RouteErrorState`, which maps the thrown value with `classifyRouteError` (`app/lib/route-error.ts`). React Router replaces a thrown `Error` with a generic one in production, so page loaders don't let `UpstreamError` or `UpstreamUnavailableError` escape: they `throw toPageErrorResponse(error)` (`app/server/pageError.server.ts`), a `data({ kind, retryAfterSeconds }, { status })` with `Retry-After` and `Cache-Control: no-store`. The root `headers` export passes those two headers on to the document (React Router otherwise copies only a thrown response's cookies). The mapping matches the `/api/*` routes and ADR-0003:
 
-| Error | Status | Kind |
+| Thrown | Status | Kind |
 |---|---|---|
-| `UpstreamError` `not_found` | 404 | `not_found`, or `repo_not_found` on the repository page |
-| `UpstreamError` `rate_limited` / `budget_exhausted`; `UpstreamUnavailableError` `budget_exhausted` | 429 | `rate_limited` |
-| `UpstreamError` `unavailable` / `bad_payload`; `UpstreamUnavailableError` `upstream_failed` | 503 | `unavailable` |
+| `UpstreamUnavailableError` (Docker Hub failing or budget spent, nothing cached) | 503 | `unavailable` |
+| `UpstreamError` that escaped `getCached` / `orNotFound` (e.g. an unexpected upstream 404) | 503 | `unavailable` |
+| The per-client 429 from `enforceRateLimit` | 429 | `rate_limited` (with its `Retry-After` seconds) |
 
-Other thrown responses map by their `ApiErrorBody` code or status (an unmatched URL is React Router's 404, the per-client rate limit a 429), and anything else is `unexpected`. "Try again" revalidates the loaders after a thrown response and reloads the page after a render error.
+A missing resource is cached like any other answer: the loader reads `getCached(key, ttl, () => orNotFound(load()))` and throws `pageNotFound('repo_not_found')` (a 404) when the value is `null`, so repeated misses don't spend the upstream budget. Other thrown responses map by their `ApiErrorBody` code or status (an unmatched URL is React Router's 404), and anything else is `unexpected`. "Try again" revalidates the loaders after a thrown response and reloads the page after a render error.
 
 ## Styling
 
