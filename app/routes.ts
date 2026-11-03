@@ -3,6 +3,8 @@ import { index, route, type RouteConfig } from '@react-router/dev/routes';
 export default [
   index('routes/home.tsx'),
   route('api/health', 'routes/api.health.ts'),
+  // Theme toggle: sets the theme cookie (POST only). Not a Docker Hub route.
+  route('theme', 'routes/theme.ts'),
 
   // Docker Hub proxy: the allowlist (docs/API.md, "Proxy routes"). Nothing else is forwarded.
   route('api/popular', 'routes/api.popular.ts'),

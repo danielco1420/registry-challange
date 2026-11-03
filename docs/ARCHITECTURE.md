@@ -53,7 +53,19 @@ Routes and loaders don't use the cache directly: they call `getCached(key, ttlSe
 
 ## Styling
 
-Tailwind CSS v4 through `@tailwindcss/vite`, with shadcn/ui components copied into `app/components/ui/` (`components.json` points the shadcn CLI there and at `~/lib/utils`). `app/app.css` holds the brand tokens as CSS variables for light (`:root`) and dark (`.dark` on `<html>`), mapped to Tailwind colors with `@theme inline`, so components use `bg-primary`, `text-brand`, `ring-ring` and so on instead of raw colors. It scans only `app/` for class names. `app/root.tsx` imports it; the production build links it as a file from `'self'`, so the CSP needs no `style-src` exception. Tokens are hex values so `app/lib/theme-contrast.test.ts` can check their WCAG contrast. Inline `style` attributes in server-rendered markup would be blocked by the production CSP, so components style with classes.
+Tailwind CSS v4 through `@tailwindcss/vite`, with shadcn/ui components copied into `app/components/ui/` (`components.json` points the shadcn CLI there and at `~/lib/utils`). `app/app.css` holds the brand tokens as CSS variables for light (`:root`) and dark (`.dark` on `<html>`, repeated under `prefers-color-scheme: dark` for System, see below), mapped to Tailwind colors with `@theme inline`, so components use `bg-primary`, `text-brand`, `ring-ring` and so on instead of raw colors. It scans only `app/` for class names. `app/root.tsx` imports it; the production build links it as a file from `'self'`, so the CSP needs no `style-src` exception. Tokens are hex values so `app/lib/theme-contrast.test.ts` can check their WCAG contrast. Inline `style` attributes in server-rendered markup would be blocked by the production CSP, so components style with classes.
+
+## App shell and theme
+
+`Layout` in `app/root.tsx` wraps every page, error pages included, in `AppShell` (`app/components/layout/app-shell.tsx`): a skip link to `#main`, the header (brand link, an empty `data-slot="header-search"` slot for the header search, the theme toggle), `<main id="main">` and the footer. Pages render their content only, never their own `<main>`.
+
+The theme (questionnaire D19, B8) is server-rendered so it never flashes:
+
+1. The `theme` cookie (`app/server/theme.server.ts`: `light` or `dark`, `HttpOnly`, `SameSite=Lax`, one year; absent means System) is read by the root `loader`.
+2. `Layout` sets `<html class="light">` or `class="dark"` from it (`themeClassName` in `app/lib/theme.ts`), and no class for System.
+3. `app/app.css` applies the dark tokens under `.dark`, and also under `@media (prefers-color-scheme: dark)` for `:root:not(.light)`. The browser resolves System from the OS before first paint and follows OS changes live, with no inline script and no change to the CSP. The `dark:` Tailwind variant matches both cases. `app/lib/theme-contrast.test.ts` checks the two dark blocks stay identical.
+4. The toggle (`app/components/theme/theme-toggle.tsx`) posts `theme` to `POST /theme` (`app/routes/theme.ts`, Valibot-validated, sets or deletes the cookie) through a fetcher with a shared key. `useTheme` reads the pending submission first, so `<html>` and the toggle update at once; the root loader then revalidates with the new cookie. Without JavaScript the buttons submit a plain form with `redirectTo`, and the action answers a 303 back to that same-origin path. That native post hits the resource route directly, which React Router's own `Origin` check for actions doesn't cover, so the action makes the same check itself and answers `403` to a cross-origin post.
+5. Since the HTML depends on the cookie, `entry.server.tsx` adds `Vary: Cookie` to every page.
 
 ## Security headers
 
