@@ -1,0 +1,32 @@
+{
+  "user": "nginxdemos",
+  "name": "hello",
+  "namespace": "nginxdemos",
+  "repository_type": "image",
+  "status": 1,
+  "status_description": "active",
+  "description": "NGINX webserver that serves a simple page containing its hostname, IP address and port ...",
+  "is_private": false,
+  "is_automated": true,
+  "star_count": 173,
+  "pull_count": 353843012,
+  "last_updated": "2025-08-15T01:35:33.747391Z",
+  "last_modified": "2024-10-16T13:48:34.145251Z",
+  "date_registered": "2016-02-12T17:25:48.349595Z",
+  "collaborator_count": 0,
+  "affiliation": null,
+  "hub_user": "nginxdemos",
+  "has_starred": false,
+  "full_description": "# NGINX webserver that serves a simple page containing its hostname, IP address and port as wells as the request URI and the local time of the webserver.\n\nThe images are uploaded to Docker Hub -- https://hub.docker.com/r/nginxdemos/hello/.\n\nHow to run:\n```\n$ docker run -P -d nginxdemos/hello\n```\n\n\nA plain text version of the image is available as `nginxdemos/hello:plain-text`. This version returns the same information in the plain text format.\n\nThe images were created to be used as simple backends for various load balancing demos.",
+  "permissions": { "read": true, "write": false, "admin": false },
+  "media_types": [
+    "application/vnd.docker.container.image.v1+json",
+    "application/vnd.docker.distribution.manifest.list.v2+json",
+    "application/vnd.oci.image.index.v1+json"
+  ],
+  "content_types": ["image"],
+  "categories": [],
+  "immutable_tags_settings": { "enabled": false, "rules": [".*"] },
+  "storage_size": 7077912650,
+  "source": null
+}

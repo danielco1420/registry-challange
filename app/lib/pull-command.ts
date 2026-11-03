@@ -12,8 +12,8 @@
 /** Official images namespace. Its name is omitted from the pull command. */
 export const OFFICIAL_NAMESPACE = 'library';
 
-/** `image[:tag]` without the namespace when it's `library`, else `ns/image[:tag]`. */
-function imageRef(ns: string, repo: string): string {
+/** `image` without the namespace when it's `library`, else `ns/image`. */
+export function imageRef(ns: string, repo: string): string {
   return ns === OFFICIAL_NAMESPACE ? repo : `${ns}/${repo}`;
 }
 

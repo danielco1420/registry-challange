@@ -3,8 +3,8 @@
  * `test/setup.msw.ts`).
  *
  * It starts with no handlers: a test adds the ones it needs with `server.use()`,
- * and they are reset after each test. Handlers built from the recorded Docker Hub
- * responses in `fixtures/dockerhub/` land here with T08.
+ * and they are reset after each test. Handlers that serve the recorded Docker Hub
+ * responses in `fixtures/dockerhub/` are in `./dockerhub.ts` (`dockerHubHandlers`).
  */
 import { setupServer } from 'msw/node';
 

@@ -78,6 +78,8 @@ export interface UpstreamErrorOptions {
   status?: number;
   /** Upstream `Retry-After`, in whole seconds, when it sent one. */
   retryAfterSeconds?: number;
+  /** For a schema mismatch: where the payload failed, e.g. `$.results[3].name` (see `formatIssuePath`). */
+  issuePath?: string;
   cause?: unknown;
 }
 
@@ -90,9 +92,10 @@ export interface UpstreamErrorOptions {
  * - `budget_exhausted`: the proxy-wide upstream budget had no slot, so nothing
  *   was sent. `retryAfterSeconds` is the time until a slot frees up.
  *
- * Messages never include the upstream body. For a schema mismatch, `cause` is
- * a `ValiError` whose issues may quote upstream values: log it server-side,
- * never send it to the client.
+ * Messages never include the upstream body. For a schema mismatch, `issuePath`
+ * names the first failing field (keys and indexes only, safe to log), and
+ * `cause` is a `ValiError` whose issues may quote upstream values: log it
+ * server-side, never send it to the client.
  */
 export class UpstreamError extends Error {
   override name = 'UpstreamError';
@@ -100,6 +103,8 @@ export class UpstreamError extends Error {
   readonly endpoint: UpstreamEndpoint;
   readonly status: number | undefined;
   readonly retryAfterSeconds: number | undefined;
+  /** Set only when a 2xx JSON body failed the schema (`bad_payload`). */
+  readonly issuePath: string | undefined;
 
   constructor(kind: UpstreamErrorKind, message: string, options: UpstreamErrorOptions) {
     super(message, options.cause === undefined ? undefined : { cause: options.cause });
@@ -107,7 +112,40 @@ export class UpstreamError extends Error {
     this.endpoint = options.endpoint;
     this.status = options.status;
     this.retryAfterSeconds = options.retryAfterSeconds;
+    this.issuePath = options.issuePath;
   }
+}
+
+/** True for a `bad_payload` caused by JSON that didn't match the schema (not a non-JSON body). */
+export function isSchemaMismatch(error: unknown): error is UpstreamError & { issuePath: string } {
+  return (
+    error instanceof UpstreamError &&
+    error.kind === 'bad_payload' &&
+    typeof error.issuePath === 'string'
+  );
+}
+
+const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
+
+/**
+ * A Valibot issue path as a JSONPath-like string: `$` for the root, then
+ * `.key`, `["odd key"]` or `[index]`. Only keys and indexes, never values, so
+ * it's safe to log and to put in an error message.
+ *
+ * That holds because our response schemas only use `v.object` (keys come from
+ * the schema, unknown keys are stripped) and arrays. A `v.record`,
+ * `v.looseObject`, `v.objectWithRest` or `v.map` would put keys from the
+ * upstream body in the path; `dockerhub.schemas.server.test.ts` fails if one
+ * is added.
+ */
+export function formatIssuePath(path: readonly { key: unknown }[] | undefined): string {
+  let out = '$';
+  for (const { key } of path ?? []) {
+    if (typeof key === 'number') out += `[${key}]`;
+    else if (typeof key === 'string' && IDENTIFIER.test(key)) out += `.${key}`;
+    else out += `[${JSON.stringify(String(key))}]`;
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -120,6 +158,12 @@ export type UpstreamRequest =
   | { endpoint: 'search'; query: SearchQuery }
   /** A: `/api/search/v4/suggestions`. */
   | { endpoint: 'suggestions'; q: string }
+  /**
+   * A (fallback): legacy `/v2/search/repositories/`, used only when v4 fails its
+   * schema (`search.server.ts`). Takes `q`, `page` and `pageSize`; it has no sort
+   * or badge filter.
+   */
+  | { endpoint: 'legacySearch'; query: Pick<SearchQuery, 'q' | 'page' | 'pageSize'> }
   /** B: `/v2/namespaces/{ns}/repositories/{repo}`. */
   | { endpoint: 'repository'; params: RepoParams }
   /** C: `/v2/namespaces/{ns}/repositories/{repo}/tags`. */
@@ -199,6 +243,18 @@ function pathAndQuery(request: UpstreamRequest): { path: string; query?: URLSear
         path: '/api/search/v4/suggestions',
         query: new URLSearchParams({ query: text(request.q, QUERY_MAX_LENGTH, 'q') }),
       };
+    case 'legacySearch': {
+      const { q, page, pageSize } = request.query;
+      return {
+        // With the trailing slash, as documented in docs/API.md.
+        path: '/v2/search/repositories/',
+        query: new URLSearchParams({
+          query: text(q, QUERY_MAX_LENGTH, 'q'),
+          page: String(int(page, 1, PAGE_MAX, 'page')),
+          page_size: String(int(pageSize, 1, PAGE_SIZE_MAX, 'pageSize')),
+        }),
+      };
+    }
     case 'repository':
       return { path: repoPath(request.params) };
     case 'tags': {
@@ -435,10 +491,11 @@ export function createDockerHubClient(options: DockerHubClientOptions): DockerHu
 
       const parsed = v.safeParse(schema, result.body);
       if (!parsed.success) {
+        const issuePath = formatIssuePath(parsed.issues[0].path);
         throw new UpstreamError(
           'bad_payload',
-          `Docker Hub ${endpoint}: response doesn't match the expected schema`,
-          { endpoint, cause: new v.ValiError(parsed.issues) },
+          `Docker Hub ${endpoint}: response doesn't match the expected schema at ${issuePath}`,
+          { endpoint, issuePath, cause: new v.ValiError(parsed.issues) },
         );
       }
       return parsed.output;
