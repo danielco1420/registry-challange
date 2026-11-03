@@ -1,0 +1,19 @@
+# Requires Docker Compose v2.24.0 or newer (optional `env_file` entries).
+services:
+  app:
+    build: .
+    image: registry-challange:local
+    ports:
+      - '3000:3000'
+    env_file:
+      # Optional: copy .env.example to .env to override defaults
+      # (app/server/config.server.ts). Missing file is fine; compose only
+      # loads it if present.
+      - path: .env
+        required: false
+    environment:
+      # Overrides any PORT in .env, so the server always listens on the
+      # container port mapped above and the image HEALTHCHECK probes it.
+      PORT: '3000'
+    restart: unless-stopped
+    # Healthcheck: inherited from the image's HEALTHCHECK (polls /api/health).
