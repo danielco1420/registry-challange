@@ -38,7 +38,7 @@ Tests (Vitest, questionnaire F33):
 Server-only code goes in `app/server/*.server.ts`. Read env vars only through `config` from `app/server/config.server.ts`, never `process.env` directly.
 
 ## Rules
-- Never call `hub.docker.com` from the browser. Use the allowlisted `/api/*` proxy routes ([ADR-0001](docs/adr/0001-backend-proxy-for-cors.md)).
+- Never call `hub.docker.com` from the browser. Use the allowlisted `/api/*` proxy routes ([ADR-0001](docs/adr/0001-backend-proxy-for-cors.md)): `/api/popular`, `/api/search`, `/api/search/suggestions`, `/api/repos/:ns/:repo`, `/api/repos/:ns/:repo/tags` (and `/tags/:tag`), `/api/publishers/:name`. Any other `/api/*` path answers 404.
 - Validate all route params and upstream responses. Cache upstream calls.
 - Sanitize Markdown. No raw HTML from upstream.
 - `library/` namespace is omitted from `docker pull` commands.

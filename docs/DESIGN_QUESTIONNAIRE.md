@@ -75,7 +75,7 @@ Zod schemas protect against changes to the undocumented API.
 ### B11. ✅ Search interaction
 Options: debounced as-you-type · submit-only · both. Autocomplete via `/api/search/v4/suggestions`?
 **Answer:** Submit navigates to the results page. A debounced (~250 ms) autocomplete dropdown uses `/api/search/v4/suggestions` through a new allowlisted proxy route.
-**Follow-up:** add the suggestions route to the allowlist in [API.md](API.md) and the hard rules when implemented.
+**Follow-up:** add the suggestions route to the allowlist in [API.md](API.md) and the hard rules when implemented. Done: `GET /api/search/suggestions?q=` (T13).
 
 ### B12. ✅ Pagination style
 Separately for search results and for tags. Options: numbered pages · "Load more" · infinite scroll.

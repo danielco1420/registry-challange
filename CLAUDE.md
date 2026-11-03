@@ -55,9 +55,12 @@ Server-only code goes in `app/server/*.server.ts`. Read env vars only through `c
 1. Docker Hub has **no CORS**. The browser never calls `hub.docker.com`. All traffic goes through our proxy routes:
    - `/api/popular`
    - `/api/search`
+   - `/api/search/suggestions`
    - `/api/repos/:ns/:repo`
-   - `/api/repos/:ns/:repo/tags`
+   - `/api/repos/:ns/:repo/tags` (and `/tags/:tag`)
    - `/api/publishers/:name`
+
+   Any other `/api/*` path answers 404. Routes live in `app/routes/api.*.ts` and share `app/server/api.server.ts`.
 2. The proxy is an **allowlist**. Validate `namespace`/`repo`/`tag` params. Never forward arbitrary paths or URLs.
 3. Cache upstream responses. The ~180 req/min per-IP limit is shared by all users.
 4. Validate upstream JSON with Valibot schemas. `/api/search/v4` is undocumented and may change.

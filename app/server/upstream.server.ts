@@ -142,17 +142,19 @@ export function createGetCached({ cache, budget }: GetCachedDeps): GetCached {
 export const getCached: GetCached = createGetCached({ cache: sharedCache, budget: upstreamBudget });
 
 /**
- * A 200 JSON response for data from `getCached`, with `X-Cache` and `Age`:
+ * A JSON response for data from `getCached`, with `X-Cache` and `Age`:
  * - `HIT` / `MISS`: `Cache-Control: public, max-age=<ttlSeconds>`; with `Age`,
  *   downstream caches keep it only for what's left of the TTL;
  * - `STALE`: `Cache-Control: no-store`, so downstream caches don't keep it.
  *
  * `data` is what the client gets (usually a DTO built from `result.value`).
+ * `status` is 200 except for a cached "not found" answer (404).
  */
 export function cachedJson(
   data: unknown,
   result: Pick<Cached<unknown>, 'status' | 'ageMs'>,
   ttlSeconds: number,
+  status = 200,
 ): Response {
   const headers = new Headers({
     'X-Cache': result.status,
@@ -162,7 +164,7 @@ export function cachedJson(
         ? 'no-store'
         : `public, max-age=${Math.max(0, Math.floor(ttlSeconds))}`,
   });
-  return Response.json(data, { status: 200, headers });
+  return Response.json(data, { status, headers });
 }
 
 export interface UpstreamUnavailableBody {

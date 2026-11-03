@@ -25,6 +25,12 @@ export const PAGE_MAX = 100;
 /** Largest page size. Docker Hub silently caps `page_size` at 100 anyway. */
 export const PAGE_SIZE_MAX = 100;
 export const PAGE_SIZE_DEFAULT = 25;
+/**
+ * Docker Hub only pages through the first 1000 results anonymously: past that,
+ * search v4 and the tags list answer `403` ("pagination too large for anonymous
+ * requests"). So `page × pageSize` must stay within it (docs/API.md).
+ */
+export const ANONYMOUS_RESULTS_MAX = 1000;
 
 // ---------------------------------------------------------------------------
 // Path params
@@ -168,25 +174,50 @@ export const PublisherParamsSchema = v.object(
   objectMessage,
 );
 
+/** `page × pageSize ≤ ANONYMOUS_RESULTS_MAX`; reported on `page` by the schemas below. */
+const withinAnonymousPaging = (input: { page: number; pageSize: number }) =>
+  input.page * input.pageSize <= ANONYMOUS_RESULTS_MAX;
+const ANONYMOUS_PAGING_MESSAGE = `page × pageSize must be at most ${ANONYMOUS_RESULTS_MAX} (Docker Hub's limit without sign-in)`;
+
 /** `/api/search?q=&page=&pageSize=&sort=&badge=`. Missing params get defaults. */
-export const SearchQuerySchema = v.object(
-  {
-    q: v.optional(QuerySchema, ''),
-    page: v.optional(PageSchema, '1'),
-    pageSize: v.optional(PageSizeSchema, String(PAGE_SIZE_DEFAULT)),
-    sort: v.optional(SearchSortSchema, 'relevance'),
-    badge: v.optional(BadgeSchema),
-  },
-  objectMessage,
+export const SearchQuerySchema = v.pipe(
+  v.object(
+    {
+      q: v.optional(QuerySchema, ''),
+      page: v.optional(PageSchema, '1'),
+      pageSize: v.optional(PageSizeSchema, String(PAGE_SIZE_DEFAULT)),
+      sort: v.optional(SearchSortSchema, 'relevance'),
+      badge: v.optional(BadgeSchema),
+    },
+    objectMessage,
+  ),
+  v.forward(
+    v.partialCheck([['page'], ['pageSize']], withinAnonymousPaging, ANONYMOUS_PAGING_MESSAGE),
+    ['page'],
+  ),
 );
 
 /** `/api/repos/:ns/:repo/tags?page=&pageSize=&ordering=&name=`. */
-export const TagsQuerySchema = v.object(
+export const TagsQuerySchema = v.pipe(
+  v.object(
+    {
+      page: v.optional(PageSchema, '1'),
+      pageSize: v.optional(PageSizeSchema, String(PAGE_SIZE_DEFAULT)),
+      ordering: v.optional(TagOrderingSchema),
+      name: v.optional(TagFilterSchema),
+    },
+    objectMessage,
+  ),
+  v.forward(
+    v.partialCheck([['page'], ['pageSize']], withinAnonymousPaging, ANONYMOUS_PAGING_MESSAGE),
+    ['page'],
+  ),
+);
+
+/** `/api/search/suggestions?q=`. `q` is required and not blank, so autocomplete never spends an upstream call on nothing. */
+export const SuggestionsQuerySchema = v.object(
   {
-    page: v.optional(PageSchema, '1'),
-    pageSize: v.optional(PageSizeSchema, String(PAGE_SIZE_DEFAULT)),
-    ordering: v.optional(TagOrderingSchema),
-    name: v.optional(TagFilterSchema),
+    q: v.pipe(QuerySchema, v.minLength(1, 'q must not be empty')),
   },
   objectMessage,
 );
@@ -196,6 +227,7 @@ export type TagParams = v.InferOutput<typeof TagParamsSchema>;
 export type PublisherParams = v.InferOutput<typeof PublisherParamsSchema>;
 export type SearchQuery = v.InferOutput<typeof SearchQuerySchema>;
 export type TagsQuery = v.InferOutput<typeof TagsQuerySchema>;
+export type SuggestionsQuery = v.InferOutput<typeof SuggestionsQuerySchema>;
 
 /**
  * Turns `URLSearchParams` into a plain object for the query schemas.
