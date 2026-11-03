@@ -13,6 +13,7 @@ import {
   RepoParamsSchema,
   SearchQuerySchema,
   SearchSortSchema,
+  SuggestionsQuerySchema,
   TagFilterSchema,
   TagOrderingSchema,
   TagParamsSchema,
@@ -37,6 +38,7 @@ export const PARAM_SCHEMAS = {
   publisherParams: PublisherParamsSchema,
   searchQuery: SearchQuerySchema,
   tagsQuery: TagsQuerySchema,
+  suggestionsQuery: SuggestionsQuerySchema,
 } as const;
 
 export interface ParamCase {
@@ -253,4 +255,15 @@ export const PARAM_CASES: ParamCase[] = [
     output: { page: 2, pageSize: 100, ordering: 'name', name: 'alpine' },
   },
   { schema: 'tagsQuery', label: 'pageSize over cap', input: { pageSize: '1000' }, valid: false },
+
+  {
+    schema: 'suggestionsQuery',
+    label: 'trimmed',
+    input: { q: '  ngi ' },
+    valid: true,
+    output: { q: 'ngi' },
+  },
+  { schema: 'suggestionsQuery', label: 'missing q', input: {}, valid: false },
+  { schema: 'suggestionsQuery', label: 'blank q', input: { q: '   ' }, valid: false },
+  { schema: 'suggestionsQuery', label: 'q too long', input: { q: 'a'.repeat(101) }, valid: false },
 ];

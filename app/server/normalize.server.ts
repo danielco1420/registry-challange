@@ -17,6 +17,7 @@ import {
   BADGE_VALUES,
   type Badge,
   type Page,
+  type Publisher,
   type RepoDetails,
   type RepoSummary,
   type Tag,
@@ -27,11 +28,13 @@ import { OFFICIAL_NAMESPACE, imageRef } from '../lib/pull-command';
 import type {
   LegacySearchResponse,
   LegacySearchResult,
+  Org,
   Repository,
   SearchV4Response,
   SearchV4Result,
   TagsResponse,
   UpstreamTag,
+  User,
 } from './dockerhub.schemas.server';
 
 // ---------------------------------------------------------------------------
@@ -290,4 +293,34 @@ export function toTag(tag: UpstreamTag): Tag {
 
 export function toTagsPage(body: TagsResponse, paging: Paging): Page<Tag> {
   return page(body.results.map(toTag), body.count, paging);
+}
+
+// ---------------------------------------------------------------------------
+// Publishers (D)
+// ---------------------------------------------------------------------------
+
+/** Fields orgs and users share. `gravatar_url: ""` means no avatar. */
+function publisher(
+  name: string,
+  kind: Publisher['kind'],
+  body: Pick<Org, 'full_name' | 'company' | 'gravatar_url'>,
+  badge: Badge,
+): Publisher {
+  return {
+    name,
+    displayName: text(body.full_name) || text(body.company) || name,
+    kind,
+    avatarUrl: safeHttpsUrl(body.gravatar_url),
+    badge,
+  };
+}
+
+/** `/v2/orgs/{name}`. */
+export function toOrgPublisher(org: Org): Publisher {
+  return publisher(org.orgname, 'organization', org, toBadge(org.badge));
+}
+
+/** `/v2/users/{name}`. Users have no badge. */
+export function toUserPublisher(user: User): Publisher {
+  return publisher(user.username, 'user', user, 'none');
 }

@@ -191,11 +191,20 @@ export const TagsQuerySchema = v.object(
   objectMessage,
 );
 
+/** `/api/search/suggestions?q=`. `q` is required and not blank, so autocomplete never spends an upstream call on nothing. */
+export const SuggestionsQuerySchema = v.object(
+  {
+    q: v.pipe(QuerySchema, v.minLength(1, 'q must not be empty')),
+  },
+  objectMessage,
+);
+
 export type RepoParams = v.InferOutput<typeof RepoParamsSchema>;
 export type TagParams = v.InferOutput<typeof TagParamsSchema>;
 export type PublisherParams = v.InferOutput<typeof PublisherParamsSchema>;
 export type SearchQuery = v.InferOutput<typeof SearchQuerySchema>;
 export type TagsQuery = v.InferOutput<typeof TagsQuerySchema>;
+export type SuggestionsQuery = v.InferOutput<typeof SuggestionsQuerySchema>;
 
 /**
  * Turns `URLSearchParams` into a plain object for the query schemas.

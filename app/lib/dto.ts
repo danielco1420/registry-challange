@@ -87,3 +87,34 @@ export interface Page<T> {
   page: number;
   pageSize: number;
 }
+
+/**
+ * `/api/popular`, `/api/search` and `/api/search/suggestions`. `source` is
+ * `legacy` when `/api/search/v4` failed its schema and the legacy search
+ * answered: no logos, dates or platforms, and `sort` was ignored.
+ */
+export interface SearchPage extends Page<RepoSummary> {
+  source: 'v4' | 'legacy';
+}
+
+/** `/api/publishers/:name`: a Docker Hub org or user, for the logo fallback. */
+export interface Publisher {
+  /** The namespace, e.g. `fluent`. */
+  name: string;
+  /** `full_name`, else `company`, else `name`. */
+  displayName: string;
+  kind: 'organization' | 'user';
+  /** An `https:` avatar URL; absent when Docker Hub has none (use the initials fallback). */
+  avatarUrl?: string;
+  /** The org's badge (`verified_publisher`, `open_source`); `none` for users and unknown values. */
+  badge: Badge;
+}
+
+/** The JSON body of every `/api/*` error response. */
+export interface ApiErrorBody {
+  error: {
+    code:
+      'invalid_params' | 'not_found' | 'rate_limited' | 'upstream_unavailable' | 'internal_error';
+    message: string;
+  };
+}
