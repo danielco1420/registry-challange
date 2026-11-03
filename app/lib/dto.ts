@@ -114,7 +114,12 @@ export interface Publisher {
 export interface ApiErrorBody {
   error: {
     code:
-      'invalid_params' | 'not_found' | 'rate_limited' | 'upstream_unavailable' | 'internal_error';
+      | 'invalid_params'
+      | 'not_found'
+      | 'method_not_allowed'
+      | 'rate_limited'
+      | 'upstream_unavailable'
+      | 'internal_error';
     message: string;
   };
 }

@@ -1,6 +1,6 @@
 import { TagParamsSchema } from '~/lib/params';
 import { parseOrThrow } from '~/lib/validate';
-import { cacheKey, handleApi, orNotFound, proxyJson } from '~/server/api.server';
+import { cacheKey, handleApi, orNotFound, proxyJson, rejectWrite } from '~/server/api.server';
 import { config } from '~/server/config.server';
 import { dockerHub } from '~/server/dockerhub.server';
 import { TagSchema } from '~/server/dockerhub.schemas.server';
@@ -23,4 +23,9 @@ export function loader({ request, params }: Route.LoaderArgs) {
       },
     });
   });
+}
+
+/** Write methods: a JSON `405`. */
+export function action({ request }: Route.ActionArgs) {
+  return rejectWrite(request);
 }

@@ -1,6 +1,6 @@
 import type { SearchPage } from '~/lib/dto';
 import type { SearchQuery } from '~/lib/params';
-import { handleApi, proxyJson } from '~/server/api.server';
+import { cacheKey, handleApi, proxyJson, rejectWrite } from '~/server/api.server';
 import { config } from '~/server/config.server';
 import { dockerHub } from '~/server/dockerhub.server';
 import { searchRepositories } from '~/server/search.server';
@@ -19,7 +19,7 @@ const POPULAR_QUERY: SearchQuery = {
 export function loader({ request }: Route.LoaderArgs) {
   return handleApi(request, () =>
     proxyJson<SearchPage>({
-      key: 'popular',
+      key: cacheKey('popular'),
       ttlSeconds: config.cache.ttlSeconds.popular,
       load: async () => {
         const { page, source } = await searchRepositories(dockerHub, POPULAR_QUERY);
@@ -27,4 +27,9 @@ export function loader({ request }: Route.LoaderArgs) {
       },
     }),
   );
+}
+
+/** Write methods: a JSON `405`. */
+export function action({ request }: Route.ActionArgs) {
+  return rejectWrite(request);
 }

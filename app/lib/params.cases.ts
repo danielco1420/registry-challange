@@ -255,6 +255,34 @@ export const PARAM_CASES: ParamCase[] = [
     output: { page: 2, pageSize: 100, ordering: 'name', name: 'alpine' },
   },
   { schema: 'tagsQuery', label: 'pageSize over cap', input: { pageSize: '1000' }, valid: false },
+  // Docker Hub's anonymous paging cap: page × pageSize ≤ 1000.
+  {
+    schema: 'searchQuery',
+    label: 'last anonymous page',
+    input: { page: '40', pageSize: '25' },
+    valid: true,
+    output: { q: '', page: 40, pageSize: 25, sort: 'relevance' },
+  },
+  {
+    schema: 'searchQuery',
+    label: 'past the anonymous cap',
+    input: { page: '41', pageSize: '25' },
+    valid: false,
+  },
+  {
+    schema: 'tagsQuery',
+    label: 'last anonymous page',
+    input: { page: '10', pageSize: '100' },
+    valid: true,
+    output: { page: 10, pageSize: 100 },
+  },
+  {
+    schema: 'tagsQuery',
+    label: 'past the anonymous cap',
+    input: { page: '11', pageSize: '100' },
+    valid: false,
+  },
+  { schema: 'tagsQuery', label: 'max page, default size', input: { page: '100' }, valid: false },
 
   {
     schema: 'suggestionsQuery',

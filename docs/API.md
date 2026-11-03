@@ -279,7 +279,7 @@ interface Publisher {
 
 // Every /api/* error
 interface ApiErrorBody {
-  error: { code: 'invalid_params' | 'not_found' | 'rate_limited' | 'upstream_unavailable' | 'internal_error';
+  error: { code: 'invalid_params' | 'not_found' | 'method_not_allowed' | 'rate_limited' | 'upstream_unavailable' | 'internal_error';
            message: string; };   // a 400 also has issues: { param, message }[]
 }
 
@@ -307,8 +307,6 @@ Each upstream response is validated with a Valibot schema in `app/server/dockerh
 
 ### Proxy routes (allowlist only)
 
-| Our route | Upstream |
-|---|---|
 Resource routes in `app/routes/api.*.ts`, registered in `app/routes.ts`, sharing `app/server/api.server.ts`.
 
 | Our route | Upstream | DTO | Cache TTL (env) | 404 when |
@@ -317,11 +315,11 @@ Resource routes in `app/routes/api.*.ts`, registered in `app/routes.ts`, sharing
 | `GET /api/search?q=&page=&pageSize=&sort=&badge=` | A (legacy fallback on drift) | `SearchPage` | `CACHE_TTL_SEARCH` (60 s) | |
 | `GET /api/search/suggestions?q=` | A `/suggestions` (legacy fallback on drift) | `SearchPage` (`pageSize: 10`) | `CACHE_TTL_SEARCH` (60 s) | |
 | `GET /api/repos/:ns/:repo` | B | `RepoDetails` | `CACHE_TTL_REPO` (300 s) | no such repository |
-| `GET /api/repos/:ns/:repo/tags?page=&pageSize=&ordering=&name=` | C | `Page<Tag>` | `CACHE_TTL_TAGS` (120 s) | no such repository |
+| `GET /api/repos/:ns/:repo/tags?page=&pageSize=&ordering=&name=` | C | `Page<Tag>` | `CACHE_TTL_TAGS` (120 s) | no such repository, or `page` is past the last page (Docker Hub answers 404 for both; the message is `Repository or page not found` when `page > 1`) |
 | `GET /api/repos/:ns/:repo/tags/:tag` | C, single tag | `Tag` | `CACHE_TTL_TAGS` (120 s) | no such tag |
 | `GET /api/publishers/:name` | D: `/v2/orgs/{name}`, then `/v2/users/{name}` on a 404 | `Publisher` | `CACHE_TTL_PUBLISHER` (3600 s) | neither an org nor a user |
 
-The proxy never forwards arbitrary paths or URLs. Any other `/api/*` path, with any method, answers `404` `{ "error": { "code": "not_found", "message": "Not found" } }` (`Cache-Control: no-store`) and calls nothing upstream (`app/routes/api.$.ts`). A method other than `GET`/`HEAD` on a proxy route answers `405`. `/api/health` is not a proxy route.
+The proxy never forwards arbitrary paths or URLs. Any other `/api/*` path, with any method, answers `404` `{ "error": { "code": "not_found", "message": "Not found" } }` (`Cache-Control: no-store`) and calls nothing upstream (`app/routes/api.$.ts`). A method other than `GET`/`HEAD` on a proxy route answers `405` `method_not_allowed` with `Allow: GET, HEAD` and `Cache-Control: no-store` (rate limited like any `/api/*` request). `/api/health` is not a proxy route and isn't rate limited.
 
 Every proxy route, in order (`handleApi` and `proxyJson`):
 
@@ -336,7 +334,7 @@ Every proxy route, in order (`handleApi` and `proxyJson`):
 | Data, stale (see the budget table below) | 200 | `X-Cache: STALE`, `Age`, `Cache-Control: no-store` | the DTO |
 | Upstream 404 for a repository, tag or publisher | 404 | as for data: the miss is cached with the same TTL, so repeated misses don't spend the budget | `not_found` |
 | No cached entry; Docker Hub failing or budget spent | 503 | `Retry-After`, `Cache-Control: no-store` | `upstream_unavailable` |
-| Upstream 404 from a search endpoint (it should always answer, so the endpoint changed) | 503 | `Retry-After: 5`, `Cache-Control: no-store` | `upstream_unavailable` |
+| Upstream 404 from a search endpoint (it should always answer, so the endpoint changed) | 503 | `Retry-After` (5 s, or the budget's wait if longer), `Cache-Control: no-store` | `upstream_unavailable` |
 | Anything unexpected (logged server-side) | 500 | `Cache-Control: no-store` | `internal_error`, no details |
 
 `fullDescriptionMd` in `RepoDetails` is the raw upstream Markdown, sent as JSON; the UI must sanitize it before rendering (CLAUDE.md hard rule 5).
@@ -355,7 +353,7 @@ Every proxy route validates its params with the Valibot schemas in `app/lib/para
 | `:ns`, `:repo`, `:name` (publisher) | `^[a-z0-9]+(?:[._-][a-z0-9]+)*$`, ≤ 255 chars | | path segment, `encodeURIComponent` |
 | `:tag` | `^[\w][\w.-]{0,127}$` (ASCII) | | path segment |
 | `q` | trimmed, ≤ 100 chars, no control chars; required and not blank for suggestions | `''` (search) | `query` |
-| `page` | integer 1–100 | `1` | search: `from = (page - 1) * pageSize`; tags: `page` |
+| `page` | integer 1–100, and `page × pageSize ≤ 1000` (search and tags) | `1` | search: `from = (page - 1) * pageSize`; tags: `page` |
 | `pageSize` | integer 1–100 | `25` | search: `size`; tags: `page_size` |
 | `sort` (search) | `relevance` \| `pulls` \| `stars` \| `updated` | `relevance` | `sort` omitted \| `pull_count` \| `star_count` \| `updated_at`, with `order=desc` |
 | `badge` (search) | `official` \| `verified_publisher` \| `open_source` | none | `badges` |
@@ -363,6 +361,8 @@ Every proxy route validates its params with the Valibot schemas in `app/lib/para
 | `name` (tags) | trimmed, `[\w.-]*`, ≤ 128 chars | none | `name` |
 
 Query strings: unknown keys are ignored, empty values count as missing, and a repeated key uses its first value.
+
+**Anonymous paging cap** (checked live, 2026-11-03): without sign-in, Docker Hub serves only the first 1000 results. Search v4 answers `403` `{"message":"pagination too large for anonymous requests; …"}` when `from + size > 1000`, and the tags list answers `403` `{"message":"pagination offset too large for anonymous requests; …"}` once the offset reaches 1000. Our client would treat that `403` as `unavailable` (a misleading `503` that spends a budget slot on every request), so `page × pageSize > 1000` is a `400` (`ANONYMOUS_RESULTS_MAX` in `app/lib/params.ts`). Search `total` can be far larger (e.g. 295,913 for `nginx`), so the UI must cap its page links at `floor(1000 / pageSize)`.
 
 ## Upstream client (`app/server/dockerhub.server.ts`)
 

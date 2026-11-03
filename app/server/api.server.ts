@@ -10,6 +10,7 @@
  *    `X-Cache`, `Age` and `Cache-Control` (or answers `404` / `503`).
  */
 import type { ApiErrorBody } from '../lib/dto';
+import { upstreamBudget } from './budget.server';
 import { UpstreamError } from './dockerhub.server';
 import { enforceRateLimit } from './rateLimit.server';
 import {
@@ -33,6 +34,22 @@ function errorJson(
 /** `404` for a path outside the allowlist. Never cached. */
 export function notFoundResponse(message = 'Not found'): Response {
   return errorJson(404, 'not_found', message);
+}
+
+/** `405` for a write method on a proxy route (they only answer `GET`/`HEAD`). Never cached. */
+export function methodNotAllowedResponse(): Response {
+  return errorJson(405, 'method_not_allowed', 'Method not allowed', {
+    Allow: 'GET, HEAD',
+    'Cache-Control': 'no-store',
+  });
+}
+
+/**
+ * The `action` of every proxy route: a JSON `405`, rate limited like any
+ * `/api/*` request. Without it, React Router answers its own non-JSON 405.
+ */
+export function rejectWrite(request: Request): Promise<Response> {
+  return handleApi(request, () => methodNotAllowedResponse());
 }
 
 /**
@@ -114,8 +131,12 @@ export async function proxyJson<T>({
     if (error instanceof UpstreamUnavailableError) return upstreamUnavailableResponse(error);
     if (isUpstreamNotFound(error)) {
       console.error(`[api] Docker Hub ${error.endpoint} answered 404 for ${key}`);
+      // Like any other upstream failure (`getCached`): also wait for a free budget slot.
       return upstreamUnavailableResponse({
-        retryAfterSeconds: UNAVAILABLE_RETRY_AFTER_FALLBACK_SECONDS,
+        retryAfterSeconds: Math.max(
+          UNAVAILABLE_RETRY_AFTER_FALLBACK_SECONDS,
+          upstreamBudget.retryAfterSeconds(),
+        ),
       });
     }
     throw error;

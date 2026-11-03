@@ -218,6 +218,8 @@ describe('GET /api/search', () => {
     ['/api/search?badge=hardened', 'badge'],
     [`/api/search?q=${'a'.repeat(101)}`, 'q'],
     ['/api/search?q=a%00b', 'q'],
+    // Docker Hub answers 403 past the first 1000 results without sign-in.
+    ['/api/search?q=nginx&page=41&pageSize=25', 'page'],
   ])('bad params: %s → 400 on %s', async (path, param) => {
     await expectBadRequest(path, param);
   });
@@ -320,7 +322,23 @@ describe('GET /api/repos/:ns/:repo/tags', () => {
     await expectNotFound('/api/repos/library/does-not-exist/tags', 'Repository not found', 120);
   });
 
+  it('a 404 past the first page may be a page past the last one, and says so', async () => {
+    await expectNotFound(
+      '/api/repos/library/does-not-exist/tags?page=2',
+      'Repository or page not found',
+      120,
+    );
+  });
+
+  it('a blank `name` filter shares the entry of no filter', async () => {
+    await send('/api/repos/library/nginx/tags');
+    const again = await send('/api/repos/library/nginx/tags?name=%20');
+    expect(again.headers.get('X-Cache')).toBe('HIT');
+    expect(calls).toHaveLength(1);
+  });
+
   it.each([
+    ['/api/repos/library/nginx/tags?page=11&pageSize=100', 'page'],
     ['/api/repos/library/nginx/tags?page=101', 'page'],
     ['/api/repos/library/nginx/tags?pageSize=0', 'pageSize'],
     ['/api/repos/library/nginx/tags?ordering=size', 'ordering'],
@@ -432,9 +450,20 @@ describe('outside the allowlist', () => {
     expect(((await res.json()) as ApiErrorBody).error.code).toBe('not_found');
   });
 
-  it('a write method on a proxy route is not allowed', async () => {
-    const res = await send('/api/repos/library/nginx', { method: 'DELETE' });
+  it.each([
+    ['DELETE', '/api/repos/library/nginx'],
+    ['POST', '/api/popular'],
+    ['POST', '/api/search?q=nginx'],
+    ['PUT', '/api/search/suggestions?q=ngi'],
+    ['PATCH', '/api/repos/library/nginx/tags'],
+    ['POST', '/api/repos/library/nginx/tags/latest'],
+    ['POST', '/api/publishers/docker'],
+  ])('%s %s → JSON 405, nothing forwarded', async (method, path) => {
+    const { res, body } = await json<ApiErrorBody>(path, { method });
     expect(res.status).toBe(405);
+    expect(res.headers.get('Allow')).toBe('GET, HEAD');
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
+    expect(body.error.code).toBe('method_not_allowed');
     expect(calls).toEqual([]);
   });
 

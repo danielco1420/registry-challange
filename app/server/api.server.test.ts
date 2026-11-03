@@ -3,7 +3,13 @@
  * `app/routes/api-routes.test.ts`; this covers what they can't easily trigger.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cacheKey, handleApi, notFoundResponse, orNotFound } from './api.server';
+import {
+  cacheKey,
+  handleApi,
+  methodNotAllowedResponse,
+  notFoundResponse,
+  orNotFound,
+} from './api.server';
 import { UpstreamError } from './dockerhub.server';
 
 const request = new Request('http://localhost/api/popular');
@@ -65,6 +71,16 @@ describe('cacheKey', () => {
   it("can't be made to collide by a separator in a part", () => {
     expect(cacheKey('search', 'a|b', 1)).not.toBe(cacheKey('search', 'a', 'b|1'));
     expect(cacheKey('search', 'a', undefined)).not.toBe(cacheKey('search', 'a'));
+  });
+});
+
+it('methodNotAllowedResponse is a JSON 405 with Allow, never cached', async () => {
+  const res = methodNotAllowedResponse();
+  expect(res.status).toBe(405);
+  expect(res.headers.get('Allow')).toBe('GET, HEAD');
+  expect(res.headers.get('Cache-Control')).toBe('no-store');
+  expect(await res.json()).toEqual({
+    error: { code: 'method_not_allowed', message: 'Method not allowed' },
   });
 });
 
