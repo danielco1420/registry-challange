@@ -54,6 +54,7 @@ Examples:
 - **Never render raw HTML** from Docker Hub. Markdown must go through a sanitizer.
 - Prefer small, pure, tested helpers (e.g. `pullCommand`, formatters) over logic inside components.
 - No new dependency without a reason in the PR description.
+- **All UI copy goes through `t()`.** Add the string to the relevant namespace under `app/i18n/en/` and read it with `useTranslation()` (or the shared `i18next` instance directly outside React, e.g. in a route's `meta`) — never hardcode user-facing text in a component. See `app/i18n/i18next.ts`.
 
 ## Docs to keep in sync
 
