@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
-- Multi-stage `Dockerfile` (Node 22 Alpine): a build stage with full devDependencies compiling the app, and a minimal production runtime stage with prod-only dependencies, no `.env` or dev tooling baked in, running as the image's non-root `node` user, exposing port 3000 and healthchecking `/api/health`. `.dockerignore` keeps `node_modules`, `.env*`, `.git` and docs out of the build context. `docker-compose.yml` builds the image, maps port 3000, and optionally loads `.env` via `env_file` (missing file is fine). README documents both `docker build`/`docker run` and `docker compose up`.
+- Multi-stage `Dockerfile` (Node 22 Alpine): a build stage with full devDependencies compiling the app, and a minimal production runtime stage with prod-only dependencies, no `.env` or dev tooling baked in, running as the image's non-root `node` user over root-owned app files, exposing port 3000 and healthchecking `/api/health`. `.dockerignore` keeps `node_modules`, `.env*` (at any depth), `.git`, `.claude` and docs out of the build context. `docker-compose.yml` (Compose v2.24.0+) builds the image, maps port 3000, and optionally loads `.env` via `env_file` (missing file is fine). README documents both `docker build`/`docker run` and `docker compose up`.
 - Docker Hub API map with live-verified endpoints, params, and response fields (`docs/API.md`).
 - Design questionnaire covering stack, data, routing, UI, product, quality and security decisions.
 - Risk register with mitigations (`docs/RISKS.md`).

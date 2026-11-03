@@ -70,13 +70,13 @@ docker build -t registry-challange .
 docker run --rm -p 3000:3000 --env-file .env registry-challange   # --env-file is optional
 ```
 
-Or with Compose, which reads `.env` automatically if present:
+Or with Compose (v2.24.0 or newer), which reads `.env` automatically if present:
 
 ```bash
 docker compose up --build
 ```
 
-Either way the app is served on <http://localhost:3000>, with a container healthcheck polling `/api/health`. The final image runs as a non-root user, contains only production dependencies, and never bakes in a `.env` file — environment variables are supplied at `docker run`/`docker compose up` time.
+Either way the app is served on <http://localhost:3000>, with a container healthcheck polling `/api/health`. The final image runs as a non-root user, contains only production dependencies, and never bakes in a `.env` file — environment variables are supplied at `docker run`/`docker compose up` time. Compose pins `PORT=3000` inside the container to match its port mapping; with `docker run`, keep `PORT` unset (or change `-p` to match). Behind a reverse proxy, set `TRUST_PROXY_HOPS` so the per-client rate limit can see client IPs.
 
 ## Documentation
 

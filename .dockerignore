@@ -1,22 +1,31 @@
+# Patterns match from the context root; `**/` also catches nested copies.
+
 # Dependencies & build output (reinstalled / rebuilt inside the image)
-node_modules
+**/node_modules
+.pnpm-store
 build
 .react-router
+.cache
 coverage
 playwright-report
 test-results
+*.tsbuildinfo
 
 # Env, secrets, and local config — never enter the build context
-.env
-.env.*
+**/.env
+**/.env.*
 !.env.example
 
-# VCS, editor, CI
+# VCS, editor, CI, agent tooling (.claude holds local settings and agent
+# worktrees, i.e. whole repo copies with their own node_modules and .env)
 .git
 .gitignore
 .github
+.husky
+.claude
 .vscode
-*.log
+.idea
+**/*.log
 
 # Docker itself
 Dockerfile
