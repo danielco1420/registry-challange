@@ -56,14 +56,17 @@ test('not-found pages get the same headers', async ({ request }) => {
   scriptNonce(response.headers()['content-security-policy']);
 });
 
-test('API responses get a locked-down CSP and the security headers', async ({ request }) => {
-  const response = await request.get('/api/health');
-  expect(response.ok()).toBe(true);
-  expect(response.headers()).toMatchObject({
-    ...BASE_HEADERS,
-    'content-security-policy': "default-src 'none'; frame-ancestors 'none'",
+// `/_root.data` is the single-fetch data request a client navigation to `/` makes.
+for (const path of ['/api/health', '/_root.data']) {
+  test(`${path} gets a locked-down CSP and the security headers`, async ({ request }) => {
+    const response = await request.get(path);
+    expect(response.ok()).toBe(true);
+    expect(response.headers()).toMatchObject({
+      ...BASE_HEADERS,
+      'content-security-policy': "default-src 'none'; frame-ancestors 'none'",
+    });
   });
-});
+}
 
 test('the page loads and hydrates with no CSP violations', async ({ page }) => {
   const errors: string[] = [];
