@@ -55,7 +55,7 @@ const OriginSchema = v.pipe(
   v.trim(),
   v.check(
     isHttpOrigin,
-    'must be an http(s) origin without credentials, path, query or hash (e.g. https://hub.docker.com)',
+    'must be an http(s) origin without credentials, path, query or hash (e.g. https://example.com)',
   ),
   v.transform((value) => new URL(value).origin),
 );
