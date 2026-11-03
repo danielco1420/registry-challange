@@ -52,6 +52,9 @@ const isDev = import.meta.env.DEV;
 // keep the old strings and the dev handler would throw on new keys.
 if (i18next.isInitialized) {
   for (const [ns, bundle] of Object.entries(resources.en)) {
+    // Replace rather than merge: addResourceBundle's deep merge would keep
+    // keys removed from the catalog on disk, masking deletions during HMR.
+    i18next.removeResourceBundle('en', ns);
     i18next.addResourceBundle('en', ns, bundle, true, true);
   }
 } else {
