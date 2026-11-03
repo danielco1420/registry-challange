@@ -13,6 +13,20 @@ function channels(hex: string): [number, number, number] {
   return [(value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff];
 }
 
+/**
+ * `color` at `alpha` (0 to 1) composited over the opaque `backdrop`, as `#rrggbb`.
+ * For translucent fills such as Tailwind's `bg-primary/90`.
+ */
+export function blend(color: string, alpha: number, backdrop: string): string {
+  if (!(alpha >= 0 && alpha <= 1)) throw new RangeError(`alpha must be 0 to 1, got ${alpha}`);
+  const top = channels(color);
+  const bottom = channels(backdrop);
+  return `#${top
+    .map((channel, i) => Math.round(channel * alpha + (bottom[i] ?? 0) * (1 - alpha)))
+    .map((channel) => channel.toString(16).padStart(2, '0'))
+    .join('')}`;
+}
+
 /** Relative luminance, 0 (black) to 1 (white). */
 export function relativeLuminance(hex: string): number {
   const [r, g, b] = channels(hex).map((channel) => {

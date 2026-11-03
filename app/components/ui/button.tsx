@@ -10,9 +10,13 @@ import { cn } from '~/lib/utils';
 // - `link` uses `text-brand`, since the light green `primary` is too light for
 //   text on a white page;
 // - `destructive` uses `destructive-foreground` instead of white plus a
-//   translucent dark background, so its contrast is checked too.
+//   translucent dark background, so its contrast is checked too;
+// - `outline-hidden` instead of `outline-none`: in Tailwind v4 only the former
+//   keeps a focus outline in forced-colors (Windows High Contrast) mode, where
+//   the box-shadow ring isn't drawn.
+// The hover fills (`/90`, `/80`) are contrast-checked in theme-contrast.test.ts.
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all outline-none focus-visible:ring-[3px] focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all outline-hidden focus-visible:ring-[3px] focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {

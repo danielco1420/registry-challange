@@ -6,7 +6,7 @@ import i18next from '~/i18n/i18next';
 import type { Route } from './+types/home';
 
 export function meta(_args: Route.MetaArgs) {
-  return [{ title: i18next.t('home.title') }];
+  return [{ title: i18next.t('brand.name') }];
 }
 
 export default function Home() {

@@ -1,6 +1,23 @@
 import { describe, expect, it } from 'vitest';
 
-import { contrastRatio, relativeLuminance } from './contrast';
+import { blend, contrastRatio, relativeLuminance } from './contrast';
+
+describe('blend', () => {
+  it('composites a translucent color over an opaque backdrop', () => {
+    expect(blend('#ffffff', 0.5, '#000000')).toBe('#808080');
+    expect(blend('#dc2626', 0.9, '#ffffff')).toBe('#e03c3c');
+  });
+
+  it('returns the color at alpha 1 and the backdrop at alpha 0', () => {
+    expect(blend('#15803d', 1, '#ffffff')).toBe('#15803d');
+    expect(blend('#15803d', 0, '#ffffff')).toBe('#ffffff');
+  });
+
+  it('rejects an alpha outside 0 to 1', () => {
+    expect(() => blend('#15803d', 1.5, '#ffffff')).toThrow(RangeError);
+    expect(() => blend('#15803d', Number.NaN, '#ffffff')).toThrow(RangeError);
+  });
+});
 
 describe('relativeLuminance', () => {
   it('is 0 for black and 1 for white', () => {
