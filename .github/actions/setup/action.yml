@@ -1,0 +1,20 @@
+name: Setup
+description: Install pnpm (version from package.json) and Node (from .nvmrc), restore the pnpm store cache, and install dependencies from the lockfile.
+
+runs:
+  using: composite
+  steps:
+    # Reads the pnpm version from the `packageManager` field in package.json.
+    - name: Install pnpm
+      uses: pnpm/action-setup@v6
+
+    # `cache: pnpm` caches the pnpm store, keyed on pnpm-lock.yaml.
+    - name: Install Node
+      uses: actions/setup-node@v7
+      with:
+        node-version-file: .nvmrc
+        cache: pnpm
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile

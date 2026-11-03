@@ -38,6 +38,10 @@ pnpm build && pnpm start   # production server, PORT defaults to 3000
 
 `pnpm install` sets up Husky git hooks: pre-commit runs lint-staged (ESLint + Prettier on staged files), commit-msg runs commitlint (Conventional Commits).
 
+CI (`.github/workflows/ci.yml`) runs on every PR to `main` with these jobs: `lint` (lint + format check), `typecheck`, `test`, `build`, `audit` (`pnpm audit --audit-level=high`) and `e2e`. Run the same commands locally before pushing. The job names are used as required checks, so don't rename them casually.
+
+Dependency install scripts are off unless allowed in `allowBuilds` (`pnpm-workspace.yaml`); pnpm fails `pnpm install` on any dependency with an unreviewed build script. Allow or deny it there (`pnpm approve-builds`) and say why in the PR.
+
 Tests (Vitest, questionnaire F33):
 - `app/**/*.test.ts` run in Node (`node` project), `app/**/*.test.tsx` in jsdom with Testing Library and jest-dom (`dom` project). Import `describe`/`it`/`expect`/`vi` from `vitest` (no globals).
 - MSW (`test/msw/server.ts`) runs for every test in both projects. Add handlers per test with `server.use(...)`; they reset after each test. Unhandled HTTP requests to non-loopback hosts get a 500 and unhandled WebSockets get an error, so tests never reach the real Docker Hub. Recorded responses go in `fixtures/dockerhub/` (T08).
