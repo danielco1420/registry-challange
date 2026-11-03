@@ -67,7 +67,13 @@ Build and run the production image directly:
 
 ```bash
 docker build -t registry-challange .
-docker run --rm -p 3000:3000 --env-file .env registry-challange   # --env-file is optional
+docker run --rm -p 3000:3000 registry-challange
+```
+
+With a `.env` file, pass it explicitly to load it into the container:
+
+```bash
+docker run --rm -p 3000:3000 --env-file .env registry-challange
 ```
 
 Or with Compose (v2.24.0 or newer), which reads `.env` automatically if present:
