@@ -3,6 +3,7 @@ import { I18nextProvider } from 'react-i18next';
 
 import './app.css';
 import { AppShell } from './components/layout/app-shell';
+import { RouteErrorState } from './components/state/route-error-state';
 import { useTheme } from './components/theme/use-theme';
 import i18next from './i18n/i18next';
 import { themeClassName } from './lib/theme';
@@ -18,6 +19,11 @@ export const middleware: Route.MiddlewareFunction[] = [securityHeadersMiddleware
 export function loader({ request }: Route.LoaderArgs) {
   return { theme: readTheme(request) };
 }
+
+// When a loader throws a page error (`toPageErrorResponse`), the document gets
+// its `Retry-After` and `Cache-Control: no-store`. Without a `headers` export,
+// React Router copies only the thrown response's cookies.
+export const headers: Route.HeadersFunction = ({ errorHeaders }) => errorHeaders ?? new Headers();
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const theme = useTheme();
@@ -43,4 +49,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return <Outlet />;
+}
+
+// Unmatched URLs, page-loader failures (see `toPageErrorResponse` in
+// app/server/pageError.server.ts) and render errors: one error state each
+// (questionnaire C16). Rendered inside `Layout`, so it gets the shell and i18n.
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  return <RouteErrorState error={error} />;
 }

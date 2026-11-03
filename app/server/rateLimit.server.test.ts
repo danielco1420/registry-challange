@@ -247,7 +247,14 @@ describe('request helpers', () => {
     expect(response.headers.get('Content-Type')).toMatch(/^application\/json/);
     expect(await response.json()).toStrictEqual({
       error: { code: 'rate_limited', message: 'Too many requests. Try again later.' },
+      retryAfterSeconds: 42,
     });
+  });
+
+  it('rateLimitedResponse rounds the wait up to at least 1 s, in the header and the body', async () => {
+    const response = rateLimitedResponse({ retryAfterSeconds: 0 });
+    expect(response.headers.get('Retry-After')).toBe('1');
+    expect(await response.json()).toMatchObject({ retryAfterSeconds: 1 });
   });
 
   it('enforceRateLimit returns the result, then throws the 429 Response', () => {

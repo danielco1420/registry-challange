@@ -5,6 +5,45 @@
   "home": {
     "placeholder": "Placeholder. The Explore page lands in a later task."
   },
+  "state": {
+    "loading": "Loading…",
+    "empty": {
+      "title": "No results",
+      "description": "Try a different search, or clear the filters."
+    },
+    "actions": {
+      "retry": "Try again",
+      "backToExplore": "Back to Explore"
+    },
+    "retryIn_one": "You can try again in {{count}} second.",
+    "retryIn_other": "You can try again in {{count}} seconds.",
+    "error": {
+      "not_found": {
+        "title": "Page not found",
+        "description": "This page doesn't exist. Go back to Explore to search for an image."
+      },
+      "repo_not_found": {
+        "title": "Repository not found",
+        "description": "It may have been removed, renamed or made private. Check the name, or go back to Explore to search for it."
+      },
+      "unavailable": {
+        "title": "Docker Hub is unavailable",
+        "description": "We can't reach Docker Hub right now and have no saved copy of this page. Try again in a moment."
+      },
+      "rate_limited": {
+        "title": "Too many requests",
+        "description": "You've sent a lot of requests in a short time. Wait a few seconds, then try again."
+      },
+      "unexpected": {
+        "title": "Something went wrong",
+        "description": "An unexpected error stopped this page from loading. Try again, or go back to Explore."
+      }
+    },
+    "degraded": {
+      "title": "Showing saved data.",
+      "description": "We couldn't refresh it just now, so it may be out of date. Try again in a minute for the latest."
+    }
+  },
   "shell": {
     "skipToContent": "Skip to main content",
     "footer": {

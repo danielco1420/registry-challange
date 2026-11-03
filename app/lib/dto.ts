@@ -122,4 +122,6 @@ export interface ApiErrorBody {
       | 'internal_error';
     message: string;
   };
+  /** On a `429` only: the same value as `Retry-After`. */
+  retryAfterSeconds?: number;
 }
