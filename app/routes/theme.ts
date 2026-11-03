@@ -2,6 +2,7 @@ import { data, redirect } from 'react-router';
 
 import { safeRedirectPath, ThemeFormSchema } from '~/lib/theme';
 import { parseParams } from '~/lib/validate';
+import { config } from '~/server/config.server';
 import { themeCookieHeader } from '~/server/theme.server';
 
 import type { Route } from './+types/theme';
@@ -38,11 +39,14 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 /**
- * True when a browser sent this request from another origin. Same check as
- * React Router's own for actions: the `Origin` header, when present, must match
- * the request URL's origin (`Origin: null` doesn't).
+ * True when a browser sent this request from another origin: the `Origin`
+ * header, when present, must match ours (`Origin: null` doesn't). Ours is
+ * `PUBLIC_ORIGIN` when set, since behind a TLS-terminating proxy `request.url`
+ * is `http://` while the browser sends `https://`; otherwise the request URL's
+ * origin. `X-Forwarded-*` headers are never trusted for this.
  */
 function isCrossOrigin(request: Request): boolean {
   const origin = request.headers.get('Origin');
-  return origin !== null && origin !== new URL(request.url).origin;
+  const expected = config.app.publicOrigin ?? new URL(request.url).origin;
+  return origin !== null && origin !== expected;
 }
