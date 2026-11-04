@@ -191,10 +191,10 @@ Response (trimmed):
 | `name` | Tag name and pull command |
 | `last_updated` (or `tag_last_pushed`) | "Last updated" |
 | `full_size` | Size |
-| `digest` | Optional "pull by digest" |
+| `digest` | "Pull by digest" for the whole tag (the multi-platform index) |
 | `last_updater_username` | Optional "pushed by" |
 | `tag_last_pulled` | Optional activity signal |
-| `images[]` (`architecture`, `variant`, `os`, `size`) | Optional per-platform breakdown |
+| `images[]` (`architecture`, `variant`, `os`, `size`, `digest`) | Per-platform breakdown in the Tags tab; `digest` is that platform's manifest, for its own "pull by digest" |
 
 **Single tag:** `GET …/tags/{tag}` returns the same object shape. Use it for deep links.
 
@@ -205,6 +205,7 @@ Observed in the recorded tags (`fixtures/dockerhub/tags-*.json`):
 - Some very old images have `os: ""`; Windows images have `os: "windows"` and an `os_version`.
 - `tag_last_pulled` is `null` for tags nobody pulled recently; `tag_status` and `images[].status` can be `inactive`.
 - We never saw `full_size: 0` live, but treat `0`/`null` as unknown size ("—", RISKS.md 4.3).
+- Every recorded `digest` (tag and `images[]`) is `sha256:` plus 64 lowercase hex characters. Digests go into a `docker pull …@digest` command people paste into a shell, so the normalizer drops any that isn't a well-formed `sha256:`/`sha512:` digest (`optionalDigest` in `app/server/normalize.server.ts`).
 
 ---
 
@@ -253,12 +254,13 @@ interface Tag {
   name: string;
   updatedAt: string;
   size: number;
-  digest?: string;
+  digest?: string;       // "sha256:…"; absent when missing or malformed
   pushedBy?: string;
   lastPulled?: string;
   // arch is the raw platform name ("amd64", "arm64"), as in `--platform linux/arm64/v8`,
   // unlike RepoSummary.archs, which holds search's display labels
-  images: { arch: string; variant?: string; os: string; size: number }[];
+  // digest: that platform's manifest ("sha256:…"), absent when missing or malformed
+  images: { arch: string; variant?: string; os: string; size: number; digest?: string }[];
 }
 
 interface Page<T> { items: T[]; total: number; page: number; pageSize: number; }

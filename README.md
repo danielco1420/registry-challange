@@ -12,7 +12,7 @@ A simplified Docker Hub–style web app for browsing and searching public contai
 
 - **Explore**: search repositories by keyword and see a showcase of the 10 most popular official images (logo, name, description, owner).
 - **Repository details**: title, description, owner, last updated, rendered overview.
-- **Tags**: name, last updated, size, and a one-click **Copy** for `docker pull <repo>:<tag>`.
+- **Tags**: name, last updated, size, and a one-click **Copy** for `docker pull <repo>:<tag>`. Each tag expands into its platforms (OS/arch, digest, size) with a **Copy** for `docker pull <repo>@sha256:…`.
 - Product extras: decided in the questionnaire (section E).
 
 ## Architecture at a glance

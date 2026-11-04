@@ -116,7 +116,19 @@ function renderTags(
 }
 
 const table = () => screen.findByRole('table', { name: /^Tags of / });
-const rowNames = () => screen.getAllByRole('rowheader').map((cell) => cell.textContent);
+/**
+ * The tag names in the table, in order. `hidden: true` skips Testing Library's
+ * CSS visibility check, which costs jsdom about 0.5 s per call over 100+ rows
+ * and made `waitFor` polls on it slow enough to time out. The filter keeps
+ * only the tags table's own row headers, not an expanded platform table's.
+ */
+const rowNames = () => {
+  const tags = screen.getByRole('table', { name: /^Tags of / });
+  return within(tags)
+    .getAllByRole('rowheader', { hidden: true })
+    .filter((cell) => cell.closest('table') === tags)
+    .map((cell) => cell.textContent);
+};
 const columnHeader = (name: string) => screen.getByRole('columnheader', { name: new RegExp(name) });
 
 describe('Tags tab: table', () => {
@@ -301,7 +313,10 @@ describe('Tags tab: load more', () => {
     expect(screen.queryByRole('button', { name: 'Load more tags' })).toBeNull();
     expect(screen.queryByText(/^Showing/)).toBeNull();
     expect(requests.map((r) => r.page)).toEqual([1, 2, 3]);
-  });
+    // Each "Load more tags" query computes the accessible name of every button
+    // (a platforms toggle and a Copy per row, 240 at the end), about 1 s each in
+    // jsdom. The test takes about 3 s locally; this leaves room for a slow runner.
+  }, 15_000);
 
   it('keeps the current sort and filter when loading more', async () => {
     const { requests } = renderTags('/r/fluent/fluent-bit/tags?name=3&ordering=-name', (url) =>

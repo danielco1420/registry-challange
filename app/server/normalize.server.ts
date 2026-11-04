@@ -81,6 +81,19 @@ const text = (value: string | null | undefined) => value?.trim() ?? '';
 /** `undefined` instead of `''`/`null`, for optional DTO fields. */
 const optionalText = (value: string | null | undefined) => text(value) || undefined;
 
+/** A `sha256` or `sha512` content digest, lowercase hex, as Docker Hub sends them. */
+const DIGEST_PATTERN = /^(?:sha256:[0-9a-f]{64}|sha512:[0-9a-f]{128})$/;
+
+/**
+ * A well-formed digest, else `undefined`. Digests end up in a `docker pull`
+ * command people paste into a shell, so anything else (spaces, `;`, `|`, …)
+ * is dropped rather than copied.
+ */
+export function optionalDigest(value: string | null | undefined): string | undefined {
+  const digest = text(value);
+  return DIGEST_PATTERN.test(digest) ? digest : undefined;
+}
+
 // ---------------------------------------------------------------------------
 // Pull counts (RISKS.md 4.2)
 // ---------------------------------------------------------------------------
@@ -276,7 +289,13 @@ function toTagImage(image: NonNullable<UpstreamTag['images']>[number]): TagImage
   const os = text(image.os);
   // Attestation manifests show up as `unknown/unknown`; they aren't pullable platforms.
   if (arch === '' || arch === 'unknown' || os === 'unknown') return undefined;
-  return { arch, variant: optionalText(image.variant), os, size: nonNegative(image.size) };
+  return {
+    arch,
+    variant: optionalText(image.variant),
+    os,
+    size: nonNegative(image.size),
+    digest: optionalDigest(image.digest),
+  };
 }
 
 export function toTag(tag: UpstreamTag): Tag {
@@ -284,7 +303,7 @@ export function toTag(tag: UpstreamTag): Tag {
     name: tag.name,
     updatedAt: text(tag.last_updated) || text(tag.tag_last_pushed),
     size: nonNegative(tag.full_size),
-    digest: optionalText(tag.digest),
+    digest: optionalDigest(tag.digest),
     pushedBy: optionalText(tag.last_updater_username),
     lastPulled: optionalText(tag.tag_last_pulled),
     images: (tag.images ?? []).map(toTagImage).filter(defined),

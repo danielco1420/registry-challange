@@ -65,6 +65,8 @@ export interface TagImage {
   os: string;
   /** Compressed size in bytes; 0 when unknown. */
   size: number;
+  /** This platform's manifest digest (`sha256:…`), for a pull by digest; absent when unknown. */
+  digest?: string;
 }
 
 export interface Tag {

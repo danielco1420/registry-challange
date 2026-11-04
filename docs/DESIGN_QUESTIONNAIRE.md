@@ -140,7 +140,7 @@ Choose from: logo · name · owner · description · badge · pulls · stars · 
 ### D23. ✅ Tags layout
 Options: table with sortable columns · cards. Expandable row for the per-architecture breakdown?
 **Answer:** Table with sortable columns (name, last updated, size). Rows expand to show the per-architecture breakdown (OS/arch, digest, size).
-**Follow-up:** Table done (T25, `app/routes/repo.tags.tsx`): name filter, sort, "Load more" and a copyable pull command per row. Only name and last updated sort: Docker Hub's `ordering` can't sort by size, and sorting just the loaded rows would mislead. Expandable per-architecture rows aren't built yet. See [ARCHITECTURE](ARCHITECTURE.md#tags-tab).
+**Follow-up:** Table done (T25, `app/routes/repo.tags.tsx`): name filter, sort, "Load more" and a copyable pull command per row. Only name and last updated sort: Docker Hub's `ordering` can't sort by size, and sorting just the loaded rows would mislead. Expandable per-architecture rows done (T26): a disclosure button per tag shows OS/arch(+variant), short digest, size and a copyable pull-by-digest command per platform, plus one for the tag's own digest (E28). See [ARCHITECTURE](ARCHITECTURE.md#tags-tab).
 
 ### D24. ✅ Repository overview
 Render `full_description` Markdown (sanitized)? Tabs "Overview | Tags" like Hub, or a single page?
