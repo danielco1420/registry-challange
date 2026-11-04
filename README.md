@@ -50,6 +50,7 @@ Environment variables are documented in [.env.example](.env.example). All are op
 
 | Variable | Default | Allowed |
 |---|---|---|
+| `PUBLIC_ORIGIN` | unset | `http(s)` origin browsers use to reach the app. Set it behind a TLS-terminating reverse proxy, so `POST /theme`'s cross-origin check compares against it instead of the request URL. Covers the no-JavaScript form post only: React Router's own check on the toggle's JavaScript post still compares against the request URL |
 | `DOCKERHUB_BASE_URL` | `https://hub.docker.com` | `http(s)` origin (no credentials, path, query or hash) |
 | `UPSTREAM_TIMEOUT_MS` | `8000` | integer 1–2147483647 |
 | `CACHE_TTL_POPULAR` / `_SEARCH` / `_REPO` / `_TAGS` / `_PUBLISHER` (seconds) | `600` / `60` / `300` / `120` / `3600` | integer ≥ 0 |
@@ -82,7 +83,7 @@ Or with Compose (v2.24.0 or newer), which reads `.env` automatically if present:
 docker compose up --build
 ```
 
-Either way the app is served on <http://localhost:3000>, with a container healthcheck polling `/api/health`. The final image runs as a non-root user, contains only production dependencies, and never bakes in a `.env` file — environment variables are supplied at `docker run`/`docker compose up` time. Compose pins `PORT=3000` inside the container to match its port mapping; with `docker run`, keep `PORT` unset (or change `-p` to match). Behind a reverse proxy, set `TRUST_PROXY_HOPS` so the per-client rate limit can see client IPs.
+Either way the app is served on <http://localhost:3000>, with a container healthcheck polling `/api/health`. The final image runs as a non-root user, contains only production dependencies, and never bakes in a `.env` file — environment variables are supplied at `docker run`/`docker compose up` time. Compose pins `PORT=3000` inside the container to match its port mapping; with `docker run`, keep `PORT` unset (or change `-p` to match). Behind a reverse proxy, set `TRUST_PROXY_HOPS` so the per-client rate limit can see client IPs, and `PUBLIC_ORIGIN` if the proxy terminates TLS.
 
 ## Documentation
 

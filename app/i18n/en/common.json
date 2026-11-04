@@ -67,6 +67,23 @@
       "disclaimer": "Repository data comes from Docker Hub. Danny's Dockers is not affiliated with or endorsed by Docker, Inc."
     }
   },
+  "repo": {
+    "noDescription": "No description",
+    "by": "by {{owner}}",
+    "badge": {
+      "official": "Official Image",
+      "verified_publisher": "Verified Publisher",
+      "open_source": "Sponsored OSS",
+      "hardened": "Hardened Image"
+    }
+  },
+  "copy": {
+    "copy": "Copy",
+    "copied": "Copied",
+    "copiedAnnouncement": "Copied to clipboard.",
+    "manualLabel": "Text to copy",
+    "manualAnnouncement": "Couldn't copy automatically. The text is selected: press Ctrl+C, or Command+C on a Mac, to copy it."
+  },
   "theme": {
     "label": "Color theme",
     "light": "Light",
