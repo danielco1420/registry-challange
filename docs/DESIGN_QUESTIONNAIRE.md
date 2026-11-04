@@ -56,6 +56,7 @@ Options: TanStack Query · SWR · RTK Query · plain fetch.
 *Rec:* TanStack Query.
 **Answer:** None. React Router loaders for page data, `useFetcher` for "Load more" and autocomplete.
 **Why:** Loaders already handle fetching, revalidation and pending states; caching lives on the server (B9).
+**Follow-up:** Autocomplete uses plain `fetch` with an `AbortController` instead of `useFetcher` (T22, [ADR-0004](adr/0004-autocomplete-with-fetch.md)). A fetcher's failed load goes to the nearest route ErrorBoundary, so a `429` or `503` from `/api/search/suggestions` would replace the whole page; suggestions are optional and should fail soft. Still no server-state library.
 
 ### B8. ✅ Client state (theme, recent searches, favorites)
 Options: none (URL + localStorage) · React Context · Zustand.
@@ -75,7 +76,7 @@ Zod schemas protect against changes to the undocumented API.
 ### B11. ✅ Search interaction
 Options: debounced as-you-type · submit-only · both. Autocomplete via `/api/search/v4/suggestions`?
 **Answer:** Submit navigates to the results page. A debounced (~250 ms) autocomplete dropdown uses `/api/search/v4/suggestions` through a new allowlisted proxy route.
-**Follow-up:** add the suggestions route to the allowlist in [API.md](API.md) and the hard rules when implemented. Done: `GET /api/search/suggestions?q=` (T13).
+**Follow-up:** add the suggestions route to the allowlist in [API.md](API.md) and the hard rules when implemented. Done: `GET /api/search/suggestions?q=` (T13). The search box is done too (T22, `app/components/search/search-bar.tsx`): a plain `GET` form to `/search?q=` that works without JavaScript, in the header on every page but Explore and as a larger box on Explore. With JavaScript it is a combobox with suggestions after a 250 ms pause and at least 2 characters (picking one opens its repository page), and recent searches when the box is empty (E28).
 
 ### B12. ✅ Pagination style
 Separately for search results and for tags. Options: numbered pages · "Load more" · infinite scroll.
