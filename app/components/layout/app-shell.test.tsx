@@ -7,11 +7,11 @@ import '~/i18n/i18next';
 
 import { AppShell } from './app-shell';
 
-function renderShell() {
+function renderShell(path = '/') {
   const Stub = createRoutesStub([
     {
       id: 'root',
-      path: '/',
+      path: '*',
       loader: () => ({ theme: 'system' }),
       Component: () => (
         <AppShell>
@@ -20,7 +20,7 @@ function renderShell() {
       ),
     },
   ]);
-  return render(<Stub initialEntries={['/']} />);
+  return render(<Stub initialEntries={[path]} />);
 }
 
 describe('AppShell', () => {
@@ -49,5 +49,18 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: "Danny's Dockers" })).toHaveAttribute('href', '/');
     expect(header.querySelector('[data-slot="header-search"]')).toBeInTheDocument();
     expect(screen.getByRole('group', { name: 'Color theme' })).toBeInTheDocument();
+  });
+
+  it('puts the search box in the header slot away from Explore', async () => {
+    renderShell('/r/bitnami/nginx');
+    const header = await screen.findByRole('banner');
+    const slot = header.querySelector('[data-slot="header-search"]');
+    expect(slot).toContainElement(screen.getByRole('search', { name: 'Search images' }));
+  });
+
+  it('leaves the header search out on Explore, which has its own', async () => {
+    renderShell('/');
+    await screen.findByRole('banner');
+    expect(screen.queryByRole('search')).not.toBeInTheDocument();
   });
 });

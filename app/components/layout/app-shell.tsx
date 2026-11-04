@@ -1,8 +1,9 @@
 import type * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
 
 import { Wordmark } from '~/components/brand/wordmark';
+import { SearchBar } from '~/components/search/search-bar';
 import { ThemeToggle } from '~/components/theme/theme-toggle';
 
 /** Target of the skip link. */
@@ -16,6 +17,10 @@ export const MAIN_ID = 'main';
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
+  // Explore (`/`) has its own, larger search box; a second one in the header
+  // would only add a duplicate search landmark.
+  const { pathname } = useLocation();
+  const showHeaderSearch = pathname !== '/';
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -33,8 +38,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Wordmark />
           </Link>
 
-          {/* Search slot: the header search box lands here in T22. */}
-          <div data-slot="header-search" className="min-w-0 flex-1" />
+          <div data-slot="header-search" className="min-w-0 flex-1">
+            {showHeaderSearch && <SearchBar variant="header" className="max-w-xl" />}
+          </div>
 
           <ThemeToggle className="shrink-0" />
         </div>

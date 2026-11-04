@@ -14,7 +14,7 @@ Build one React Router v7 app in framework mode, with SSR, run on Node 22 LTS an
 - The `/api/*` proxy routes are React Router resource routes in the same app.
 - Page loaders call the same server-side upstream client and cache directly, rather than going through HTTP to `/api/*`; the same 60 req/min per-client-IP limit applies before each upstream request.
 - Server-only code lives in `*.server.ts` modules so it can't reach the client bundle.
-- No client server-state library: loaders plus `useFetcher` cover page data, "Load more" and autocomplete.
+- No client server-state library: loaders plus `useFetcher` cover page data, "Load more" and autocomplete. (Autocomplete amended by [ADR-0004](0004-autocomplete-with-fetch.md): plain `fetch`, so a failed suggestion request can't replace the page.)
 - Valibot schemas validate route params and upstream JSON.
 - TypeScript `strict: true` plus `noUncheckedIndexedAccess`.
 
