@@ -44,6 +44,23 @@
       "description": "We couldn't refresh it just now, so it may be out of date. Try again in a minute for the latest."
     }
   },
+  "search": {
+    "label": "Search images",
+    "placeholder": "Search images, e.g. nginx",
+    "submit": "Search",
+    "suggestions": {
+      "label": "Suggestions",
+      "loading": "Loading suggestions…",
+      "empty": "No suggestions for “{{query}}”. Press Enter to search anyway.",
+      "error": "Suggestions are unavailable right now. Press Enter to search.",
+      "count_one": "{{count}} suggestion available. Use the up and down arrow keys to browse.",
+      "count_other": "{{count}} suggestions available. Use the up and down arrow keys to browse."
+    },
+    "recent": {
+      "label": "Recent searches",
+      "clear": "Clear recent searches"
+    }
+  },
   "shell": {
     "skipToContent": "Skip to main content",
     "footer": {
