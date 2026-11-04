@@ -53,6 +53,31 @@
   "repo": {
     "noDescription": "No description",
     "by": "by {{owner}}",
+    "archived": "Archived",
+    "page": {
+      "title": "{{name}} | {{brand}}"
+    },
+    "stats": {
+      "updated": "Updated",
+      "pulls": "Pulls",
+      "stars": "Stars",
+      "unknown": "Unknown"
+    },
+    "tabs": {
+      "label": "Repository sections",
+      "overview": "Overview",
+      "tags": "Tags"
+    },
+    "overview": {
+      "empty": {
+        "title": "No overview yet",
+        "description": "The publisher hasn't written an overview for this repository. Its tags may still tell you what you need.",
+        "action": "View tags"
+      }
+    },
+    "tags": {
+      "placeholder": "The tag list lands in a later task."
+    },
     "badge": {
       "official": "Official Image",
       "verified_publisher": "Verified Publisher",
