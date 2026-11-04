@@ -40,6 +40,11 @@ describe('safeRedirectPath', () => {
     '',
     '/foo\nSet-Cookie: x=1',
     '/\t/evil.example/',
+    // Dot segments that collapse to `//evil.example` once the URL is normalized.
+    '/.//evil.example',
+    '/%2e//evil.example',
+    '/./\\evil.example',
+    '/a/..//evil.example',
     undefined,
     42,
   ])('falls back to / for %j', (value) => {

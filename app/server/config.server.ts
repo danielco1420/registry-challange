@@ -50,21 +50,21 @@ function isHttpOrigin(value: string): boolean {
  * An env var holding an http(s) origin, normalized to `URL.origin` (no trailing slash).
  * The error doesn't echo the value, since a URL may embed credentials.
  */
-const originVar = (defaultValue: string) =>
-  v.optional(
-    v.pipe(
-      v.string(),
-      v.trim(),
-      v.check(
-        isHttpOrigin,
-        'must be an http(s) origin without credentials, path, query or hash (e.g. https://hub.docker.com)',
-      ),
-      v.transform((value) => new URL(value).origin),
-    ),
-    defaultValue,
-  );
+const OriginSchema = v.pipe(
+  v.string(),
+  v.trim(),
+  v.check(
+    isHttpOrigin,
+    'must be an http(s) origin without credentials, path, query or hash (e.g. https://example.com)',
+  ),
+  v.transform((value) => new URL(value).origin),
+);
+
+const originVar = (defaultValue: string) => v.optional(OriginSchema, defaultValue);
 
 const EnvSchema = v.object({
+  PUBLIC_ORIGIN: v.optional(OriginSchema),
+
   DOCKERHUB_BASE_URL: originVar('https://hub.docker.com'),
   UPSTREAM_TIMEOUT_MS: intVar(8000, 1, MAX_TIMER_MS),
 
@@ -83,6 +83,14 @@ const EnvSchema = v.object({
 });
 
 export interface Config {
+  app: {
+    /**
+     * The origin browsers use to reach the app (e.g. `https://registry.example.com`),
+     * when a TLS-terminating reverse proxy means `request.url` doesn't show it.
+     * Unset: same-origin checks compare against `request.url`.
+     */
+    publicOrigin: string | undefined;
+  };
   upstream: {
     /** Docker Hub origin, without a trailing slash. */
     baseUrl: string;
@@ -147,6 +155,9 @@ export function parseEnv(source: Record<string, string | undefined>): Config {
 
   const env = result.output;
   return {
+    app: {
+      publicOrigin: env.PUBLIC_ORIGIN,
+    },
     upstream: {
       baseUrl: env.DOCKERHUB_BASE_URL,
       timeoutMs: env.UPSTREAM_TIMEOUT_MS,
