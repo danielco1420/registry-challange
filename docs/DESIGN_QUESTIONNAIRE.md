@@ -81,11 +81,13 @@ Options: debounced as-you-type · submit-only · both. Autocomplete via `/api/se
 ### B12. ✅ Pagination style
 Separately for search results and for tags. Options: numbered pages · "Load more" · infinite scroll.
 **Answer:** Search results: numbered pages (`page` in the URL). Tags: "Load more".
+**Follow-up:** Search results done (T23, `app/routes/search.tsx`): 25 per page, numbered links up to page 40, since Docker Hub serves only the first 1,000 results without sign-in. See [ARCHITECTURE](ARCHITECTURE.md#search-results-page).
 
 ### B13. ✅ URL as state
 Put `q`, `sort`, `page`, and the tag filter in the query string, so links can be shared and Back/Forward works.
 *Rec:* yes.
 **Answer:** Yes.
+**Follow-up:** Done for search (T23: `q`, `sort`, `badge`, `page`; invalid values fall back to defaults) and tags (T25: `name`, `ordering`).
 
 ---
 
