@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useLoaderData, useRevalidator } from 'react-router';
 
 import { Wordmark } from '~/components/brand/wordmark';
+import { FavoritesSection } from '~/components/repo/favorites-section';
 import { RepoCard } from '~/components/repo/repo-card';
 import { SearchBar } from '~/components/search/search-bar';
 import { DegradedBanner } from '~/components/state/degraded-banner';
@@ -69,6 +70,8 @@ export default function Home() {
         <Wordmark />
       </h1>
       <SearchBar variant="hero" className="mt-6 max-w-2xl" />
+
+      <FavoritesSection className="mt-10" />
 
       <h2 className="mt-10 text-xl font-semibold text-foreground">{t('explore.heading')}</h2>
 
