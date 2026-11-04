@@ -276,7 +276,13 @@ function toTagImage(image: NonNullable<UpstreamTag['images']>[number]): TagImage
   const os = text(image.os);
   // Attestation manifests show up as `unknown/unknown`; they aren't pullable platforms.
   if (arch === '' || arch === 'unknown' || os === 'unknown') return undefined;
-  return { arch, variant: optionalText(image.variant), os, size: nonNegative(image.size) };
+  return {
+    arch,
+    variant: optionalText(image.variant),
+    os,
+    size: nonNegative(image.size),
+    digest: optionalText(image.digest),
+  };
 }
 
 export function toTag(tag: UpstreamTag): Tag {

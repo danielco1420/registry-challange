@@ -290,9 +290,27 @@ describe('tags → Page<Tag>', () => {
       pushedBy: 'edsiper',
       lastPulled: '2026-11-02T20:36:59.620442477Z',
       images: [
-        { arch: 'amd64', variant: undefined, os: 'linux', size: 62592256 },
-        { arch: 'arm', variant: 'v7', os: 'linux', size: 56267351 },
-        { arch: 'arm64', variant: 'v8', os: 'linux', size: 61709184 },
+        {
+          arch: 'amd64',
+          variant: undefined,
+          os: 'linux',
+          size: 62592256,
+          digest: 'sha256:9b6786d8d129fe8e4a2e19a9cb4aebeb44bd31fb52377b7ef1db327f56e0b951',
+        },
+        {
+          arch: 'arm',
+          variant: 'v7',
+          os: 'linux',
+          size: 56267351,
+          digest: 'sha256:44217bf77e602213aa21af48bf0b5e177084c1245bbfeba36dc3f05d50a5d3e0',
+        },
+        {
+          arch: 'arm64',
+          variant: 'v8',
+          os: 'linux',
+          size: 61709184,
+          digest: 'sha256:35100a7cf11943c331f86776db2c9e98766c5210b9608787fb705e0b01dba686',
+        },
       ],
     });
   });
@@ -319,6 +337,14 @@ describe('tags → Page<Tag>', () => {
     const tag = toTag(v.parse(TagSchema, fixtures.tagNginxLatest));
     expect(tag).toMatchObject({ name: 'latest', size: 63911306, pushedBy: 'doijanky' });
     expect(tag.images.map((image) => image.arch)).toContain('arm64');
+  });
+
+  it('an image without a digest keeps it absent', () => {
+    const raw = cloneFixture(fixtures.tagsFluentBit.results[0]) as Record<string, unknown>;
+    raw.images = [{ architecture: 'amd64', os: 'linux', size: 1, digest: '' }];
+    expect(toTag(v.parse(TagSchema, raw)).images).toEqual([
+      { arch: 'amd64', variant: undefined, os: 'linux', size: 1, digest: undefined },
+    ]);
   });
 
   it('full_size 0 or null, no images, never pulled: safe defaults (RISKS 4.3)', () => {
