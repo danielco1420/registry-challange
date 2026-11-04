@@ -245,6 +245,16 @@ describe('SearchResults', () => {
     );
   });
 
+  it('counts the range from the cards shown when some results were skipped', async () => {
+    renderSearch('/search?q=nginx&page=2', (url) => {
+      const results = resultsOf(url.page, 295_913);
+      return { results: { ...results, items: results.items.slice(0, 23) } };
+    });
+
+    expect(await screen.findByText('Showing 26–48 of 295,913 results')).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(23);
+  });
+
   it('shows the plain count when everything fits on one page, and no pagination', async () => {
     renderSearch('/search?q=nginx', () => ({ results: resultsOf(1, 1) }));
 

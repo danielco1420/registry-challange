@@ -116,7 +116,13 @@ function renderTags(
 }
 
 const table = () => screen.findByRole('table', { name: /^Tags of / });
-const rowNames = () => screen.getAllByRole('rowheader').map((cell) => cell.textContent);
+/**
+ * The row headers' text. A CSS query rather than `getAllByRole('rowheader')`:
+ * role queries walk the accessibility tree, and polled in `waitFor` over a
+ * 100+ row table they took seconds, enough to time out under a full parallel run.
+ */
+const rowNames = () =>
+  Array.from(document.querySelectorAll('tbody th[scope="row"]'), (cell) => cell.textContent);
 const columnHeader = (name: string) => screen.getByRole('columnheader', { name: new RegExp(name) });
 
 describe('Tags tab: table', () => {
@@ -280,7 +286,9 @@ describe('Tags tab: name filter', () => {
   });
 });
 
-describe('Tags tab: load more', () => {
+// These render 100+ rows in jsdom, which takes 1–2 s alone and several times
+// that while the full suite runs in parallel: allow more than the 5 s default.
+describe('Tags tab: load more', { timeout: 15_000 }, () => {
   it('fetches one more page per click and appends it, until the last', async () => {
     const { router, requests } = renderTags('/r/fluent/fluent-bit/tags', (url) =>
       ok(pageOf(url.page, 120)),
