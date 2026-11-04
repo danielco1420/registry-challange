@@ -191,10 +191,10 @@ Response (trimmed):
 | `name` | Tag name and pull command |
 | `last_updated` (or `tag_last_pushed`) | "Last updated" |
 | `full_size` | Size |
-| `digest` | Optional "pull by digest" |
+| `digest` | "Pull by digest" for the whole tag (the multi-platform index) |
 | `last_updater_username` | Optional "pushed by" |
 | `tag_last_pulled` | Optional activity signal |
-| `images[]` (`architecture`, `variant`, `os`, `size`) | Optional per-platform breakdown |
+| `images[]` (`architecture`, `variant`, `os`, `size`, `digest`) | Per-platform breakdown in the Tags tab; `digest` is that platform's manifest, for its own "pull by digest" |
 
 **Single tag:** `GET …/tags/{tag}` returns the same object shape. Use it for deep links.
 
@@ -258,7 +258,8 @@ interface Tag {
   lastPulled?: string;
   // arch is the raw platform name ("amd64", "arm64"), as in `--platform linux/arm64/v8`,
   // unlike RepoSummary.archs, which holds search's display labels
-  images: { arch: string; variant?: string; os: string; size: number }[];
+  // digest: that platform's manifest ("sha256:…"), absent when Docker Hub sends none
+  images: { arch: string; variant?: string; os: string; size: number; digest?: string }[];
 }
 
 interface Page<T> { items: T[]; total: number; page: number; pageSize: number; }
