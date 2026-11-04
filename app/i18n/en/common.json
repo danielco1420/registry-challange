@@ -203,5 +203,9 @@
     "light": "Light",
     "dark": "Dark",
     "system": "System"
+  },
+  "favorites": {
+    "heading": "Favorites",
+    "toggle": "Favorite {{name}}"
   }
 }

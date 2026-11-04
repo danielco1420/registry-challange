@@ -11,7 +11,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '~/i18n/i18next';
 
 import type { SearchPage } from '~/lib/dto';
+import { FAVORITES_KEY } from '~/lib/favorites';
 import { cache } from '~/server/cache.server';
+
+import { resetFavoritesStore } from '~/components/repo/use-favorites';
 
 import { HUB, dockerHubHandlers } from '../../test/msw/dockerhub';
 import { server } from '../../test/msw/server';
@@ -45,6 +48,8 @@ beforeEach(() => {
   server.use(...dockerHubHandlers);
   vi.spyOn(console, 'warn').mockImplementation(() => {});
   vi.spyOn(console, 'error').mockImplementation(() => {});
+  localStorage.clear();
+  resetFavoritesStore();
 });
 
 afterEach(() => {
@@ -179,5 +184,25 @@ describe('Home', () => {
     expect(await screen.findByText('No popular images right now')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  });
+
+  it('has no Favorites section when nothing is favorited', async () => {
+    renderHome({ popular: POPULAR, degraded: false });
+
+    await screen.findByRole('heading', { level: 1 });
+    expect(screen.queryByRole('heading', { name: 'Favorites' })).not.toBeInTheDocument();
+  });
+
+  it('shows a Favorites section above Popular when something is favorited', async () => {
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify([POPULAR.items[0]]));
+
+    renderHome({ popular: POPULAR, degraded: false });
+
+    const favoritesHeading = await screen.findByRole('heading', { name: 'Favorites' });
+    const popularHeading = screen.getByRole('heading', { name: 'Popular official images' });
+    expect(
+      favoritesHeading.compareDocumentPosition(popularHeading) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.getAllByRole('link', { name: 'nginx' })).toHaveLength(2);
   });
 });

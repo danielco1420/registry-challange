@@ -6,12 +6,14 @@ import { formatCompactNumber, formatRelativeDate } from '~/lib/format';
 import { OFFICIAL_NAMESPACE } from '~/lib/pull-command';
 import { cn } from '~/lib/utils';
 
+import { FavoriteButton } from './favorite-button';
 import { RepoBadge } from './repo-badge';
 import { RepoLogo } from './repo-logo';
 
 export interface RepoHeaderProps {
   repo: Pick<
     RepoDetails,
+    | 'id'
     | 'namespace'
     | 'name'
     | 'displayName'
@@ -38,8 +40,8 @@ export interface RepoHeaderProps {
  * Official images skip the owner line: their namespace is `library`, and the
  * "Official Image" badge already says who publishes them.
  *
- * The favorite toggle (questionnaire E28) joins the title row once the
- * favorites hook (T21) lands.
+ * The favorite toggle (questionnaire E28, T21) joins the title row, pushed
+ * to the end by `ml-auto`.
  */
 export function RepoHeader({ repo, now, className }: RepoHeaderProps) {
   const { t } = useTranslation();
@@ -56,6 +58,7 @@ export function RepoHeader({ repo, now, className }: RepoHeaderProps) {
           </h1>
           <RepoBadge badge={repo.badge} />
           {repo.archived && <Badge variant="outline">{t('repo.archived')}</Badge>}
+          <FavoriteButton repo={repo} className="ml-auto" />
         </div>
 
         {repo.namespace !== OFFICIAL_NAMESPACE && (

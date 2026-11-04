@@ -1,13 +1,17 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import '~/i18n/i18next';
 
+import { FAVORITES_KEY } from '~/lib/favorites';
+
+import { resetFavoritesStore } from './use-favorites';
 import { RepoHeader, type RepoHeaderProps } from './repo-header';
 
 const NOW = Date.parse('2026-11-02T12:00:00Z');
 
 const NGINX: RepoHeaderProps['repo'] = {
+  id: 'library/nginx',
   namespace: 'library',
   name: 'nginx',
   displayName: 'nginx',
@@ -21,6 +25,11 @@ const NGINX: RepoHeaderProps['repo'] = {
   stars: 21_416,
   updatedAt: '2026-10-31T01:52:43.634621Z',
 };
+
+beforeEach(() => {
+  localStorage.clear();
+  resetFavoritesStore();
+});
 
 describe('RepoHeader', () => {
   it('shows the name as the h1, the badge, stats and a relative date with the absolute on hover', () => {
@@ -78,5 +87,30 @@ describe('RepoHeader', () => {
     const name = 'a'.repeat(255);
     render(<RepoHeader repo={{ ...NGINX, name, displayName: name }} now={NOW} />);
     expect(screen.getByRole('heading', { level: 1 })).toHaveClass('min-w-0', 'wrap-anywhere');
+  });
+
+  it('has a favorite toggle in the title row', () => {
+    render(<RepoHeader repo={NGINX} now={NOW} />);
+
+    const toggle = screen.getByRole('button', { name: 'Favorite nginx' });
+    fireEvent.click(toggle);
+
+    expect(screen.getByRole('button', { name: 'Favorite nginx' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    // Only the card's fields are kept, not the page's stats.
+    expect(JSON.parse(localStorage.getItem(FAVORITES_KEY) ?? '[]')).toEqual([
+      {
+        id: 'library/nginx',
+        namespace: 'library',
+        name: 'nginx',
+        displayName: 'nginx',
+        owner: 'library',
+        description: 'Official build of Nginx.',
+        logoUrl: 'https://d1q6f0aelx0por.cloudfront.net/product-logos/nginx.png',
+        badge: 'official',
+      },
+    ]);
   });
 });

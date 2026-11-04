@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -6,12 +6,15 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import '~/i18n/i18next';
 
 import type { RepoSummary } from '~/lib/dto';
+import { FAVORITES_KEY } from '~/lib/favorites';
 
 import { server } from '../../../test/msw/server';
 import { RepoCard, type RepoCardProps } from './repo-card';
+import { resetFavoritesStore } from './use-favorites';
 import { clearPublisherAvatarCache } from './use-publisher-avatar';
 
 const NGINX: RepoCardProps['repo'] = {
+  id: 'library/nginx',
   namespace: 'library',
   name: 'nginx',
   displayName: 'nginx',
@@ -28,7 +31,11 @@ function renderCard(repo: RepoCardProps['repo'], props: Omit<RepoCardProps, 'rep
   return render(<Stub initialEntries={['/']} />);
 }
 
-beforeEach(() => clearPublisherAvatarCache());
+beforeEach(() => {
+  clearPublisherAvatarCache();
+  localStorage.clear();
+  resetFavoritesStore();
+});
 
 describe('RepoCard', () => {
   it('shows the logo, name, owner, description and badge', async () => {
@@ -42,7 +49,7 @@ describe('RepoCard', () => {
     expect(container.querySelector('img')).toHaveAttribute('src', NGINX.logoUrl);
   });
 
-  it('links to /_/{repo} for an official image, as the card’s only tab stop', async () => {
+  it('links to /_/{repo} for an official image, as the card’s only link', async () => {
     renderCard(NGINX);
 
     const link = await screen.findByRole('link', { name: 'nginx' });
@@ -50,6 +57,33 @@ describe('RepoCard', () => {
     expect(screen.getAllByRole('link')).toHaveLength(1);
     link.focus();
     expect(link).toHaveFocus();
+  });
+
+  it('has a favorite toggle, independent of the card link', async () => {
+    renderCard(NGINX);
+
+    const toggle = await screen.findByRole('button', { name: 'Favorite nginx' });
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+
+    fireEvent.click(toggle);
+
+    expect(await screen.findByRole('button', { name: 'Favorite nginx' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(JSON.parse(localStorage.getItem(FAVORITES_KEY) ?? '[]')).toEqual([NGINX]);
+    // Still a single link: the toggle is a separate button, not a link.
+    expect(screen.getAllByRole('link')).toHaveLength(1);
+  });
+
+  it('puts the favorite toggle after the card link in tab order', async () => {
+    renderCard(NGINX);
+
+    const link = await screen.findByRole('link', { name: 'nginx' });
+    const toggle = screen.getByRole('button', { name: 'Favorite nginx' });
+    // Neither sets a tabindex, so tab order is DOM order.
+    expect(link.compareDocumentPosition(toggle) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(toggle).not.toHaveAttribute('tabindex');
   });
 
   it('links to /r/{ns}/{repo} and shows the full name for other repositories', async () => {
