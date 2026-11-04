@@ -3,6 +3,7 @@ import { useLoaderData, useRevalidator } from 'react-router';
 
 import { Wordmark } from '~/components/brand/wordmark';
 import { RepoCard } from '~/components/repo/repo-card';
+import { SearchBar } from '~/components/search/search-bar';
 import { DegradedBanner } from '~/components/state/degraded-banner';
 import { Empty } from '~/components/state/empty';
 import { Button } from '~/components/ui/button';
@@ -67,7 +68,9 @@ export default function Home() {
       <h1 className="text-3xl">
         <Wordmark />
       </h1>
-      <h2 className="mt-6 text-xl font-semibold text-foreground">{t('explore.heading')}</h2>
+      <SearchBar variant="hero" className="mt-6 max-w-2xl" />
+
+      <h2 className="mt-10 text-xl font-semibold text-foreground">{t('explore.heading')}</h2>
 
       {degraded && <DegradedBanner retry={retry} className="mt-4" />}
 

@@ -56,6 +56,7 @@ Options: TanStack Query · SWR · RTK Query · plain fetch.
 *Rec:* TanStack Query.
 **Answer:** None. React Router loaders for page data, `useFetcher` for "Load more" and autocomplete.
 **Why:** Loaders already handle fetching, revalidation and pending states; caching lives on the server (B9).
+**Follow-up:** Autocomplete uses plain `fetch` with an `AbortController` instead of `useFetcher` (T22, [ADR-0004](adr/0004-autocomplete-with-fetch.md)). A fetcher's failed load goes to the nearest route ErrorBoundary, so a `429` or `503` from `/api/search/suggestions` would replace the whole page; suggestions are optional and should fail soft. Still no server-state library.
 
 ### B8. ✅ Client state (theme, recent searches, favorites)
 Options: none (URL + localStorage) · React Context · Zustand.
@@ -75,7 +76,7 @@ Zod schemas protect against changes to the undocumented API.
 ### B11. ✅ Search interaction
 Options: debounced as-you-type · submit-only · both. Autocomplete via `/api/search/v4/suggestions`?
 **Answer:** Submit navigates to the results page. A debounced (~250 ms) autocomplete dropdown uses `/api/search/v4/suggestions` through a new allowlisted proxy route.
-**Follow-up:** add the suggestions route to the allowlist in [API.md](API.md) and the hard rules when implemented. Done: `GET /api/search/suggestions?q=` (T13).
+**Follow-up:** add the suggestions route to the allowlist in [API.md](API.md) and the hard rules when implemented. Done: `GET /api/search/suggestions?q=` (T13). The search box is done too (T22, `app/components/search/search-bar.tsx`): a plain `GET` form to `/search?q=` that works without JavaScript, in the header on every page but Explore and as a larger box on Explore. With JavaScript it is a combobox with suggestions after a 250 ms pause and at least 2 characters (picking one opens its repository page), and recent searches when the box is empty (E28).
 
 ### B12. ✅ Pagination style
 Separately for search results and for tags. Options: numbered pages · "Load more" · infinite scroll.
@@ -141,6 +142,7 @@ Options: table with sortable columns · cards. Expandable row for the per-archit
 ### D24. ✅ Repository overview
 Render `full_description` Markdown (sanitized)? Tabs "Overview | Tags" like Hub, or a single page?
 **Answer:** Tabs "Overview | Tags", each URL-addressable (`/r/{ns}/{repo}` and `/r/{ns}/{repo}/tags`). Overview renders sanitized `full_description` Markdown.
+**Follow-up:** Done (T24): `app/routes/repo.tsx` and its tabs, the same for `/_/{repo}`. The renderer is `react-markdown` + `remark-gfm` + `rehype-sanitize` (this questionnaire named none; RISKS 3.1 names `rehype-sanitize`). Raw HTML in a README is skipped rather than rendered, so HTML-only layout (e.g. `<p align="center">`) is lost; images from hosts outside the CSP `img-src` allowlist don't load. See [ARCHITECTURE](ARCHITECTURE.md#repository-page).
 
 ### D25. ✅ Loading, empty and error states
 Skeletons or spinners? Illustrations? Copy text for each state?

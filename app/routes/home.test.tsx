@@ -1,7 +1,7 @@
 /**
  * Explore page (T20, docs/API.md "Popular 10"): the loader against the real
  * cache, budget and upstream client (MSW fixtures), and the component's
- * states (grid, degraded banner, empty, retry).
+ * states (search box, grid, degraded banner, empty, retry).
  */
 import { render, screen } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
@@ -145,6 +145,19 @@ const POPULAR: SearchPage = {
 };
 
 describe('Home', () => {
+  it('renders the page heading', async () => {
+    renderHome({ popular: POPULAR, degraded: false });
+    expect(
+      await screen.findByRole('heading', { level: 1, name: "Danny's Dockers" }),
+    ).toBeInTheDocument();
+  });
+
+  it('has the search box', async () => {
+    renderHome({ popular: POPULAR, degraded: false });
+    const search = await screen.findByRole('search', { name: 'Search images' });
+    expect(search).toHaveAttribute('action', '/search');
+  });
+
   it('renders a card grid for the popular images', async () => {
     renderHome({ popular: POPULAR, degraded: false });
 

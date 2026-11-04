@@ -340,7 +340,9 @@ Every proxy route, in order (`handleApi` and `proxyJson`):
 | Upstream 404 from a search endpoint (it should always answer, so the endpoint changed) | 503 | `Retry-After` (5 s, or the budget's wait if longer), `Cache-Control: no-store` | `upstream_unavailable` |
 | Anything unexpected (logged server-side) | 500 | `Cache-Control: no-store` | `internal_error`, no details |
 
-`fullDescriptionMd` in `RepoDetails` is the raw upstream Markdown, sent as JSON; the UI must sanitize it before rendering (CLAUDE.md hard rule 5).
+`fullDescriptionMd` in `RepoDetails` is the raw upstream Markdown, sent as JSON; the UI must sanitize it before rendering (CLAUDE.md hard rule 5). The repository page renders it through `Markdown` (`app/components/markdown/markdown.tsx`).
+
+The repository page's loader (`/r/:ns/:repo`, `/_/:repo`) makes the same repository call as `GET /api/repos/:ns/:repo` through `app/server/repo.server.ts`, with the same cache key and TTL, so a page view and an API call for one repository share a single cache entry and upstream request.
 
 ### Param validation
 
