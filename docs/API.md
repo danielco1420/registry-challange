@@ -205,6 +205,7 @@ Observed in the recorded tags (`fixtures/dockerhub/tags-*.json`):
 - Some very old images have `os: ""`; Windows images have `os: "windows"` and an `os_version`.
 - `tag_last_pulled` is `null` for tags nobody pulled recently; `tag_status` and `images[].status` can be `inactive`.
 - We never saw `full_size: 0` live, but treat `0`/`null` as unknown size ("—", RISKS.md 4.3).
+- Every recorded `digest` (tag and `images[]`) is `sha256:` plus 64 lowercase hex characters. Digests go into a `docker pull …@digest` command people paste into a shell, so the normalizer drops any that isn't a well-formed `sha256:`/`sha512:` digest (`optionalDigest` in `app/server/normalize.server.ts`).
 
 ---
 
@@ -253,12 +254,12 @@ interface Tag {
   name: string;
   updatedAt: string;
   size: number;
-  digest?: string;
+  digest?: string;       // "sha256:…"; absent when missing or malformed
   pushedBy?: string;
   lastPulled?: string;
   // arch is the raw platform name ("amd64", "arm64"), as in `--platform linux/arm64/v8`,
   // unlike RepoSummary.archs, which holds search's display labels
-  // digest: that platform's manifest ("sha256:…"), absent when Docker Hub sends none
+  // digest: that platform's manifest ("sha256:…"), absent when missing or malformed
   images: { arch: string; variant?: string; os: string; size: number; digest?: string }[];
 }
 

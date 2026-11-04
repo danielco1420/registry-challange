@@ -252,8 +252,10 @@ function PlatformBreakdown({ tag, namespace, repo }: RepoRef & { tag: Tag }) {
           <tbody>
             {images.map((image, index) => (
               <PlatformRow
-                // A platform's digest is unique within the tag; else its position.
-                key={image.digest ?? `${platformLabel(image)}#${index}`}
+                // Docker Hub can list one manifest twice (e.g. arm64 with and
+                // without `v8`), so the digest alone isn't a unique key. The
+                // list never reorders, so the position keeps it unique.
+                key={`${image.digest ?? platformLabel(image)}#${index}`}
                 tagName={tag.name}
                 image={image}
                 namespace={namespace}

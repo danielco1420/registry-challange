@@ -108,30 +108,34 @@ describe('TagsTable: per-platform breakdown', () => {
     expect(screen.queryByRole('table', { name: 'Platforms of 1.27' })).not.toBeInTheDocument();
   });
 
-  it('is keyboard operable: a native, focusable button, and hidden Copy buttons are out of reach', async () => {
+  it('is keyboard operable: a native, tabbable button, and hidden Copy buttons are out of reach', async () => {
     renderTable([MULTI_ARCH]);
 
     const toggle = await screen.findByRole('button', { name: 'Platforms of 1.27' });
-    // A native <button type="button">: browsers activate it with Enter and Space.
+    // A native, enabled <button type="button"> in the tab order: browsers turn
+    // Enter and Space on it into a click, so it needs no key handler of its own.
+    // jsdom doesn't do that translation (and user-event isn't a dependency), so
+    // the activations below are the clicks a browser would dispatch.
     expect(toggle.tagName).toBe('BUTTON');
     expect(toggle).toHaveAttribute('type', 'button');
+    expect(toggle).toBeEnabled();
+    expect(toggle.tabIndex).toBe(0);
     toggle.focus();
     expect(toggle).toHaveFocus();
     // Collapsed: only the tag's own Copy button is reachable.
     expect(screen.getAllByRole('button', { name: /^Copy/ })).toHaveLength(1);
 
-    // What the browser does on Enter/Space on a focused button.
-    fireEvent.keyDown(toggle, { key: 'Enter' });
     fireEvent.click(toggle);
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    // Focus stays on the toggle, so a second Enter or Space collapses it again.
     expect(toggle).toHaveFocus();
     expect(
       screen.getByRole('button', { name: 'Copy docker pull by digest for 1.27 on linux/amd64' }),
     ).toBeInTheDocument();
 
-    fireEvent.keyDown(toggle, { key: ' ' });
     fireEvent.click(toggle);
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(toggle).toHaveFocus();
     expect(screen.getAllByRole('button', { name: /^Copy/ })).toHaveLength(1);
   });
 
@@ -197,6 +201,29 @@ describe('TagsTable: per-platform breakdown', () => {
     expect(writeText).toHaveBeenCalledExactlyOnceWith(
       `docker pull fluent/fluent-bit@${INDEX_DIGEST}`,
     );
+  });
+
+  it('lists every image, even two that share one digest', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const shared: Tag = {
+      ...MULTI_ARCH,
+      images: [
+        { arch: 'arm64', os: 'linux', size: 1, digest: ARM64_DIGEST },
+        { arch: 'arm64', variant: 'v8', os: 'linux', size: 1, digest: ARM64_DIGEST },
+      ],
+    };
+    renderTable([shared]);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Platforms of 1.27' }));
+
+    const platforms = screen.getByRole('table', { name: 'Platforms of 1.27' });
+    expect(
+      within(platforms)
+        .getAllByRole('rowheader')
+        .map((cell) => cell.textContent),
+    ).toEqual(['linux/arm64', 'linux/arm64/v8']);
+    expect(consoleError).not.toHaveBeenCalled();
+    consoleError.mockRestore();
   });
 
   it('expands each tag on its own, with distinct controlled regions', async () => {
