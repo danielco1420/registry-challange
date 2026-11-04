@@ -301,7 +301,9 @@ describe('Tags tab: load more', () => {
     expect(screen.queryByRole('button', { name: 'Load more tags' })).toBeNull();
     expect(screen.queryByText(/^Showing/)).toBeNull();
     expect(requests.map((r) => r.page)).toEqual([1, 2, 3]);
-  });
+    // 120 rows with two buttons each (platforms toggle, Copy): jsdom's role
+    // queries over them take a few seconds, more on a busy CI runner.
+  }, 15_000);
 
   it('keeps the current sort and filter when loading more', async () => {
     const { requests } = renderTags('/r/fluent/fluent-bit/tags?name=3&ordering=-name', (url) =>
