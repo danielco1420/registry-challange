@@ -200,7 +200,7 @@ Response (trimmed):
 
 Observed in the recorded tags (`fixtures/dockerhub/tags-*.json`):
 
-- `ordering=last_updated` returns the **newest** first and `-last_updated` the **oldest** first, the reverse of the usual convention.
+- `ordering=last_updated` returns the **newest** first and `-last_updated` the **oldest** first, the reverse of the usual convention. `name` is reversed too (checked live 2026-11-04): `ordering=name` lists **Z→A** and `-name` **A→Z**. Without `ordering`, tags come newest first, as with `last_updated`.
 - Official images list attestation manifests in `images[]` with `architecture: "unknown"` and `os: "unknown"` (8 of nginx's 16 entries). They aren't pullable platforms, so we drop them.
 - Some very old images have `os: ""`; Windows images have `os: "windows"` and an `os_version`.
 - `tag_last_pulled` is `null` for tags nobody pulled recently; `tag_status` and `images[].status` can be `inactive`.
@@ -341,6 +341,8 @@ Every proxy route, in order (`handleApi` and `proxyJson`):
 `fullDescriptionMd` in `RepoDetails` is the raw upstream Markdown, sent as JSON; the UI must sanitize it before rendering (CLAUDE.md hard rule 5). The repository page renders it through `Markdown` (`app/components/markdown/markdown.tsx`).
 
 The repository page's loader (`/r/:ns/:repo`, `/_/:repo`) makes the same repository call as `GET /api/repos/:ns/:repo` through `app/server/repo.server.ts`, with the same cache key and TTL, so a page view and an API call for one repository share a single cache entry and upstream request.
+
+The Tags tab's loader (`/r/:ns/:repo/tags`, `/_/:repo/tags`) does the same for tags through `app/server/tags.server.ts` (`tagsCacheKey`, `loadTags`, shared with `GET /api/repos/:ns/:repo/tags`): 50 tags per page, `ordering` always sent (default `last_updated`), `name` when set. "Load more" fetches `?page=N` of the same route, never more than one page per click and never past `page × 50 ≤ 1000` (the anonymous cap below). A `name` that fails the `name` rule below is an empty page without an upstream call, and an upstream 404 after page 1 is the end of the list.
 
 ### Param validation
 
