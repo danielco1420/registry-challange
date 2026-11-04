@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'vitest';
-import { formatCompactNumber, formatRelativeDate, formatSize } from './format';
+import { formatCompactNumber, formatNumber, formatRelativeDate, formatSize } from './format';
 
 const NOW = '2026-11-02T12:00:00.000Z';
 
@@ -78,6 +78,18 @@ describe('formatCompactNumber', () => {
   it('returns "—" for non-finite input', () => {
     assert.equal(formatCompactNumber(NaN), '—');
     assert.equal(formatCompactNumber(Infinity), '—');
+  });
+});
+
+describe('formatNumber', () => {
+  it('formats with grouping, without compacting', () => {
+    assert.equal(formatNumber(2189), '2,189');
+    assert.equal(formatNumber(1_234_567), '1,234,567');
+    assert.equal(formatNumber(0), '0');
+  });
+
+  it('returns "—" for non-finite input', () => {
+    assert.equal(formatNumber(NaN), '—');
   });
 });
 

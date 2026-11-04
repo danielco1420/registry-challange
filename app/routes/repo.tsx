@@ -1,5 +1,12 @@
 import { useTranslation } from 'react-i18next';
-import { NavLink, Outlet, useNavigation, useRevalidator } from 'react-router';
+import {
+  NavLink,
+  Outlet,
+  useLocation,
+  useNavigation,
+  useRevalidator,
+  type ShouldRevalidateFunctionArgs,
+} from 'react-router';
 
 import { RepoHeader } from '~/components/repo/repo-header';
 import type { RepoPageContext } from '~/components/repo/repo-page-context';
@@ -20,6 +27,27 @@ import type { Route } from './+types/repo';
  */
 export function loader({ request, params }: Route.LoaderArgs) {
   return loadRepoPage({ request, params });
+}
+
+/**
+ * A new sort or filter on the Tags tab, or switching tabs, stays on the same
+ * repository: its details don't need loading again. That includes the tag
+ * filter's `GET` form, whose submissions carry `formMethod: 'GET'`.
+ * Revalidation (the degraded banner's "Try again", after a mutation such as
+ * a `POST`) still runs.
+ */
+export function shouldRevalidate({
+  currentUrl,
+  nextUrl,
+  currentParams,
+  nextParams,
+  formMethod,
+  defaultShouldRevalidate,
+}: ShouldRevalidateFunctionArgs) {
+  const sameRepo = currentParams.ns === nextParams.ns && currentParams.repo === nextParams.repo;
+  const mutation = formMethod !== undefined && formMethod.toUpperCase() !== 'GET';
+  if (!mutation && sameRepo && currentUrl.href !== nextUrl.href) return false;
+  return defaultShouldRevalidate;
 }
 
 export function meta({ data }: Route.MetaArgs) {
@@ -44,16 +72,15 @@ export default function RepoPage({ loaderData }: Route.ComponentProps) {
   const { repo, degraded } = loaderData;
   const revalidator = useRevalidator();
   const navigation = useNavigation();
+  const location = useLocation();
   const basePath = repoPath(repo.namespace, repo.name);
 
-  // Leaving for another page (e.g. another repository): its loader is running.
-  // Switching tabs stays under `basePath` and loads nothing.
+  // Leaving for another page (e.g. another repository) or tab: its loader is
+  // running. A new sort or filter on the Tags tab keeps the path, and the tab
+  // shows its own pending state.
   const pathname = navigation.location?.pathname;
   const leaving =
-    navigation.state === 'loading' &&
-    pathname !== undefined &&
-    pathname !== basePath &&
-    !pathname.startsWith(`${basePath}/`);
+    navigation.state === 'loading' && pathname !== undefined && pathname !== location.pathname;
 
   const context: RepoPageContext = { repo, basePath };
   const tabClass = ({ isActive }: { isActive: boolean }) =>
