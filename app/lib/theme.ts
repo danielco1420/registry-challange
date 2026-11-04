@@ -45,8 +45,9 @@ const REDIRECT_BASE = 'http://localhost';
 
 /**
  * A same-origin path to redirect to after the no-JS form post, or `/`. Rejects
- * anything that could leave the site: absolute URLs, protocol-relative `//host`,
- * `/\host` (browsers treat `\` as `/`) and control characters. The result is
+ * anything that could leave the site: absolute URLs, protocol-relative `//host`
+ * (also once dot segments are resolved, as in `/.//host`), `/\host` (browsers
+ * treat `\` as `/`) and control characters. The result is
  * re-serialized by the URL parser, so non-ASCII is percent-encoded (a raw
  * `Location` header can't carry it, and the server would answer 500).
  */
@@ -62,7 +63,8 @@ export function safeRedirectPath(value: unknown): string {
   } catch {
     return '/';
   }
-  // Belt and braces: whatever the parser made of it must still be on our origin.
-  if (url.origin !== REDIRECT_BASE) return '/';
+  // Belt and braces: whatever the parser made of it must still be on our origin,
+  // and dot segments mustn't have collapsed it to `//host` (`/.//evil.example`).
+  if (url.origin !== REDIRECT_BASE || url.pathname.startsWith('//')) return '/';
   return url.pathname + url.search + url.hash;
 }
