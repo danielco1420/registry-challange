@@ -16,13 +16,20 @@
  * rethrown as is: the legacy endpoint is on the same host and would fail too.
  *
  * Callers wrap these in `getCached` (`upstream.server.ts`); both upstream
- * calls take a budget slot.
+ * calls take a budget slot. `getSearchPage` does that for `GET /api/search`'s
+ * cache key, and `loadSearchPage` is the results page's (`/search`) loader.
  */
-import type { Page, RepoSummary } from '../lib/dto';
+import type { Page, RepoSummary, SearchPage } from '../lib/dto';
 import type { SearchQuery } from '../lib/params';
-import { isSchemaMismatch, type DockerHubClient } from './dockerhub.server';
+import { parseSearchUrl, toSearchQuery, type SearchPageData } from '../lib/search-query';
+import { cacheKey } from './api.server';
+import { config } from './config.server';
+import { dockerHub, isSchemaMismatch, type DockerHubClient } from './dockerhub.server';
 import { LegacySearchResponseSchema, SearchV4ResponseSchema } from './dockerhub.schemas.server';
 import { toLegacySearchPage, toSearchPage } from './normalize.server';
+import { toPageErrorResponse } from './pageError.server';
+import { enforceRateLimit } from './rateLimit.server';
+import { getCached, type Cached } from './upstream.server';
 
 export type SearchSource = 'v4' | 'legacy';
 
@@ -90,5 +97,48 @@ export async function suggestRepositories(
     if (!isSchemaMismatch(error) || !canFallBack({ q })) throw error;
     warnFallback('suggestions', error.issuePath);
     return legacy(client, { q, ...paging });
+  }
+}
+
+/**
+ * The cache key of one search, shared by `GET /api/search` and the results
+ * page (`/search`), so the same query reads one entry whichever asks
+ * (CLAUDE.md hard rule 3). Every part comes from the validated query.
+ */
+export const searchCacheKey = ({ q, page, pageSize, sort, badge }: SearchQuery) =>
+  cacheKey('search', q, page, pageSize, sort, badge);
+
+/**
+ * One page of search results through the cache (`getCached`), with the legacy
+ * fallback. Throws `UpstreamUnavailableError` when nothing is cached and
+ * Docker Hub is failing or the budget is spent.
+ */
+export function getSearchPage(query: SearchQuery): Promise<Cached<SearchPage>> {
+  return getCached(searchCacheKey(query), config.cache.ttlSeconds.search, async () => {
+    const result = await searchRepositories(dockerHub, query);
+    return { ...result.page, source: result.source };
+  });
+}
+
+/**
+ * The results page's loader (`/search`, questionnaire B12, B13, E28):
+ *
+ * 1. counts the request against the per-client rate limit;
+ * 2. reads `q`, `sort`, `badge` and `page` from the URL (`parseSearchUrl`),
+ *    leniently: an invalid value falls back to its default instead of a 400,
+ *    and `page` never passes Docker Hub's anonymous 1000-result cap;
+ * 3. reads the page through the cache shared with `GET /api/search`. A stale
+ *    copy comes back with `degraded: true`; Docker Hub failing with nothing
+ *    cached is thrown as a page error (`toPageErrorResponse`, 503) for the
+ *    root `ErrorBoundary`, as is the per-client limit (429).
+ */
+export async function loadSearchPage({ request }: { request: Request }): Promise<SearchPageData> {
+  try {
+    enforceRateLimit(request);
+    const url = parseSearchUrl(new URL(request.url).searchParams);
+    const result = await getSearchPage(toSearchQuery(url));
+    return { ...url, results: result.value, degraded: result.degraded };
+  } catch (error) {
+    throw toPageErrorResponse(error);
   }
 }

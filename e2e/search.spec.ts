@@ -1,7 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 
-// `/search` (T23) and the repository pages (T24) don't exist yet, so these
-// navigations land on the "Page not found" page. Only the URL is checked.
+// These tests check where the search box navigates, not what the results page
+// shows: `/search` and the repository pages call Docker Hub from the server,
+// which the browser-side stubs below can't answer. The results page's states
+// are covered by `app/routes/search.test.tsx`.
 
 function searchBox(page: Page) {
   return page.getByRole('search', { name: 'Search images' });
