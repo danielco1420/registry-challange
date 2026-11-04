@@ -8,8 +8,9 @@ import type { Route } from './+types/api.repos.$ns.$repo.tags';
 /**
  * `GET /api/repos/:ns/:repo/tags?page=&pageSize=&ordering=&name=` → `Page<Tag>`.
  * Docker Hub also answers 404 for a page past the last one, so a `404` with
- * `page > 1` doesn't mean the repository is missing. Shares its cache entries
- * with the Tags tab (`app/server/tags.server.ts`).
+ * `page > 1` doesn't mean the repository is missing. Uses the Tags tab's cache
+ * keys (`app/server/tags.server.ts`), so a call with the tab's query
+ * (`pageSize=50` and an `ordering`) reads the same entry.
  */
 export function loader({ request, params }: Route.LoaderArgs) {
   return handleApi(request, () => {

@@ -242,6 +242,11 @@ describe('repository layout shouldRevalidate', () => {
     expect(shouldRevalidate(args(from, to))).toBe(false);
   });
 
+  it('skips the repository loader for the tag filter form (a GET submission)', () => {
+    const tags = '/r/fluent/fluent-bit/tags';
+    expect(shouldRevalidate(args(tags, `${tags}?name=al`, { formMethod: 'GET' }))).toBe(false);
+  });
+
   it('revalidates on "Try again" (same URL) and after a form post', () => {
     const tags = '/r/fluent/fluent-bit/tags';
     expect(shouldRevalidate(args(tags, tags))).toBe(true);

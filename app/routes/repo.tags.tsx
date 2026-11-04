@@ -183,7 +183,14 @@ function TagList({ first, state }: { first: Page<Tag>; state: TagsUrlState }) {
 
   const loading = fetcher.state !== 'idle';
   const failed =
-    !loading && answer && !answer.result.ok && answer.page === next ? answer.result : undefined;
+    !loading &&
+    answer &&
+    !answer.result.ok &&
+    answer.page === next &&
+    answer.ordering === state.ordering &&
+    answer.name === state.name
+      ? answer.result
+      : undefined;
 
   const rows: Tag[] = [];
   const seen = new Set<string>();
@@ -271,12 +278,17 @@ function TagFilter({
   const inputId = useId();
   const hintId = useId();
   const [draft, setDraft] = useState(name);
+  // The filter this box last put in the URL, until that navigation lands.
+  const [pushed, setPushed] = useState<string | null>(null);
   // The URL's filter changed elsewhere ("Clear filter", Back): show it,
-  // unless it's what's typed already (e.g. our own debounced update).
+  // unless it's what's typed already. When our own debounced update lands,
+  // keep the box as is: the user may have typed on while it loaded, and the
+  // effect below sends that next.
   const [shownName, setShownName] = useState(name);
   if (name !== shownName) {
     setShownName(name);
-    if (draft.trim() !== name) setDraft(name);
+    if (name !== pushed && draft.trim() !== name) setDraft(name);
+    setPushed(null);
   }
   const wanted = draft.trim();
   const valid = isValidTagFilter(wanted);
@@ -284,6 +296,7 @@ function TagFilter({
   useEffect(() => {
     if (wanted === name || !valid) return;
     const timer = setTimeout(() => {
+      setPushed(wanted);
       void navigate(tagsHref(basePath, { ordering, name: wanted }), {
         replace: true,
         preventScrollReset: true,

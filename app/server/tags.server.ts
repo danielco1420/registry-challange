@@ -1,8 +1,11 @@
 /**
  * Tag lists, shared by `GET /api/repos/:ns/:repo/tags` and the repository
- * page's Tags tab loader (`app/routes/repo.tags.tsx`), so both read the same
- * cache entry per page and a page view never costs a second upstream call
- * (CLAUDE.md hard rule 3).
+ * page's Tags tab loader (`app/routes/repo.tags.tsx`). Both build keys with
+ * `tagsCacheKey`, so the same query (page, page size, ordering, filter) reads
+ * one cache entry whichever asks (CLAUDE.md hard rule 3). The tab always asks
+ * for 50 per page with an explicit `ordering`, while the API route defaults to
+ * 25 and no `ordering`, so they share an entry only when the API call names
+ * the same values.
  */
 import * as v from 'valibot';
 

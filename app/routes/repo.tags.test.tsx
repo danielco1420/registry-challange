@@ -219,6 +219,29 @@ describe('Tags tab: name filter', () => {
     expect(filter()).toHaveValue(' alp ');
   });
 
+  it('keeps what was typed while an earlier filter was loading, then sends it', async () => {
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const { router, requests } = renderTags('/r/fluent/fluent-bit/tags', async (url) => {
+      if (url.name === 'alp') await gate;
+      return ok(pageOf(1, 3));
+    });
+    await table();
+
+    fireEvent.change(filter(), { target: { value: 'alp' } });
+    await waitFor(() => expect(requests.at(-1)).toMatchObject({ name: 'alp' }));
+    // Typed on while `?name=alp` is still loading.
+    fireEvent.change(filter(), { target: { value: 'alpine' } });
+    release();
+
+    await waitFor(() => expect(router.state.location.search).toBe('?name=alp'));
+    expect(filter()).toHaveValue('alpine');
+    await waitFor(() => expect(router.state.location.search).toBe('?name=alpine'));
+    expect(filter()).toHaveValue('alpine');
+  });
+
   it('starts from the URL’s filter', async () => {
     renderTags('/r/fluent/fluent-bit/tags?name=3.1', () => ok(pageOf(1, 3)));
     await table();

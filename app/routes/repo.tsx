@@ -31,8 +31,10 @@ export function loader({ request, params }: Route.LoaderArgs) {
 
 /**
  * A new sort or filter on the Tags tab, or switching tabs, stays on the same
- * repository: its details don't need loading again. Revalidation (the
- * degraded banner's "Try again", after a form post) still runs.
+ * repository: its details don't need loading again. That includes the tag
+ * filter's `GET` form, whose submissions carry `formMethod: 'GET'`.
+ * Revalidation (the degraded banner's "Try again", after a mutation such as
+ * a `POST`) still runs.
  */
 export function shouldRevalidate({
   currentUrl,
@@ -43,7 +45,8 @@ export function shouldRevalidate({
   defaultShouldRevalidate,
 }: ShouldRevalidateFunctionArgs) {
   const sameRepo = currentParams.ns === nextParams.ns && currentParams.repo === nextParams.repo;
-  if (formMethod === undefined && sameRepo && currentUrl.href !== nextUrl.href) return false;
+  const mutation = formMethod !== undefined && formMethod.toUpperCase() !== 'GET';
+  if (!mutation && sameRepo && currentUrl.href !== nextUrl.href) return false;
   return defaultShouldRevalidate;
 }
 

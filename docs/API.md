@@ -342,7 +342,7 @@ Every proxy route, in order (`handleApi` and `proxyJson`):
 
 The repository page's loader (`/r/:ns/:repo`, `/_/:repo`) makes the same repository call as `GET /api/repos/:ns/:repo` through `app/server/repo.server.ts`, with the same cache key and TTL, so a page view and an API call for one repository share a single cache entry and upstream request.
 
-The Tags tab's loader (`/r/:ns/:repo/tags`, `/_/:repo/tags`) does the same for tags through `app/server/tags.server.ts` (`tagsCacheKey`, `loadTags`, shared with `GET /api/repos/:ns/:repo/tags`): 50 tags per page, `ordering` always sent (default `last_updated`), `name` when set. "Load more" fetches `?page=N` of the same route, never more than one page per click and never past `page × 50 ≤ 1000` (the anonymous cap below). A `name` that fails the `name` rule below is an empty page without an upstream call, and an upstream 404 after page 1 is the end of the list.
+The Tags tab's loader (`/r/:ns/:repo/tags`, `/_/:repo/tags`) does the same for tags through `app/server/tags.server.ts` (`tagsCacheKey`, `loadTags`, shared with `GET /api/repos/:ns/:repo/tags`): 50 tags per page, `ordering` always sent (default `last_updated`), `name` when set. The API route defaults to 25 per page and no `ordering`, so the two share a cache entry only when an API call names the tab's values (`pageSize=50` and an `ordering`). "Load more" fetches `?page=N` of the same route, never more than one page per click and never past `page × 50 ≤ 1000` (the anonymous cap below). A `name` that fails the `name` rule below is an empty page without an upstream call, and an upstream 404 after page 1 is the end of the list.
 
 ### Param validation
 
