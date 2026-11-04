@@ -161,12 +161,25 @@
       "matchCount_other": "{{total}} tags match “{{name}}”",
       "table": {
         "caption": "Tags of {{name}}",
+        "details": "Platforms",
         "name": "Tag",
         "updated": "Last updated",
         "size": "Size",
         "pull": "Pull command"
       },
       "copyLabel": "Copy {{command}}",
+      "platforms": {
+        "toggle": "Platforms of {{tag}}",
+        "caption": "Platforms of {{tag}}",
+        "platform": "OS/Arch",
+        "digest": "Digest",
+        "size": "Size",
+        "pull": "Pull by digest",
+        "copyLabel": "Copy docker pull by digest for {{tag}} on {{platform}}",
+        "tagDigest": "Tag digest (all platforms):",
+        "copyTagLabel": "Copy docker pull by digest for {{tag}}, all platforms",
+        "empty": "Docker Hub lists no per-platform images for this tag."
+      },
       "loading": "Loading tags…",
       "loadMore": "Load more tags",
       "loadingMore": "Loading more tags…",
