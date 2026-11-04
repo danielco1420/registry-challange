@@ -76,6 +76,56 @@ describe('CopyButton', () => {
     expect(screen.getByRole('button')).toHaveTextContent('Copy');
   });
 
+  it('announces a repeated copy again with a fresh live-region node', async () => {
+    mockClipboard({ writeText: vi.fn().mockResolvedValue(undefined) });
+    render(<CopyButton value={COMMAND} />);
+    const status = screen.getByRole('status');
+
+    await click(screen.getByRole('button'));
+    const first = status.firstChild;
+    await click(screen.getByRole('button'));
+
+    expect(status).toHaveTextContent('Copied to clipboard.');
+    expect(status.firstChild).not.toBe(first);
+  });
+
+  it('counts the 2 s from the last of two overlapping copies', async () => {
+    vi.useFakeTimers();
+    const pending: (() => void)[] = [];
+    const writeText = vi.fn(
+      () => new Promise<void>((resolve) => pending.push(() => resolve(undefined))),
+    );
+    mockClipboard({ writeText });
+    render(<CopyButton value={COMMAND} />);
+
+    // Two clicks before either write finishes; they then resolve 1 s apart.
+    await click(screen.getByRole('button'));
+    await click(screen.getByRole('button'));
+    await act(async () => pending[0]!());
+    act(() => vi.advanceTimersByTime(1000));
+    await act(async () => pending[1]!());
+
+    act(() => vi.advanceTimersByTime(COPIED_MS - 1));
+    expect(screen.getByRole('button')).toHaveTextContent('Copied');
+    act(() => vi.advanceTimersByTime(1));
+    expect(screen.getByRole('button')).toHaveTextContent('Copy');
+  });
+
+  it('arms no timer when it unmounts while the write is pending', async () => {
+    vi.useFakeTimers();
+    let finish: () => void = () => {};
+    mockClipboard({
+      writeText: vi.fn(() => new Promise<void>((resolve) => (finish = () => resolve(undefined)))),
+    });
+    const { unmount } = render(<CopyButton value={COMMAND} />);
+
+    await click(screen.getByRole('button'));
+    unmount();
+    await act(async () => finish());
+
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it.each([
     ['unavailable (no secure context)', undefined],
     ['without writeText', {}],

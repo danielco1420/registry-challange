@@ -159,6 +159,33 @@ describe('RepoLogo', () => {
     expect(screen.getByText('FB')).toBeInTheDocument();
   });
 
+  it.each([
+    ['rejects (broken)', () => Promise.reject(new DOMException('Broken', 'EncodingError')), 0],
+    ['resolves (an SVG without intrinsic size)', () => Promise.resolve(), 1],
+  ])(
+    'asks decode() about a 0-width logo when the browser has it: %s',
+    async (_case, decode, kept) => {
+      const requested = publisherApi(() => HttpResponse.json({ error: {} }, { status: 404 }));
+      vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(true);
+      vi.spyOn(HTMLImageElement.prototype, 'naturalWidth', 'get').mockReturnValue(0);
+      // jsdom has no `decode()`; give it one for this test only.
+      Object.defineProperty(HTMLImageElement.prototype, 'decode', {
+        value: decode,
+        configurable: true,
+      });
+      try {
+        const { container } = render(
+          <RepoLogo namespace="fluent" name="fluent-bit" logoUrl={LOGO} />,
+        );
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        expect(images(container)).toHaveLength(kept);
+        expect(requested).toEqual(kept ? [] : ['fluent']);
+      } finally {
+        Reflect.deleteProperty(HTMLImageElement.prototype, 'decode');
+      }
+    },
+  );
+
   it('keeps a logo that loaded before hydration', () => {
     vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(true);
     vi.spyOn(HTMLImageElement.prototype, 'naturalWidth', 'get').mockReturnValue(48);

@@ -59,11 +59,17 @@ export function RepoLogo({
   const src = usable(logoUrl) ? logoUrl : usable(avatar) ? avatar : undefined;
 
   // An image that failed before hydration fired its `error` event before React
-  // was listening. It's `complete` but has no pixels, so treat it as failed.
+  // was listening. It's `complete` but has no pixels. An SVG without intrinsic
+  // dimensions also reports `naturalWidth` 0 when it loaded fine, so where the
+  // browser has `decode()` (it rejects only for a broken image), ask it first.
   useEffect(() => {
     const image = imageRef.current;
-    if (src && image?.complete && image.naturalWidth === 0) {
-      setFailed((previous) => [...previous, src]);
+    if (!src || !image?.complete || image.naturalWidth !== 0) return;
+    const markFailed = () => setFailed((previous) => [...previous, src]);
+    if (typeof image.decode === 'function') {
+      void image.decode().catch(markFailed);
+    } else {
+      markFailed();
     }
   }, [src]);
 
