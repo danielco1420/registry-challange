@@ -16,14 +16,16 @@ export interface FavoriteButtonProps {
  * removes it from the `localStorage` favorites kept by `useFavorites`.
  *
  * A native `<button>`, not a link, so it never fights the stretched link on
- * `RepoCard`. `aria-pressed` and the label switch with the state, so screen
- * readers hear "Add {name} to favorites" / "Remove {name} from favorites".
+ * `RepoCard`. Only `aria-pressed` carries the state: the label stays
+ * "Favorite {name}" either way, so screen readers hear "Favorite nginx,
+ * toggle button, pressed" rather than a label that contradicts the pressed
+ * state (WAI-ARIA APG: a toggle's label must not change with its state).
  */
 export function FavoriteButton({ repo, className }: FavoriteButtonProps) {
   const { t } = useTranslation();
   const { isFavorite, toggle } = useFavorites();
   const favorited = isFavorite(repo.id);
-  const label = t(favorited ? 'favorites.remove' : 'favorites.add', { name: repo.displayName });
+  const label = t('favorites.toggle', { name: repo.displayName });
 
   return (
     <Button

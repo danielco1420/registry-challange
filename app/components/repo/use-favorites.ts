@@ -47,7 +47,11 @@ function subscribe(onChange: () => void): () => void {
   listeners.add(onChange);
   const onStorage = (event: StorageEvent) => {
     // `key` is null when another tab cleared all of storage.
-    if (event.key === FAVORITES_KEY || event.key === null) onChange();
+    if (event.key !== FAVORITES_KEY && event.key !== null) return;
+    // Another tab managed to write, so storage is the truth again: drop our
+    // in-memory fallback instead of hiding (and later overwriting) its list.
+    memoryList = null;
+    onChange();
   };
   window.addEventListener('storage', onStorage);
   return () => {
@@ -77,7 +81,7 @@ export interface Favorites {
   favorites: readonly FavoriteRepo[];
   /** Whether `id` (`namespace/name`) is favorited. */
   isFavorite: (id: string) => boolean;
-  /** Adds `repo` if it isn't favorited yet, else removes it. */
+  /** Adds `repo` (just its `FavoriteRepo` fields) if it isn't favorited yet, else removes it. */
   toggle: (repo: FavoriteRepo) => void;
 }
 
@@ -89,9 +93,6 @@ export function useFavorites(): Favorites {
       isFavorited(current, repo.id) ? removeFavorite(current, repo.id) : addFavorite(current, repo),
     );
   }, []);
-  const isFavorite = useCallback(
-    (id: string) => favorites.some((repo) => repo.id === id),
-    [favorites],
-  );
+  const isFavorite = useCallback((id: string) => isFavorited(favorites, id), [favorites]);
   return { favorites, isFavorite, toggle };
 }

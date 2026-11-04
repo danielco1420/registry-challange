@@ -6,8 +6,16 @@
  *
  * We store a small snapshot of the repository (the same fields `RepoCard`
  * needs) rather than just its id, so the Explore favorites section can
- * render the card grid without an extra Docker Hub call. A stale
- * description or logo after an upstream change is an accepted tradeoff.
+ * render the card grid without an extra Docker Hub call. Only those fields
+ * are kept (`toFavorite`): callers often pass a full `RepoSummary` or
+ * `RepoDetails`, whose stats and `fullDescriptionMd` would bloat storage.
+ *
+ * A stale description, logo or badge after an upstream change is an accepted
+ * tradeoff: unfavoriting and favoriting again refreshes it. We don't refresh
+ * snapshots automatically, because the repository page and search build
+ * these fields from different upstream calls (a deep-linked repository page
+ * has no logo and only an official / none badge), so a silent refresh could
+ * replace a good snapshot with a poorer one.
  */
 
 import { BADGE_VALUES, type RepoSummary } from './dto';
@@ -41,6 +49,18 @@ function isFavoriteRepo(value: unknown): value is FavoriteRepo {
   );
 }
 
+/**
+ * Just the `FavoriteRepo` fields of `repo`, which is often a whole
+ * `RepoSummary` or `RepoDetails`. A logo that isn't `https:` is dropped, as
+ * the server's normalizers do.
+ */
+export function toFavorite(repo: FavoriteRepo): FavoriteRepo {
+  const { id, namespace, name, displayName, owner, description, logoUrl, badge } = repo;
+  const favorite: FavoriteRepo = { id, namespace, name, displayName, owner, description, badge };
+  if (logoUrl?.startsWith('https://')) favorite.logoUrl = logoUrl;
+  return favorite;
+}
+
 /** Case-sensitive duplicates by `id` dropped, first occurrence kept, at most `max` entries. */
 function dedupe(repos: readonly FavoriteRepo[], max: number): FavoriteRepo[] {
   const seen = new Set<string>();
@@ -69,16 +89,16 @@ export function parseFavorites(raw: string | null): FavoriteRepo[] {
     return [];
   }
   if (!Array.isArray(value)) return [];
-  return dedupe(value.filter(isFavoriteRepo), MAX_FAVORITES);
+  return dedupe(value.filter(isFavoriteRepo).map(toFavorite), MAX_FAVORITES);
 }
 
-/** `repo` moved (or added) to the front, deduplicated by id and capped. */
+/** `repo`'s snapshot moved (or added) to the front, deduplicated by id and capped. */
 export function addFavorite(
   list: readonly FavoriteRepo[],
   repo: FavoriteRepo,
   max = MAX_FAVORITES,
 ): FavoriteRepo[] {
-  return dedupe([repo, ...list], max);
+  return dedupe([toFavorite(repo), ...list], max);
 }
 
 /** `list` with `id` removed; unchanged if it wasn't there. */

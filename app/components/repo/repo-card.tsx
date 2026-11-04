@@ -27,8 +27,8 @@ export interface RepoCardProps {
  * The name is the card's main link, stretched over the whole card, so the
  * card is reached in one tab stop and the link's name is just the
  * repository name. The favorite toggle (T21) is the card's second, separate
- * tab stop, overlaid top-right so it stays clickable above the stretched
- * link. A missing description reads "No description"; a missing logo falls
+ * tab stop, after the link in tab order and overlaid top-right so it stays
+ * clickable above the stretched link. A missing description reads "No description"; a missing logo falls
  * back to the publisher's avatar, then initials (`RepoLogo`).
  */
 export function RepoCard({ repo, headingLevel = 3, className }: RepoCardProps) {
@@ -44,7 +44,6 @@ export function RepoCard({ repo, headingLevel = 3, className }: RepoCardProps) {
         className,
       )}
     >
-      <FavoriteButton repo={repo} className="absolute right-3 top-3 z-10" />
       <div className="flex items-start gap-3 pr-8">
         <RepoLogo namespace={repo.namespace} name={repo.name} logoUrl={repo.logoUrl} />
         <div className="min-w-0 flex-1">
@@ -78,6 +77,9 @@ export function RepoCard({ repo, headingLevel = 3, className }: RepoCardProps) {
           <RepoBadge badge={repo.badge} />
         </div>
       )}
+      {/* Last in the DOM so Tab reaches the card's link first, then its heart;
+          absolutely positioned, so it still shows top-right. */}
+      <FavoriteButton repo={repo} className="absolute right-3 top-3 z-10" />
     </article>
   );
 }

@@ -92,15 +92,25 @@ describe('RepoHeader', () => {
   it('has a favorite toggle in the title row', () => {
     render(<RepoHeader repo={NGINX} now={NOW} />);
 
-    const toggle = screen.getByRole('button', { name: 'Add nginx to favorites' });
+    const toggle = screen.getByRole('button', { name: 'Favorite nginx' });
     fireEvent.click(toggle);
 
-    expect(screen.getByRole('button', { name: 'Remove nginx from favorites' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Favorite nginx' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
-    expect(JSON.parse(localStorage.getItem(FAVORITES_KEY) ?? '[]')).toMatchObject([
-      { id: 'library/nginx' },
+    // Only the card's fields are kept, not the page's stats.
+    expect(JSON.parse(localStorage.getItem(FAVORITES_KEY) ?? '[]')).toEqual([
+      {
+        id: 'library/nginx',
+        namespace: 'library',
+        name: 'nginx',
+        displayName: 'nginx',
+        owner: 'library',
+        description: 'Official build of Nginx.',
+        logoUrl: 'https://d1q6f0aelx0por.cloudfront.net/product-logos/nginx.png',
+        badge: 'official',
+      },
     ]);
   });
 });

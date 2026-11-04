@@ -157,7 +157,6 @@
   },
   "favorites": {
     "heading": "Favorites",
-    "add": "Add {{name}} to favorites",
-    "remove": "Remove {{name}} from favorites"
+    "toggle": "Favorite {{name}}"
   }
 }

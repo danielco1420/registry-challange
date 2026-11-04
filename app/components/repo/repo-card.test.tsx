@@ -62,17 +62,28 @@ describe('RepoCard', () => {
   it('has a favorite toggle, independent of the card link', async () => {
     renderCard(NGINX);
 
-    const toggle = await screen.findByRole('button', { name: 'Add nginx to favorites' });
+    const toggle = await screen.findByRole('button', { name: 'Favorite nginx' });
     expect(toggle).toHaveAttribute('aria-pressed', 'false');
 
     fireEvent.click(toggle);
 
-    expect(
-      await screen.findByRole('button', { name: 'Remove nginx from favorites' }),
-    ).toHaveAttribute('aria-pressed', 'true');
+    expect(await screen.findByRole('button', { name: 'Favorite nginx' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     expect(JSON.parse(localStorage.getItem(FAVORITES_KEY) ?? '[]')).toEqual([NGINX]);
     // Still a single link: the toggle is a separate button, not a link.
     expect(screen.getAllByRole('link')).toHaveLength(1);
+  });
+
+  it('puts the favorite toggle after the card link in tab order', async () => {
+    renderCard(NGINX);
+
+    const link = await screen.findByRole('link', { name: 'nginx' });
+    const toggle = screen.getByRole('button', { name: 'Favorite nginx' });
+    // Neither sets a tabindex, so tab order is DOM order.
+    expect(link.compareDocumentPosition(toggle) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(toggle).not.toHaveAttribute('tabindex');
   });
 
   it('links to /r/{ns}/{repo} and shows the full name for other repositories', async () => {

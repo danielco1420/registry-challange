@@ -6,6 +6,7 @@ import {
   MAX_FAVORITES,
   parseFavorites,
   removeFavorite,
+  toFavorite,
 } from './favorites';
 import type { FavoriteRepo } from './favorites';
 
@@ -23,7 +24,35 @@ function repo(id: string, overrides: Partial<FavoriteRepo> = {}): FavoriteRepo {
   };
 }
 
+describe('toFavorite', () => {
+  it('keeps only the card fields of a whole repository', () => {
+    const details = {
+      ...repo('library/nginx', { logoUrl: 'https://example.com/nginx.png' }),
+      pulls: 1,
+      stars: 2,
+      fullDescriptionMd: '# A long README',
+    };
+    expect(toFavorite(details)).toEqual(
+      repo('library/nginx', { logoUrl: 'https://example.com/nginx.png' }),
+    );
+  });
+
+  it('drops a logo that is not https:', () => {
+    expect(toFavorite(repo('library/nginx', { logoUrl: 'http://example.com/a.png' }))).toEqual(
+      repo('library/nginx'),
+    );
+    expect(
+      toFavorite(repo('library/nginx', { logoUrl: 'javascript:alert(1)' })),
+    ).not.toHaveProperty('logoUrl');
+  });
+});
+
 describe('addFavorite', () => {
+  it('stores the snapshot, not the extra fields it was given', () => {
+    const [added] = addFavorite([], { ...repo('library/nginx'), pulls: 1 } as FavoriteRepo);
+    expect(added).toEqual(repo('library/nginx'));
+  });
+
   it('puts the repo first', () => {
     expect(addFavorite([repo('library/redis')], repo('library/nginx'))).toEqual([
       repo('library/nginx'),
@@ -78,6 +107,11 @@ describe('parseFavorites', () => {
   it('reads a stored list', () => {
     const list = [repo('library/nginx'), repo('library/redis')];
     expect(parseFavorites(JSON.stringify(list))).toEqual(list);
+  });
+
+  it('strips fields beyond the snapshot from an older stored list', () => {
+    const raw = JSON.stringify([{ ...repo('library/nginx'), fullDescriptionMd: '# README' }]);
+    expect(parseFavorites(raw)).toEqual([repo('library/nginx')]);
   });
 
   it.each([
