@@ -6,8 +6,12 @@ import { dockerHub } from '~/server/dockerhub.server';
 import { searchRepositories } from '~/server/search.server';
 import type { Route } from './+types/api.popular';
 
-/** The 10 most pulled official images (docs/API.md, "Popular 10"). */
-const POPULAR_QUERY: SearchQuery = {
+/**
+ * The 10 most pulled official images (docs/API.md, "Popular 10"). Shared with
+ * the Explore page loader (`app/routes/home.tsx`), so the page and this route
+ * can't drift.
+ */
+export const POPULAR_QUERY: SearchQuery = {
   q: '',
   page: 1,
   pageSize: 10,
