@@ -6,6 +6,18 @@ export default [
   // Theme toggle: sets the theme cookie (POST only). Not a Docker Hub route.
   route('theme', 'routes/theme.ts'),
 
+  // Repository page (questionnaire C14, D24): `/r/{ns}/{repo}`, and `/_/{repo}`
+  // for official images (`/r/library/{repo}` redirects there). Both share the
+  // same modules, so each route needs its own id. Tabs: Overview (index), Tags.
+  route('r/:ns/:repo', 'routes/repo.tsx', { id: 'repo' }, [
+    index('routes/repo._index.tsx', { id: 'repo-overview' }),
+    route('tags', 'routes/repo.tags.tsx', { id: 'repo-tags' }),
+  ]),
+  route('_/:repo', 'routes/repo.tsx', { id: 'official-repo' }, [
+    index('routes/repo._index.tsx', { id: 'official-repo-overview' }),
+    route('tags', 'routes/repo.tags.tsx', { id: 'official-repo-tags' }),
+  ]),
+
   // Docker Hub proxy: the allowlist (docs/API.md, "Proxy routes"). Nothing else is forwarded.
   route('api/popular', 'routes/api.popular.ts'),
   route('api/search', 'routes/api.search.ts'),
