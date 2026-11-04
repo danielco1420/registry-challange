@@ -101,6 +101,14 @@ export function formatCompactNumber(value: number): string {
   return compactNumberFormatter.format(value);
 }
 
+const numberFormatter = new Intl.NumberFormat(LOCALE);
+
+/** Exact number with grouping, e.g. `2189` -> `"2,189"`. `NaN`/non-finite -> `"—"`. */
+export function formatNumber(value: number): string {
+  if (!Number.isFinite(value)) return '—';
+  return numberFormatter.format(value);
+}
+
 // ---------------------------------------------------------------------------
 // Sizes
 // ---------------------------------------------------------------------------

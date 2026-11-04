@@ -93,7 +93,40 @@
       }
     },
     "tags": {
-      "placeholder": "The tag list lands in a later task."
+      "filter": {
+        "label": "Filter tags by name",
+        "placeholder": "Filter by name, e.g. alpine",
+        "submit": "Filter",
+        "invalid": "Tag names use only letters, digits, “_”, “.” and “-”."
+      },
+      "count_one": "{{total}} tag",
+      "count_other": "{{total}} tags",
+      "matchCount_one": "{{total}} tag matches “{{name}}”",
+      "matchCount_other": "{{total}} tags match “{{name}}”",
+      "table": {
+        "caption": "Tags of {{name}}",
+        "name": "Tag",
+        "updated": "Last updated",
+        "size": "Size",
+        "pull": "Pull command"
+      },
+      "copyLabel": "Copy {{command}}",
+      "loading": "Loading tags…",
+      "loadMore": "Load more tags",
+      "loadingMore": "Loading more tags…",
+      "shown": "Showing {{shown}} of {{total}}.",
+      "capped": "Docker Hub lists only the first {{max}} tags without sign-in. Filter by name to find the others.",
+      "loadMoreError": "Couldn't load more tags.",
+      "empty": {
+        "title": "No tags yet",
+        "description": "This repository has no tags to pull yet. Its overview may say how to get the image.",
+        "action": "Back to overview"
+      },
+      "noMatch": {
+        "title": "No tags match “{{name}}”",
+        "description": "Check the spelling, or clear the filter to see every tag.",
+        "action": "Clear filter"
+      }
     },
     "badge": {
       "official": "Official Image",
