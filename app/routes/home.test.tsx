@@ -163,7 +163,7 @@ describe('Home', () => {
 
     expect(await screen.findByRole('link', { name: 'nginx' })).toHaveAttribute('href', '/_/nginx');
     expect(screen.getByRole('link', { name: 'redis' })).toHaveAttribute('href', '/_/redis');
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
   });
 
   it('shows the degraded banner when the loader flagged stale data', async () => {
