@@ -281,6 +281,7 @@ interface Publisher {
 interface ApiErrorBody {
   error: { code: 'invalid_params' | 'not_found' | 'method_not_allowed' | 'rate_limited' | 'upstream_unavailable' | 'internal_error';
            message: string; };   // a 400 also has issues: { param, message }[]
+  retryAfterSeconds?: number;     // a 429 only: same as Retry-After
 }
 
 const pullCommand = (ns: string, repo: string, tag: string) =>
@@ -323,7 +324,7 @@ The proxy never forwards arbitrary paths or URLs. Any other `/api/*` path, with 
 
 Every proxy route, in order (`handleApi` and `proxyJson`):
 
-1. **Per-client rate limit** (`enforceRateLimit`): over the limit, `429` `rate_limited` with `Retry-After`.
+1. **Per-client rate limit** (`enforceRateLimit`): over the limit, `429` `rate_limited` with `Retry-After`; the body also has `retryAfterSeconds` (same value), since a page's error boundary can't read headers.
 2. **Params** validated with the schemas below: `400` `invalid_params` with `issues`, nothing sent upstream.
 3. **Cached read** through `getCached` with the TTL above. The cache key holds every validated param that changes the answer (after trimming and defaults, so `?q=%20nginx` and `?q=nginx` share an entry).
 4. **Answer:**
