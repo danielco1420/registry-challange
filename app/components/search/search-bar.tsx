@@ -5,13 +5,12 @@ import { Form, useLocation, useNavigate } from 'react-router';
 import { Button } from '~/components/ui/button';
 import { normalizeQuery } from '~/lib/recent-searches';
 import { repoPath } from '~/lib/repo-path';
+// The search results page (`app/routes/search.tsx`). The form submits `q` there.
+import { SEARCH_PATH } from '~/lib/search-query';
 import { cn } from '~/lib/utils';
 
 import { useRecentSearches } from './use-recent-searches';
 import { type Suggestion, useSuggestions } from './use-suggestions';
-
-/** The search results page (T23). The form submits `q` here. */
-export const SEARCH_PATH = '/search';
 
 /** Same cap as the `q` param schema (`app/lib/params.ts`). */
 const MAX_QUERY_LENGTH = 100;

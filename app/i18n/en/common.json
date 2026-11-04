@@ -66,6 +66,55 @@
     "recent": {
       "label": "Recent searches",
       "clear": "Clear recent searches"
+    },
+    "results": {
+      "title": "Results for “{{query}}”",
+      "titleAll": "All images",
+      "meta": {
+        "title": "“{{query}}” search results | {{brand}}",
+        "titleAll": "Search images | {{brand}}"
+      },
+      "count_one": "{{total}} result",
+      "count_other": "{{total}} results",
+      "range": "Showing {{from}}–{{to}} of {{total}} results",
+      "capped": "Docker Hub lists only the first {{max}} results without sign-in. Add words to your search or a filter to find the others.",
+      "loading": "Loading results…",
+      "legacy": {
+        "title": "Showing basic results.",
+        "description": "Docker Hub's full search isn't answering as expected, so these results are in best-match order and some details, such as logos, are missing."
+      },
+      "sort": {
+        "label": "Sort by",
+        "relevance": "Best match",
+        "pulls": "Most pulls",
+        "stars": "Most stars",
+        "updated": "Recently updated"
+      },
+      "badge": {
+        "label": "Show",
+        "all": "All images",
+        "official": "Official Images",
+        "verified_publisher": "Verified Publishers",
+        "open_source": "Sponsored OSS"
+      },
+      "empty": {
+        "title": "No results for “{{query}}”",
+        "titleAll": "No results",
+        "description": "Check the spelling or try fewer words.",
+        "descriptionFiltered": "Check the spelling, try fewer words, or clear the filters.",
+        "clearFilters": "Clear filters"
+      },
+      "pastEnd": {
+        "title": "No results on this page",
+        "description": "This search has fewer pages. Its results start on page 1.",
+        "action": "Go to page 1"
+      },
+      "pagination": {
+        "label": "Pages of results",
+        "previous": "Previous",
+        "next": "Next",
+        "page": "Page {{page}}"
+      }
     }
   },
   "shell": {

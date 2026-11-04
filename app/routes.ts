@@ -6,6 +6,9 @@ export default [
   // Theme toggle: sets the theme cookie (POST only). Not a Docker Hub route.
   route('theme', 'routes/theme.ts'),
 
+  // Search results (questionnaire B12, B13, E28): `/search?q=&sort=&badge=&page=`.
+  route('search', 'routes/search.tsx'),
+
   // Repository page (questionnaire C14, D24): `/r/{ns}/{repo}`, and `/_/{repo}`
   // for official images (`/r/library/{repo}` redirects there). Both share the
   // same modules, so each route needs its own id. Tabs: Overview (index), Tags.
