@@ -141,6 +141,7 @@ Options: table with sortable columns · cards. Expandable row for the per-archit
 ### D24. ✅ Repository overview
 Render `full_description` Markdown (sanitized)? Tabs "Overview | Tags" like Hub, or a single page?
 **Answer:** Tabs "Overview | Tags", each URL-addressable (`/r/{ns}/{repo}` and `/r/{ns}/{repo}/tags`). Overview renders sanitized `full_description` Markdown.
+**Follow-up:** Done (T24): `app/routes/repo.tsx` and its tabs, the same for `/_/{repo}`. The renderer is `react-markdown` + `remark-gfm` + `rehype-sanitize` (this questionnaire named none; RISKS 3.1 names `rehype-sanitize`). Raw HTML in a README is skipped rather than rendered, so HTML-only layout (e.g. `<p align="center">`) is lost; images from hosts outside the CSP `img-src` allowlist don't load. See [ARCHITECTURE](ARCHITECTURE.md#repository-page).
 
 ### D25. ✅ Loading, empty and error states
 Skeletons or spinners? Illustrations? Copy text for each state?

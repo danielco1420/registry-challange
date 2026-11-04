@@ -29,11 +29,11 @@ Why a proxy: Docker Hub sends no CORS headers. See [ADR-0001](adr/0001-backend-p
 
 ## Data flow: Repository details
 
-1. User opens `/r/{ns}/{repo}`.
-2. UI requests `/api/repos/{ns}/{repo}` and `/api/repos/{ns}/{repo}/tags?page=1`.
-3. Proxy validates params and checks the cache. On a miss, it calls upstream with single-flight.
+1. User opens `/r/{ns}/{repo}` (or `/_/{repo}` for an official image; `/r/library/{repo}[/…]` answers a 301 to it, query kept).
+2. The page's layout loader (`app/routes/repo.tsx` → `loadRepoPage` in `app/server/repo.server.ts`) applies the per-client rate limit, validates the names (an invalid one is "repository not found", with no upstream call) and reads the details through `getCached` with the **same cache key** as `/api/repos/{ns}/{repo}`, so the page and the proxy route share one entry. The Tags tab will fetch `/api/repos/{ns}/{repo}/tags` (T25).
+3. On a miss, the upstream client calls Docker Hub with single-flight.
 4. The upstream JSON is parsed with Valibot, normalized into DTOs, cached, and returned.
-5. UI renders: skeleton, then content, or an error/empty state.
+5. UI renders the content, or an error/empty state (see "Repository page" below).
 
 ## Caching
 
@@ -78,6 +78,15 @@ Shared by Explore and the repository page (questionnaire D22, D27; [RISKS](RISKS
 - `RepoBadge` (`app/components/repo/repo-badge.tsx`) on the shadcn `Badge` (`app/components/ui/badge.tsx`): "Official Image", "Verified Publisher", "Sponsored OSS", "Hardened Image"; nothing for `none`.
 - `RepoLogo` (`app/components/repo/repo-logo.tsx`): logo, then the publisher's avatar, then initials (`app/lib/initials.ts`). Images get `referrerpolicy="no-referrer"` and `alt=""` (the name is always beside them). The server renders the logo, or the initials when there's none. The avatar lookup (`GET /api/publishers/:name`) runs in the browser, and only when the logo is missing or fails to load. Lookups are shared per publisher across the page (`use-publisher-avatar.ts`; a failed one is retried by the next mount), and the initials show while one is pending or after it fails. A caller that already has `Publisher.avatarUrl` passes it as `avatarUrl` (`null` for none) and no lookup happens. A logo that broke before hydration (`complete` with `naturalWidth` 0, and `decode()` rejects, so an SVG without intrinsic size isn't mistaken for a broken one) also counts as failed.
 - `CopyButton` (`app/components/copy/copy-button.tsx`): `navigator.clipboard.writeText`, then "Copied ✓" for 2 s and "Copied to clipboard." in a polite live region. When the Clipboard API is missing (insecure context) or rejects, a read-only input with the text appears, focused and selected, and the live region says to press Ctrl+C.
+- `RepoHeader` (`app/components/repo/repo-header.tsx`): the repository page's header. Logo, name (the page's `h1`), owner (skipped for official images), description, badge, "Archived", last updated (relative, absolute on hover), pulls and stars.
+
+## Repository page
+
+Routes (questionnaire C14, D24): `r/:ns/:repo` and `_/:repo` in `app/routes.ts` share one layout module (`app/routes/repo.tsx`) under distinct route ids, each with an Overview index child (`repo._index.tsx`) and a `tags` child (`repo.tags.tsx`, a placeholder until T25). The layout renders `RepoHeader`, the "Overview | Tags" `nav` (`NavLink`s, so the current tab gets `aria-current="page"`) and the tab, which reads the repository from `<Outlet context>` (`useRepoPage()`, `app/components/repo/repo-page-context.ts`). Switching tabs loads nothing; leaving for another repository shows `Loading` in place of the tab.
+
+States: a missing repository or an invalid name is "repository not found" (404); Docker Hub failing with nothing cached is "unavailable" (503) and the per-client limit "rate limited" (429), all thrown as page errors and rendered by the root `ErrorBoundary`. A stale copy renders with the `DegradedBanner`. An empty `full_description` shows an `Empty` state pointing to the Tags tab.
+
+Overview Markdown goes through `Markdown` (`app/components/markdown/markdown.tsx`; [RISKS](RISKS.md) 3.1): `react-markdown` with `remark-gfm` and `rehype-sanitize` (GitHub's schema). Raw HTML in the source is skipped, never parsed. URLs pass `safeUrl` (`app/lib/safe-url.ts`): links keep only `https:`, `http:` and `mailto:`, images only `https:`; anything else, including relative URLs, is dropped. Links get `rel="noopener noreferrer nofollow"`; images are lazy, sent no referrer and capped at the column width (the CSP's `img-src` still blocks hosts outside `IMAGE_HOSTS`, so e.g. `raw.githubusercontent.com` images don't load). Headings shift down one level under the page's `h1`. Long words wrap, and code blocks and tables scroll inside their own box, so a large README can't widen the page.
 
 ## Styling
 
