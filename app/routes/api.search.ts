@@ -3,8 +3,7 @@ import { SearchQuerySchema, searchParamsToObject } from '~/lib/params';
 import { parseOrThrow } from '~/lib/validate';
 import { handleApi, proxyJson, rejectWrite, searchParamsOf } from '~/server/api.server';
 import { config } from '~/server/config.server';
-import { dockerHub } from '~/server/dockerhub.server';
-import { searchCacheKey, searchRepositories } from '~/server/search.server';
+import { loadSearchResults, searchCacheKey } from '~/server/search.server';
 import type { Route } from './+types/api.search';
 
 /**
@@ -17,10 +16,7 @@ export function loader({ request }: Route.LoaderArgs) {
     return proxyJson<SearchPage>({
       key: searchCacheKey(query),
       ttlSeconds: config.cache.ttlSeconds.search,
-      load: async () => {
-        const result = await searchRepositories(dockerHub, query);
-        return { ...result.page, source: result.source };
-      },
+      load: () => loadSearchResults(query),
     });
   });
 }

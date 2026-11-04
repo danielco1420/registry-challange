@@ -207,7 +207,9 @@ function ResultsView({
 
   const last = lastSearchPage(total, pageSize);
   const from = (page - 1) * pageSize + 1;
-  const to = Math.min(page * pageSize, total);
+  // From what this page holds, not `page × pageSize`: normalization may skip
+  // malformed entries (`toSearchPage`) while `total` stays Docker Hub's count.
+  const to = from + items.length - 1;
 
   return (
     <div className="flex flex-col gap-4">
@@ -215,7 +217,7 @@ function ResultsView({
         {total > pageSize
           ? t('search.results.range', {
               from: formatNumber(from),
-              to: formatNumber(Math.max(from, to)),
+              to: formatNumber(to),
               total: formatNumber(total),
             })
           : t('search.results.count', { count: total, total: formatNumber(total) })}

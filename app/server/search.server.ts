@@ -109,15 +109,24 @@ export const searchCacheKey = ({ q, page, pageSize, sort, badge }: SearchQuery) 
   cacheKey('search', q, page, pageSize, sort, badge);
 
 /**
+ * One page of search results from Docker Hub, as stored under `searchCacheKey`.
+ * Both `GET /api/search` and the results page load through this, so whichever
+ * fills the shared cache entry stores the same shape.
+ */
+export async function loadSearchResults(query: SearchQuery): Promise<SearchPage> {
+  const result = await searchRepositories(dockerHub, query);
+  return { ...result.page, source: result.source };
+}
+
+/**
  * One page of search results through the cache (`getCached`), with the legacy
  * fallback. Throws `UpstreamUnavailableError` when nothing is cached and
  * Docker Hub is failing or the budget is spent.
  */
 export function getSearchPage(query: SearchQuery): Promise<Cached<SearchPage>> {
-  return getCached(searchCacheKey(query), config.cache.ttlSeconds.search, async () => {
-    const result = await searchRepositories(dockerHub, query);
-    return { ...result.page, source: result.source };
-  });
+  return getCached(searchCacheKey(query), config.cache.ttlSeconds.search, () =>
+    loadSearchResults(query),
+  );
 }
 
 /**
