@@ -2,8 +2,15 @@
   "brand": {
     "name": "Danny's Dockers"
   },
-  "home": {
-    "placeholder": "Placeholder. The Explore page lands in a later task."
+  "explore": {
+    "heading": "Popular official images",
+    "meta": {
+      "description": "Search Docker Hub and browse the most popular official images."
+    },
+    "empty": {
+      "title": "No popular images right now",
+      "description": "Docker Hub didn't return any results. Try again in a moment."
+    }
   },
   "state": {
     "loading": "Loading…",

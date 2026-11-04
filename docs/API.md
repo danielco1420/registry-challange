@@ -320,6 +320,8 @@ Resource routes in `app/routes/api.*.ts`, registered in `app/routes.ts`, sharing
 | `GET /api/repos/:ns/:repo/tags/:tag` | C, single tag | `Tag` | `CACHE_TTL_TAGS` (120 s) | no such tag |
 | `GET /api/publishers/:name` | D: `/v2/orgs/{name}`, then `/v2/users/{name}` on a 404 | `Publisher` | `CACHE_TTL_PUBLISHER` (3600 s) | neither an org nor a user |
 
+The Explore page (`/`, `app/routes/home.tsx`) doesn't call `GET /api/popular`: its loader calls `searchRepositories` directly with the same query (`POPULAR_QUERY`, exported from `app/routes/api.popular.ts` so the two can't drift), through `getCached` and the same cache entry (ADR-0002), so SSR doesn't round-trip through our own proxy.
+
 The proxy never forwards arbitrary paths or URLs. Any other `/api/*` path, with any method, answers `404` `{ "error": { "code": "not_found", "message": "Not found" } }` (`Cache-Control: no-store`) and calls nothing upstream (`app/routes/api.$.ts`). A method other than `GET`/`HEAD` on a proxy route answers `405` `method_not_allowed` with `Allow: GET, HEAD` and `Cache-Control: no-store` (rate limited like any `/api/*` request). `/api/health` is not a proxy route and isn't rate limited.
 
 Every proxy route, in order (`handleApi` and `proxyJson`):
