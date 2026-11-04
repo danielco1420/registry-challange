@@ -44,6 +44,11 @@ export async function action({ request }: Route.ActionArgs) {
  * `PUBLIC_ORIGIN` when set, since behind a TLS-terminating proxy `request.url`
  * is `http://` while the browser sends `https://`; otherwise the request URL's
  * origin. `X-Forwarded-*` headers are never trusted for this.
+ *
+ * Only the native form post (straight to `/theme`) relies on this alone. The
+ * fetcher posts to `/theme.data`, which React Router's own check sees first,
+ * and that one compares against `request.url` only, so behind a TLS-terminating
+ * proxy it answers 400 before this action runs, `PUBLIC_ORIGIN` or not.
  */
 function isCrossOrigin(request: Request): boolean {
   const origin = request.headers.get('Origin');

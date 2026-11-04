@@ -50,7 +50,7 @@ Environment variables are documented in [.env.example](.env.example). All are op
 
 | Variable | Default | Allowed |
 |---|---|---|
-| `PUBLIC_ORIGIN` | unset | `http(s)` origin browsers use to reach the app. Set it behind a TLS-terminating reverse proxy, so `POST /theme`'s cross-origin check compares against it instead of the request URL |
+| `PUBLIC_ORIGIN` | unset | `http(s)` origin browsers use to reach the app. Set it behind a TLS-terminating reverse proxy, so `POST /theme`'s cross-origin check compares against it instead of the request URL. Covers the no-JavaScript form post only: React Router's own check on the toggle's JavaScript post still compares against the request URL |
 | `DOCKERHUB_BASE_URL` | `https://hub.docker.com` | `http(s)` origin (no credentials, path, query or hash) |
 | `UPSTREAM_TIMEOUT_MS` | `8000` | integer 1–2147483647 |
 | `CACHE_TTL_POPULAR` / `_SEARCH` / `_REPO` / `_TAGS` / `_PUBLISHER` (seconds) | `600` / `60` / `300` / `120` / `3600` | integer ≥ 0 |

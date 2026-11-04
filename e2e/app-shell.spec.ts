@@ -42,9 +42,17 @@ test.describe('theme', () => {
       'true',
     );
 
+    // The class flips optimistically, before the cookie is set. Wait for the POST
+    // itself, or the reload can abort it and the choice is lost.
+    const saved = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'POST' &&
+        new URL(response.url()).pathname === '/theme.data',
+    );
     await toggle.getByRole('button', { name: 'Dark' }).click();
     await expect(page.locator('html')).toHaveClass('dark');
     expect(await bodyBackground(page)).toBe(DARK_BG);
+    expect((await saved).ok()).toBe(true);
 
     await page.reload();
     await expect(page.locator('html')).toHaveClass('dark');
