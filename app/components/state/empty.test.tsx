@@ -31,4 +31,10 @@ describe('Empty', () => {
     expect(screen.getByRole('heading', { name: 'No tags match “alpine”' })).toBeInTheDocument();
     expect(screen.getByText('Clear the tag filter to see every tag.')).toBeInTheDocument();
   });
+
+  it('renders the title at the given heading level', () => {
+    render(<Empty headingLevel={3} action={<Button>Try again</Button>} />);
+
+    expect(screen.getByRole('heading', { level: 3, name: 'No results' })).toBeInTheDocument();
+  });
 });

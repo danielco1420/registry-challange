@@ -3,8 +3,9 @@
  * cache, budget and upstream client (MSW fixtures), and the component's
  * states (search box, grid, degraded banner, empty, retry).
  */
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
+import type * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -12,10 +13,12 @@ import '~/i18n/i18next';
 
 import type { SearchPage } from '~/lib/dto';
 import { cache } from '~/server/cache.server';
+import type { ExplorePageData } from '~/server/popular.server';
 
 import { HUB, dockerHubHandlers } from '../../test/msw/dockerhub';
 import { server } from '../../test/msw/server';
-import Home, { loader, meta, type HomeLoaderData } from './home';
+import { loader as popularApiLoader } from './api.popular';
+import Home, { loader, meta } from './home';
 
 /** Every Docker Hub request answers 503 with a `Retry-After` too long to retry in-request. */
 function upstreamDown() {
@@ -88,6 +91,19 @@ describe('home loader', () => {
       expect(data.kind).toBe('unavailable');
     }
   });
+
+  it('shares its cache entry with GET /api/popular', async () => {
+    await loader({ request: request() } as Parameters<typeof loader>[0]);
+    upstreamDown();
+
+    const response = await popularApiLoader({
+      request: new Request('http://localhost/api/popular'),
+    } as Parameters<typeof popularApiLoader>[0]);
+    expect(response.status).toBe(200);
+    expect(response.headers.get('X-Cache')).toBe('HIT');
+    const body = (await response.json()) as SearchPage;
+    expect(body.items[0]?.id).toBe('library/nginx');
+  });
 });
 
 describe('meta', () => {
@@ -100,8 +116,12 @@ describe('meta', () => {
   });
 });
 
-function renderHome(data: HomeLoaderData) {
-  const Stub = createRoutesStub([{ path: '/', Component: Home, loader: () => data }]);
+/** `Home` with a stubbed loader; `load` may answer differently on each call (revalidation). */
+function renderHome(load: ExplorePageData | (() => ExplorePageData | Promise<ExplorePageData>)) {
+  const Page = Home as unknown as React.ComponentType;
+  const Stub = createRoutesStub([
+    { path: '/', Component: Page, loader: typeof load === 'function' ? load : () => load },
+  ]);
   return render(<Stub initialEntries={['/']} />);
 }
 
@@ -161,8 +181,11 @@ describe('Home', () => {
   it('renders a card grid for the popular images', async () => {
     renderHome({ popular: POPULAR, degraded: false });
 
-    expect(await screen.findByRole('link', { name: 'nginx' })).toHaveAttribute('href', '/_/nginx');
+    const section = await screen.findByRole('region', { name: 'Popular official images' });
+    expect(screen.getByRole('link', { name: 'nginx' })).toHaveAttribute('href', '/_/nginx');
     expect(screen.getByRole('link', { name: 'redis' })).toHaveAttribute('href', '/_/redis');
+    expect(screen.getByRole('heading', { level: 3, name: 'nginx' })).toBeInTheDocument();
+    expect(section).not.toHaveAttribute('aria-busy');
     expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
   });
 
@@ -176,8 +199,52 @@ describe('Home', () => {
   it('shows the empty state with a retry action when there are no popular images', async () => {
     renderHome({ popular: { ...POPULAR, items: [], total: 0 }, degraded: false });
 
-    expect(await screen.findByText('No popular images right now')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 3, name: 'No popular images right now' }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  });
+
+  it('shows the loading state while "Try again" re-runs the loader, then the new data', async () => {
+    let resolveRetry: (data: ExplorePageData) => void = () => {};
+    const load = vi
+      .fn<() => ExplorePageData | Promise<ExplorePageData>>()
+      .mockReturnValueOnce({ popular: { ...POPULAR, items: [], total: 0 }, degraded: false })
+      .mockReturnValueOnce(
+        new Promise<ExplorePageData>((resolve) => {
+          resolveRetry = resolve;
+        }),
+      );
+    renderHome(load);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Try again' }));
+
+    expect(await screen.findByText('Loading…')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Popular official images' })).toHaveAttribute(
+      'aria-busy',
+      'true',
+    );
+    expect(screen.queryByText('No popular images right now')).not.toBeInTheDocument();
+
+    resolveRetry({ popular: POPULAR, degraded: false });
+    expect(await screen.findByRole('link', { name: 'nginx' })).toBeInTheDocument();
+    expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+
+  it('re-runs the loader from the degraded banner and drops it once the data is fresh', async () => {
+    const load = vi
+      .fn<() => ExplorePageData>()
+      .mockReturnValueOnce({ popular: POPULAR, degraded: true })
+      .mockReturnValueOnce({ popular: POPULAR, degraded: false });
+    renderHome(load);
+
+    expect(await screen.findByText('Showing saved data.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+
+    await screen.findByRole('link', { name: 'nginx' });
+    await vi.waitFor(() => expect(screen.queryByText('Showing saved data.')).toBeNull());
+    expect(load).toHaveBeenCalledTimes(2);
   });
 });
