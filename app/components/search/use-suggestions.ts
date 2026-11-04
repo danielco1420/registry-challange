@@ -65,10 +65,10 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
  * debounced by `SUGGESTIONS_DEBOUNCE_MS`. Pass `''` to stop asking.
  *
  * Stale responses never win (RISKS.md 4.5): each request has its own
- * `AbortController`, aborted as soon as the query changes or the component
- * unmounts, and a response that still lands after that is dropped. Results
- * are also tagged with their query, so only the one for the current query is
- * ever shown.
+ * `AbortController`, aborted as soon as the debounced query moves on or the
+ * component unmounts, and a response that still lands after that is dropped.
+ * Results are also tagged with their query, so while the debounce is still
+ * waiting, an answer for an older query is never shown for the current one.
  *
  * Plain `fetch` rather than `useFetcher`: React Router sends a fetcher's
  * error (a `429` or `503` from the proxy) to the nearest route ErrorBoundary,

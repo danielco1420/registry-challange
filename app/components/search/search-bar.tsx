@@ -85,8 +85,9 @@ export function SearchBar({ variant = 'header', className }: SearchBarProps) {
   const expanded = showPopup && options.length > 0;
 
   // Announced politely (the popup's text is not a live region, to avoid double reading).
+  // Only once a lookup has finished: a 1-character query is `idle`, not "0 suggestions".
   let announcement = '';
-  if (open && mode === 'suggestions' && suggestions.status !== 'loading') {
+  if (open && (suggestions.status === 'success' || suggestions.status === 'error')) {
     announcement = message ?? t('search.suggestions.count', { count: options.length });
   }
 

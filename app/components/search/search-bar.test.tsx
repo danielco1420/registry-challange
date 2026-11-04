@@ -48,9 +48,11 @@ function serveSuggestions(items: RepoSummary[] = []) {
   return queries;
 }
 
+// A plain element, not <output>: that has an implicit `status` role and would
+// be a second live region next to the search bar's own.
 function LocationProbe() {
   const location = useLocation();
-  return <output data-testid="location">{location.pathname + location.search}</output>;
+  return <p data-testid="location">{location.pathname + location.search}</p>;
 }
 
 function renderSearchBar(initialPath = '/r/some/where') {
@@ -152,6 +154,8 @@ describe('SearchBar', () => {
     await new Promise((resolve) => setTimeout(resolve, 400));
     expect(queries).toEqual([]);
     expect(input).toHaveAttribute('aria-expanded', 'false');
+    // Nothing was looked up, so there is nothing to announce (not "0 suggestions").
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
   });
 
   it('never lets an older response overwrite a newer one', async () => {
